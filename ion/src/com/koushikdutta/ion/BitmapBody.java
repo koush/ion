@@ -15,7 +15,7 @@ class BitmapBody extends AsyncHttpRequestBodyBase<Bitmap> {
     }
 
     @Override
-    public Bitmap getBody() {
+    public Bitmap get() {
         return bitmap;
     }
 }

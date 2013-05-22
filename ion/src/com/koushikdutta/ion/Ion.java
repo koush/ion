@@ -4,8 +4,11 @@ import android.content.Context;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.ion.loader.HttpLoader;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by koush on 5/21/13.
@@ -37,6 +40,37 @@ public class Ion {
         catch (Exception e) {
             IonLog.w("unable to set up response cache", e);
         }
+
+        configure()
+            .addLoader(new HttpLoader());
+    }
+
+    public AsyncHttpClient getHttpClient() {
+        return httpClient;
+    }
+
+    public class Config {
+        ArrayList<Loader> loaders = new ArrayList<Loader>();
+        public Config addLoader(int index, Loader loader) {
+            loaders.add(index, loader);
+            return this;
+        }
+        public Config insertLoader(Loader loader) {
+            loaders.add(0, loader);
+            return this;
+        }
+        public Config addLoader(Loader loader) {
+            loaders.add(loader);
+            return this;
+        }
+        public List<Loader> getLoaders() {
+            return loaders;
+        }
+    }
+
+    Config config = new Config();
+    public Config configure() {
+        return config;
     }
 
     private static Ion instance;

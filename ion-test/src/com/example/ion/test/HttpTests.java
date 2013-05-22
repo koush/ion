@@ -47,7 +47,7 @@ public class HttpTests extends AndroidTestCase {
         JSONObject post = new JSONObject();
         post.put("ping", "pong");
         JSONObject ret = Ion.with(getContext())
-                .load("http://koush.com/test/echo")
+                .load("https://koush.clockworkmod.com/test/echo")
                 .setJSONObjectBody(post)
                 .asJSONObject().get();
         assertEquals("pong", ret.getString("ping"));
@@ -55,7 +55,7 @@ public class HttpTests extends AndroidTestCase {
 
     public void testUrlEncodedFormBody() throws Exception {
         JSONObject ret = Ion.with(getContext())
-                .load("http://koush.com/test/echo")
+                .load("https://koush.clockworkmod.com/test/echo")
                 .setBodyParameter("blit", "bip")
                 .asJSONObject().get();
         assertEquals("bip", ret.getString("blit"));
@@ -63,7 +63,7 @@ public class HttpTests extends AndroidTestCase {
 
     public void testMultipart() throws Exception {
         JSONObject ret = Ion.with(getContext())
-                .load("http://koush.com/test/echo")
+                .load("https://koush.clockworkmod.com/test/echo")
                 .setMultipartParameter("goop", "noop")
                 .asJSONObject().get();
         assertEquals("noop", ret.getString("goop"));

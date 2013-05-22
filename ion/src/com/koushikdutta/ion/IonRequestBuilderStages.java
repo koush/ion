@@ -16,6 +16,7 @@ public class IonRequestBuilderStages {
     public static interface IonLoadRequestBuilder {
         public IonBodyParamsRequestBuilder load(String url);
         public IonBodyParamsRequestBuilder load(String method, String url);
+        public IonFutureRequestBuilder load(File file);
     }
 
     // set parameters

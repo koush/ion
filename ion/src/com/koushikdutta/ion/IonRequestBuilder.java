@@ -8,8 +8,12 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.callback.CompletedCallback;
+import com.koushikdutta.async.callback.DataParser;
 import com.koushikdutta.async.future.Future;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.future.FutureDataEmitter;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.*;
 import org.apache.http.NameValuePair;
@@ -37,13 +41,19 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     @Override
     public IonRequestBuilderStages.IonBodyParamsRequestBuilder load(String url) {
-        return load(AsyncHttpGet.METHOD, url);
+        return loadInternal(AsyncHttpGet.METHOD, url);
     }
 
-    @Override
-    public IonRequestBuilderStages.IonBodyParamsRequestBuilder load(String method, String url) {
+    private IonRequestBuilderStages.IonBodyParamsRequestBuilder  loadInternal(String method, String url) {
         request = new AsyncHttpRequest(URI.create(url), method);
         return this;
+    }
+
+    boolean methodWasSet;
+    @Override
+    public IonRequestBuilderStages.IonBodyParamsRequestBuilder load(String method, String url) {
+        methodWasSet = true;
+        return loadInternal(method, url);
     }
 
     @Override
@@ -72,7 +82,8 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     private <T> IonRequestBuilderStages.IonFutureRequestBuilder setBody(AsyncHttpRequestBody<T> body) {
         request.setBody(body);
-        request.setMethod(AsyncHttpPost.METHOD);
+        if (!methodWasSet)
+            request.setMethod(AsyncHttpPost.METHOD);
         return this;
     }
 
@@ -101,7 +112,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         return false;
     }
 
-    private <T> void postExecute(final SimpleFuture<T> future, final Exception ex, final AsyncHttpRequestBody<T> body) {
+    private <T> void postExecute(final SimpleFuture<T> future, final Exception ex, final T value) {
         final Runnable runner = new Runnable() {
             @Override
             public void run() {
@@ -120,19 +131,10 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
                         return;
                 }
 
-                Exception report = ex;
-                T value = null;
-                try {
-                    value = body.getBody();
-                }
-                catch (Exception e) {
-                    report = e;
-                }
-
                 // unless we're invoked onto the handler/main/service thread, there's no frakking way to avoid a
                 // race condition where the service or activity dies before this callback is invoked.
-                if (report != null)
-                    future.setComplete(report);
+                if (ex != null)
+                    future.setComplete(ex);
                 else
                     future.setComplete(value);
             }
@@ -144,24 +146,50 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
             AsyncServer.post(request.getHandler(), runner);
     }
 
-    private <T> Future<T> execute(final AsyncHttpRequestBody<T> body) {
-        final SimpleFuture<T> ret = new SimpleFuture<T>();
-        return ret.setParent(ion.httpClient.execute(request, new HttpConnectCallback() {
+    private <T> void postExecute(final SimpleFuture<T> future, Exception ex, final DataParser<T> body) {
+        T value = null;
+        try {
+            if (ex == null)
+                value = body.get();
+        }
+        catch (Exception e) {
+            ex = e;
+        }
+        postExecute(future, ex, value);
+    }
+
+    private <T> void execute(final SimpleFuture<T> ret, final DataEmitter emitter, final DataParser<T> parser) {
+        emitter.setDataCallback(parser);
+        emitter.setEndCallback(new CompletedCallback() {
             @Override
-            public void onConnectCompleted(Exception ex, AsyncHttpResponse response) {
-                if (ex != null) {
-                    postExecute(ret, ex, body);
-                    return;
-                }
-                response.setDataCallback(body);
-                response.setEndCallback(new CompletedCallback() {
+            public void onCompleted(Exception ex) {
+                postExecute(ret, ex, parser);
+            }
+        });
+    }
+
+    private <T> Future<T> execute(final DataParser<T> parser) {
+        final SimpleFuture<T> ret = new SimpleFuture<T>();
+        for (Loader loader: ion.config.loaders) {
+            FutureDataEmitter emitter = loader.load(ion, request);
+            if (emitter != null) {
+                emitter.setCallback(new FutureCallback<DataEmitter>() {
                     @Override
-                    public void onCompleted(Exception ex) {
-                        postExecute(ret, ex, body);
+                    public void onCompleted(Exception e, DataEmitter result) {
+                        if (e != null) {
+                            postExecute(ret, e, parser);
+                            return;
+                        }
+
+                        execute(ret, result, parser);
                     }
                 });
+                ret.setParent(emitter);
+                return ret;
             }
-        }));
+        }
+        ret.setComplete(new Exception("Unknown uri scheme"));
+        return ret;
     }
 
     @Override
@@ -228,6 +256,12 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder autoSize(boolean autoSize) {
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilderStages.IonFutureRequestBuilder load(File file) {
+        loadInternal(null, file.toURI().toString());
         return this;
     }
 }
