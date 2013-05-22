@@ -2,7 +2,7 @@
 <project name="ion" default="help">
 
     <!-- The local.properties file is created and updated by the 'android' tool.
-         It contains the path to the SDK. It should *NOT* be checked into
+         It contains the path to the SDK. It should *NOT* be checked intoImageView
          Version Control Systems. -->
     <property file="local.properties"/>
 
@@ -23,7 +23,7 @@
          be updated using the 'android' tool with the 'update' action.
 
          This file is an integral part of the build system for your
-         application and should be checked into Version Control Systems.
+         application and should be checked intoImageView Version Control Systems.
 
          -->
     <property file="ant.properties"/>
@@ -45,7 +45,7 @@
          (or in .classpath for Eclipse projects).
 
          This file is an integral part of the build system for your
-         application and should be checked into Version Control Systems. -->
+         application and should be checked intoImageView Version Control Systems. -->
     <loadproperties srcFile="project.properties"/>
 
     <!-- quick check on sdk.dir -->
@@ -72,12 +72,12 @@
 
          To customize existing targets, there are two options:
          - Customize only one target:
-             - copy/paste the target into this file, *before* the
+             - copy/paste the target intoImageView this file, *before* the
                <import> task.
              - customize it to your needs.
          - Customize the whole content of build.xml
              - copy/paste the content of the rules files (minus the top node)
-               into this file, replacing the <import> task.
+               intoImageView this file, replacing the <import> task.
              - customize to your needs.
 
          ***********************

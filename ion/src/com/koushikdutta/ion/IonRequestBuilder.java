@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Handler;
+import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
@@ -23,7 +25,7 @@ import java.util.List;
 /**
  * Created by koush on 5/21/13.
  */
-class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder, IonRequestBuilderStages.IonBodyParamsRequestBuilder, IonRequestBuilderStages.IonUrlEncodedBodyRequestBuilder, IonRequestBuilderStages.IonFormMultipartBodyRequestBuilder {
+class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder, IonRequestBuilderStages.IonBodyParamsRequestBuilder, IonRequestBuilderStages.IonMutableBitmapRequestBuilder {
     AsyncHttpRequest request;
     Ion ion;
     WeakReference<Context> context;
@@ -201,6 +203,31 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
             setBody(multipartBody);
         }
         multipartBody.addStringPart(name, value);
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder withBitmap() {
+        return this;
+    }
+
+    @Override
+    public Future<Bitmap> intoImageView(ImageView imageView) {
+        return null;
+    }
+
+    @Override
+    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder resize(int width, int height) {
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder centerCrop() {
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder autoSize(boolean autoSize) {
         return this;
     }
 }

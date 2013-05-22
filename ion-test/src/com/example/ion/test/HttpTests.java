@@ -21,7 +21,8 @@ public class HttpTests extends AndroidTestCase {
         final Semaphore semaphore = new Semaphore(0);
         Ion.with(getContext())
                 .load("http://www.clockworkmod.com/")
-                // need to null out the handler since the semaphore blocks the main thread
+                // need to null out the handler since the semaphore blocks the main thread,
+                // and ion's default behavior is to post back onto the main thread or calling Handler.
                 .setHandler(null)
                 .asString()
                 .setCallback(new FutureCallback<String>() {
@@ -44,12 +45,12 @@ public class HttpTests extends AndroidTestCase {
 
     public void testPostJSONObject() throws Exception {
         JSONObject post = new JSONObject();
-        post.put("foo", "bar");
+        post.put("ping", "pong");
         JSONObject ret = Ion.with(getContext())
                 .load("http://koush.com/test/echo")
                 .setJSONObjectBody(post)
                 .asJSONObject().get();
-        assertEquals("bar", ret.getString("foo"));
+        assertEquals("pong", ret.getString("ping"));
     }
 
     public void testUrlEncodedFormBody() throws Exception {
@@ -63,8 +64,8 @@ public class HttpTests extends AndroidTestCase {
     public void testMultipart() throws Exception {
         JSONObject ret = Ion.with(getContext())
                 .load("http://koush.com/test/echo")
-                .setMultipartParameter("blit", "bip")
+                .setMultipartParameter("goop", "noop")
                 .asJSONObject().get();
-        assertEquals("bip", ret.getString("blit"));
+        assertEquals("noop", ret.getString("goop"));
     }
 }
