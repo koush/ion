@@ -3,7 +3,6 @@ package com.koushikdutta.ion;
 import android.content.Context;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.AsyncHttpClient;
-import com.koushikdutta.async.http.AsyncHttpRequestBody;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 
 import java.io.File;
@@ -17,13 +16,13 @@ public class Ion {
      * @param context
      * @return
      */
-    public static IonRequestBuilderStages.IonRequestBuilderLoad with(Context context) {
+    public static IonRequestBuilderStages.IonLoadRequestBuilder with(Context context) {
         if (instance == null)
             instance = new Ion(context);
         return instance.build(context);
     }
 
-    public IonRequestBuilderStages.IonRequestBuilderLoad build(Context context) {
+    public IonRequestBuilderStages.IonLoadRequestBuilder build(Context context) {
         return new IonRequestBuilder(context, this);
     }
 

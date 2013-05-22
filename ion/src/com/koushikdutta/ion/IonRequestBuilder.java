@@ -7,7 +7,6 @@ import android.content.Context;
 import android.os.Handler;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.callback.CompletedCallback;
-import com.koushikdutta.async.future.Continuation;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.*;
@@ -15,16 +14,16 @@ import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.net.URI;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by koush on 5/21/13.
  */
-class IonRequestBuilder implements IonRequestBuilderStages.IonRequestBuilderLoad, IonRequestBuilderStages.IonRequestBuilderBodyParams, IonRequestBuilderStages.IonRequestUrlEncodedBuilderParams {
+class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder, IonRequestBuilderStages.IonBodyParamsRequestBuilder, IonRequestBuilderStages.IonUrlEncodedBodyRequestBuilder, IonRequestBuilderStages.IonFormMultipartBodyRequestBuilder {
     AsyncHttpRequest request;
     Ion ion;
     WeakReference<Context> context;
@@ -35,54 +34,54 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonRequestBuilderLoad
     }
 
     @Override
-    public IonRequestBuilderStages.IonRequestBuilderBodyParams load(String url) {
+    public IonRequestBuilderStages.IonBodyParamsRequestBuilder load(String url) {
         return load(AsyncHttpGet.METHOD, url);
     }
 
     @Override
-    public IonRequestBuilderStages.IonRequestBuilderBodyParams load(String method, String url) {
+    public IonRequestBuilderStages.IonBodyParamsRequestBuilder load(String method, String url) {
         request = new AsyncHttpRequest(URI.create(url), method);
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonRequestBuilderBodyParams setHeader(String name, String value) {
+    public IonRequestBuilderStages.IonBodyParamsRequestBuilder setHeader(String name, String value) {
         request.setHeader(name, value);
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonRequestBuilderBodyParams addHeader(String name, String value) {
+    public IonRequestBuilderStages.IonBodyParamsRequestBuilder addHeader(String name, String value) {
         request.addHeader(name, value);
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonRequestBuilderBodyParams setTimeout(int timeoutMilliseconds) {
+    public IonRequestBuilderStages.IonBodyParamsRequestBuilder setTimeout(int timeoutMilliseconds) {
         request.setTimeout(timeoutMilliseconds);
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonRequestBuilderBodyParams setHandler(Handler handler) {
+    public IonRequestBuilderStages.IonBodyParamsRequestBuilder setHandler(Handler handler) {
         request.setHandler(handler);
         return this;
     }
 
-    private <T> IonRequestBuilderStages.IonRequestBuilderParams setBody(AsyncHttpRequestBody<T> body) {
+    private <T> IonRequestBuilderStages.IonFutureRequestBuilder setBody(AsyncHttpRequestBody<T> body) {
         request.setBody(body);
         request.setMethod(AsyncHttpPost.METHOD);
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonRequestBuilderParams setJSONObjectBody(JSONObject jsonObject) {
+    public IonRequestBuilderStages.IonFutureRequestBuilder setJSONObjectBody(JSONObject jsonObject) {
         setHeader("Content-Type", "application/json");
         return setBody(new JSONObjectBody(jsonObject));
     }
 
     @Override
-    public IonRequestBuilderStages.IonRequestBuilderParams setStringBody(String string) {
+    public IonRequestBuilderStages.IonFutureRequestBuilder setStringBody(String string) {
         setHeader("Content-Type", "text/plain");
         return setBody(new StringBody(string));
     }
@@ -175,12 +174,33 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonRequestBuilderLoad
 
     ArrayList<NameValuePair> bodyParameters;
     @Override
-    public IonRequestBuilderStages.IonRequestUrlEncodedBuilderParams setBodyParameter(String name, String value) {
+    public IonRequestBuilderStages.IonUrlEncodedBodyRequestBuilder setBodyParameter(String name, String value) {
         if (bodyParameters == null) {
             bodyParameters = new ArrayList<NameValuePair>();
             setBody(new UrlEncodedFormBody(bodyParameters));
         }
         bodyParameters.add(new BasicNameValuePair(name, value));
+        return this;
+    }
+
+    MultipartFormDataBody multipartBody;
+    @Override
+    public IonRequestBuilderStages.IonFormMultipartBodyRequestBuilder setMultiparFile(String name, File file) {
+        if (multipartBody == null) {
+            multipartBody = new MultipartFormDataBody();
+            setBody(multipartBody);
+        }
+        multipartBody.addFilePart(name, file);
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilderStages.IonFormMultipartBodyRequestBuilder setMultipartParameter(String name, String value) {
+        if (multipartBody == null) {
+            multipartBody = new MultipartFormDataBody();
+            setBody(multipartBody);
+        }
+        multipartBody.addStringPart(name, value);
         return this;
     }
 }

@@ -59,4 +59,12 @@ public class HttpTests extends AndroidTestCase {
                 .asJSONObject().get();
         assertEquals("bip", ret.getString("blit"));
     }
+
+    public void testMultipart() throws Exception {
+        JSONObject ret = Ion.with(getContext())
+                .load("http://koush.com/test/echo")
+                .setMultipartParameter("blit", "bip")
+                .asJSONObject().get();
+        assertEquals("bip", ret.getString("blit"));
+    }
 }
