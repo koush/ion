@@ -7,6 +7,8 @@ import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 
+import java.io.File;
+
 /**
  * Created by koush on 5/22/13.
  */
@@ -16,6 +18,10 @@ public class FileLoader implements Loader {
 
     @Override
     public FutureDataEmitter load(Ion ion, AsyncHttpRequest request) {
-        return null;
+        if (!request.getUri().getScheme().startsWith("file"))
+            return null;
+        FileFuture ret = new FileFuture();
+        ret.setComplete(new FileDataEmitter(ion.getHttpClient().getServer(), new File(request.getUri())));
+        return ret;
     }
 }

@@ -7,6 +7,7 @@
     <instrumentation android:name="android.test.InstrumentationTestRunner"
                      android:targetPackage="com.koushikdutta.ion.test"/>
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <application android:debuggable="true">
         <uses-library android:name="android.test.runner"/>
     </application>

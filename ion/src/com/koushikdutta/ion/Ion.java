@@ -4,6 +4,7 @@ import android.content.Context;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 
 import java.io.File;
@@ -42,7 +43,8 @@ public class Ion {
         }
 
         configure()
-            .addLoader(new HttpLoader());
+        .addLoader(new HttpLoader())
+        .addLoader(new FileLoader());
     }
 
     public AsyncHttpClient getHttpClient() {
