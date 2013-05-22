@@ -21,8 +21,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="ion" />
     <orderEntry type="module" module-name="AndroidAsync" />
+    <orderEntry type="module" module-name="ion" />
   </component>
 </module>
 

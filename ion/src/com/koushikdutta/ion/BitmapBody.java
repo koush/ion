@@ -10,6 +10,10 @@ import com.koushikdutta.async.http.server.AsyncHttpRequestBodyBase;
 class BitmapBody extends AsyncHttpRequestBodyBase<Bitmap> {
     Bitmap bitmap;
 
+    public BitmapBody() {
+        super("image/bitmap");
+    }
+
     @Override
     public Bitmap getBody() {
         return bitmap;
