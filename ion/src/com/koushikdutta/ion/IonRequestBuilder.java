@@ -66,16 +66,22 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonRequestBuilderLoad
         return this;
     }
 
-    @Override
-    public IonRequestBuilderStages.IonRequestBuilderParams setJSONObjectBody(JSONObject jsonObject) {
-        request.setBody(new JSONObjectBody(jsonObject));
+    private <T> IonRequestBuilderStages.IonRequestBuilderParams setBody(AsyncHttpRequestBody<T> body) {
+        request.setBody(body);
+        request.setMethod(AsyncHttpPost.METHOD);
         return this;
     }
 
     @Override
+    public IonRequestBuilderStages.IonRequestBuilderParams setJSONObjectBody(JSONObject jsonObject) {
+        setHeader("Content-Type", "application/json");
+        return setBody(new JSONObjectBody(jsonObject));
+    }
+
+    @Override
     public IonRequestBuilderStages.IonRequestBuilderParams setStringBody(String string) {
-        request.setBody(new StringBody(string));
-        return this;
+        setHeader("Content-Type", "text/plain");
+        return setBody(new StringBody(string));
     }
 
     private static boolean isServiceRunning(Service candidate) {

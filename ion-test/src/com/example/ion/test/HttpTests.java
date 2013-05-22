@@ -32,12 +32,18 @@ public class HttpTests extends AndroidTestCase {
                         semaphore.release();
                     }
                 });
-        assertTrue(semaphore.tryAcquire(1000000, TimeUnit.MILLISECONDS));
+        assertTrue(semaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
     }
 
     public void testJSONObject() throws Exception {
-        JSONObject ret;
-        assertNotNull(ret = Ion.with(getContext()).load("https://raw.github.com/koush/ion/master/ion-test/testdata/test.json").asJSONObject().get());
+        JSONObject ret = Ion.with(getContext()).load("https://raw.github.com/koush/ion/master/ion-test/testdata/test.json").asJSONObject().get();
+        assertEquals("bar", ret.getString("foo"));
+    }
+
+    public void testPostJSONObject() throws Exception {
+        JSONObject post = new JSONObject();
+        post.put("foo", "bar");
+        JSONObject ret = Ion.with(getContext()).load("http://192.168.1.2:3000/test/echo").setJSONObjectBody(post).asJSONObject().get();
         assertEquals("bar", ret.getString("foo"));
     }
 }
