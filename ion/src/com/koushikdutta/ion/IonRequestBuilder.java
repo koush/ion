@@ -11,17 +11,20 @@ import com.koushikdutta.async.future.Continuation;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.*;
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by koush on 5/21/13.
  */
-class IonRequestBuilder implements IonRequestBuilderStages.IonRequestBuilderLoad, IonRequestBuilderStages.IonRequestBuilderBodyParams {
+class IonRequestBuilder implements IonRequestBuilderStages.IonRequestBuilderLoad, IonRequestBuilderStages.IonRequestBuilderBodyParams, IonRequestBuilderStages.IonRequestUrlEncodedBuilderParams {
     AsyncHttpRequest request;
     Ion ion;
     WeakReference<Context> context;
@@ -168,5 +171,16 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonRequestBuilderLoad
     @Override
     public Future<String> asString() {
         return execute(new StringBody());
+    }
+
+    ArrayList<NameValuePair> bodyParameters;
+    @Override
+    public IonRequestBuilderStages.IonRequestUrlEncodedBuilderParams setBodyParameter(String name, String value) {
+        if (bodyParameters == null) {
+            bodyParameters = new ArrayList<NameValuePair>();
+            setBody(new UrlEncodedFormBody(bodyParameters));
+        }
+        bodyParameters.add(new BasicNameValuePair(name, value));
+        return this;
     }
 }

@@ -16,6 +16,11 @@ public class IonRequestBuilderStages {
         public IonRequestBuilderBodyParams setTimeout(int timeoutMilliseconds);
         public IonRequestBuilderParams setJSONObjectBody(JSONObject jsonObject);
         public IonRequestBuilderParams setStringBody(String string);
+        public IonRequestUrlEncodedBuilderParams setBodyParameter(String name, String value);
+    }
+
+    public static interface IonRequestUrlEncodedBuilderParams extends IonRequestBuilderParams {
+        public IonRequestUrlEncodedBuilderParams setBodyParameter(String name, String value);
     }
 
     public static interface IonRequestBuilderParams {

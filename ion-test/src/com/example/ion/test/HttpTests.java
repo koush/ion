@@ -36,14 +36,27 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testJSONObject() throws Exception {
-        JSONObject ret = Ion.with(getContext()).load("https://raw.github.com/koush/ion/master/ion-test/testdata/test.json").asJSONObject().get();
+        JSONObject ret = Ion.with(getContext())
+                .load("https://raw.github.com/koush/ion/master/ion-test/testdata/test.json")
+                .asJSONObject().get();
         assertEquals("bar", ret.getString("foo"));
     }
 
     public void testPostJSONObject() throws Exception {
         JSONObject post = new JSONObject();
         post.put("foo", "bar");
-        JSONObject ret = Ion.with(getContext()).load("http://192.168.1.2:3000/test/echo").setJSONObjectBody(post).asJSONObject().get();
+        JSONObject ret = Ion.with(getContext())
+                .load("http://koush.com/test/echo")
+                .setJSONObjectBody(post)
+                .asJSONObject().get();
         assertEquals("bar", ret.getString("foo"));
+    }
+
+    public void testUrlEncodedFormBody() throws Exception {
+        JSONObject ret = Ion.with(getContext())
+                .load("http://koush.com/test/echo")
+                .setBodyParameter("blit", "bip")
+                .asJSONObject().get();
+        assertEquals("bip", ret.getString("blit"));
     }
 }
