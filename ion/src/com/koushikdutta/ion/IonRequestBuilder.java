@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.DataParser;
@@ -16,11 +17,13 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.FutureDataEmitter;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.*;
+import com.koushikdutta.async.stream.OutputStreamDataCallback;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.ArrayList;
@@ -200,6 +203,37 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     @Override
     public Future<String> asString() {
         return execute(new StringBody());
+    }
+
+    private static class OutputStreamWriter extends OutputStreamDataCallback implements DataParser<OutputStream> {
+        private boolean close;
+        public OutputStreamWriter(OutputStream outputStream, boolean close) {
+            super(outputStream);
+            this.close = close;
+        }
+        @Override
+        public OutputStream get() {
+            OutputStream ret = getOutputStream();
+            if (close) {
+                try {
+                    ret.close();
+                }
+                catch (Exception e) {
+                }
+            }
+            return ret;
+        }
+    }
+
+
+    @Override
+    public Future<OutputStream> write(OutputStream outputStream, boolean close) {
+        return execute(new OutputStreamWriter(outputStream, close));
+    }
+
+    @Override
+    public Future<OutputStream> write(OutputStream outputStream) {
+        return execute(new OutputStreamWriter(outputStream, true));
     }
 
     ArrayList<NameValuePair> bodyParameters;

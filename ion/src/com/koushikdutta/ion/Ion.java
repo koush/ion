@@ -4,6 +4,7 @@ import android.content.Context;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 
@@ -30,10 +31,16 @@ public class Ion {
         return new IonRequestBuilder(context, this);
     }
 
+    public Context getContext() {
+        return context;
+    }
+
+    Context context;
     ResponseCacheMiddleware responseCache;
     AsyncHttpClient httpClient;
     private Ion(Context context) {
         httpClient = new AsyncHttpClient(new AsyncServer());
+        this.context = context.getApplicationContext();
 
         try {
             responseCache = ResponseCacheMiddleware.addCache(httpClient, new File(context.getCacheDir(), "ion"), 10L * 1024L * 1024L);
@@ -44,6 +51,7 @@ public class Ion {
 
         configure()
         .addLoader(new HttpLoader())
+        .addLoader(new ContentLoader())
         .addLoader(new FileLoader());
     }
 

@@ -7,6 +7,7 @@ import com.koushikdutta.async.future.Future;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.OutputStream;
 
 /**
  * Created by koush on 5/21/13.
@@ -45,6 +46,8 @@ public class IonRequestBuilderStages {
         public Future<String> asString();
         public Future<JSONObject> asJSONObject();
         public IonMutableBitmapRequestBuilder withBitmap();
+        public Future<OutputStream> write(OutputStream outputStream);
+        public Future<OutputStream> write(OutputStream outputStream, boolean close);
     }
 
     public static interface IonMutableBitmapRequestBuilder extends IonBitmapFutureRequestBuilder {
