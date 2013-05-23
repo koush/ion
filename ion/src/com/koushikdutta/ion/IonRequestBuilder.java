@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.DataParser;
@@ -23,6 +22,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
@@ -225,7 +226,6 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         }
     }
 
-
     @Override
     public Future<OutputStream> write(OutputStream outputStream, boolean close) {
         return execute(new OutputStreamWriter(outputStream, close));
@@ -234,6 +234,36 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     @Override
     public Future<OutputStream> write(OutputStream outputStream) {
         return execute(new OutputStreamWriter(outputStream, true));
+    }
+
+    private static class FileWriter extends OutputStreamDataCallback implements DataParser<File> {
+        private File file;
+        public FileWriter(File file) throws IOException {
+            super(new FileOutputStream(file));
+            this.file = file;
+        }
+        @Override
+        public File get() {
+            OutputStream ret = getOutputStream();
+            try {
+                ret.close();
+            }
+            catch (Exception e) {
+            }
+            return file;
+        }
+    }
+
+    @Override
+    public Future<File> write(File file) {
+        try {
+            return execute(new FileWriter(file));
+        }
+        catch (Exception e) {
+            SimpleFuture<File> ret = new SimpleFuture<File>();
+            ret.setComplete(e);
+            return ret;
+        }
     }
 
     ArrayList<NameValuePair> bodyParameters;

@@ -48,6 +48,7 @@ public class IonRequestBuilderStages {
         public IonMutableBitmapRequestBuilder withBitmap();
         public Future<OutputStream> write(OutputStream outputStream);
         public Future<OutputStream> write(OutputStream outputStream, boolean close);
+        public Future<File> write(File file);
     }
 
     public static interface IonMutableBitmapRequestBuilder extends IonBitmapFutureRequestBuilder {
