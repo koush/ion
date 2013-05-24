@@ -79,20 +79,16 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
                 String waitingUrl = ion.pendingViews.get(imageView);
                 if (!TextUtils.equals(waitingUrl, url))
                     return;
+
+                ion.pendingViews.remove(imageView);
                 if (e != null) {
+                    imageView.setImageBitmap(null);
                     ret.setComplete(e);
                     return;
                 }
 
-                ion.pendingViews.remove(imageView);
-                if (result == null) {
-                    imageView.setImageBitmap(null);
-                    ret.setComplete((Bitmap)null);
-                }
-                else {
-                    imageView.setImageDrawable(result);
-                    ret.setComplete(result.getBitmap());
-                }
+                imageView.setImageDrawable(result);
+                ret.setComplete(result.getBitmap());
             }
         });
 
@@ -104,10 +100,20 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         builder.setHandler(null);
         final Handler handler = new Handler(Looper.getMainLooper());
         builder.execute(new ByteArrayBody()).setCallback(new FutureCallback<byte[]>() {
+            private void error(final Exception e) {
+                AsyncServer.post(handler, new Runnable() {
+                    @Override
+                    public void run() {
+                        while (pendingDownloads.size() > 0) {
+                            pendingDownloads.remove(0).setComplete(e);
+                        }
+                    }
+                });
+            }
             @Override
             public void onCompleted(Exception e, byte[] result) {
                 if (e != null) {
-                    ret.setComplete(e);
+                    error(e);
                     return;
                 }
 
@@ -117,23 +123,26 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
                 executorService.execute(new Runnable() {
                     @Override
                     public void run() {
-                        final Bitmap bmp = ion.bitmapCache.loadBitmapFromStream(bin);
+                        try {
+                            final Bitmap bmp = ion.bitmapCache.loadBitmapFromStream(bin);
+                            if (bmp == null)
+                                throw new Exception("bitmap failed to load");
 
-                        // set the bitmap back on the handler thread
-                        AsyncServer.post(handler, new Runnable() {
-                            @Override
-                            public void run() {
-                                IonBitmapCache.ZombieDrawable zd = ion.bitmapCache.put(url, bmp);
-                                while (pendingDownloads.size() > 0) {
-                                    BitmapDrawable bd;
-                                    if (zd != null)
-                                        bd = zd.cloneAndIncrementRefCounter();
-                                    else
-                                        bd = null;
-                                    pendingDownloads.remove(0).setComplete(bd);
+                            // set the bitmap back on the handler thread
+                            AsyncServer.post(handler, new Runnable() {
+                                @Override
+                                public void run() {
+                                    IonBitmapCache.ZombieDrawable zd = ion.bitmapCache.put(url, bmp);
+                                    while (pendingDownloads.size() > 0) {
+                                        BitmapDrawable bd = zd.cloneAndIncrementRefCounter();
+                                        pendingDownloads.remove(0).setComplete(bd);
+                                    }
                                 }
-                            }
-                        });
+                            });
+                        }
+                        catch (Exception e) {
+                            error(e);
+                        }
                     }
                 });
 

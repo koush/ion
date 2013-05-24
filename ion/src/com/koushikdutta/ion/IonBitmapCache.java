@@ -51,7 +51,7 @@ class IonBitmapCache {
     }
 
     boolean useBitmapScaling = true;
-    Bitmap loadBitmapFromStream(InputStream in) {
+    Bitmap loadBitmapFromStream(InputStream in) throws IOException {
         final int tw = mMetrics.widthPixels;
         final int th = mMetrics.heightPixels;
         final int targetWidth = tw <= 0 ? Integer.MAX_VALUE : tw;
@@ -73,9 +73,6 @@ class IonBitmapCache {
                 o.inSampleSize = 1 << scale;
             }
             return BitmapFactory.decodeStream(in, null, o);
-        }
-        catch (final IOException e) {
-            return null;
         }
         finally {
             if (in != null) {
