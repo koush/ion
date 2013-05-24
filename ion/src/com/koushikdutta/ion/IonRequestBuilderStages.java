@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
 import com.koushikdutta.async.future.Future;
+import com.koushikdutta.ion.bitmap.Transform;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -52,12 +53,11 @@ public class IonRequestBuilderStages {
     }
 
     public static interface IonMutableBitmapRequestBuilder extends IonBitmapFutureRequestBuilder {
-        public IonMutableBitmapRequestBuilder resize(int width, int height);
-        public IonMutableBitmapRequestBuilder centerCrop();
-        public IonMutableBitmapRequestBuilder autoSize(boolean autoSize);
+        public IonMutableBitmapRequestBuilder transform(Transform transform);
     }
 
     public static interface IonBitmapFutureRequestBuilder {
         public Future<Bitmap> intoImageView(ImageView imageView);
+        public Future<Bitmap> asBitmap();
     }
 }

@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Created by koush on 5/21/13.
  */
-class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder, IonRequestBuilderStages.IonBodyParamsRequestBuilder, IonRequestBuilderStages.IonMutableBitmapRequestBuilder {
+class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder, IonRequestBuilderStages.IonBodyParamsRequestBuilder {
     AsyncHttpRequest request;
     Ion ion;
     WeakReference<Context> context;
@@ -172,7 +172,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         });
     }
 
-    private <T> Future<T> execute(final DataParser<T> parser) {
+    <T> Future<T> execute(final DataParser<T> parser) {
         final SimpleFuture<T> ret = new SimpleFuture<T>();
         for (Loader loader: ion.config.loaders) {
             FutureDataEmitter emitter = loader.load(ion, request);
@@ -298,9 +298,12 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         return this;
     }
 
+    IonBitmapRequestBuilder bitmapBuilder;
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder withBitmap() {
-        return this;
+        if (bitmapBuilder == null)
+            bitmapBuilder = new IonBitmapRequestBuilder(this);
+        return bitmapBuilder;
     }
 
     @Override
@@ -309,23 +312,15 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder resize(int width, int height) {
-        return this;
-    }
-
-    @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder centerCrop() {
-        return this;
-    }
-
-    @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder autoSize(boolean autoSize) {
-        return this;
-    }
-
-    @Override
     public IonRequestBuilderStages.IonFutureRequestBuilder load(File file) {
         loadInternal(null, file.toURI().toString());
         return this;
+    }
+
+    @Override
+    public Future<Bitmap> asBitmap() {
+        if (bitmapBuilder == null)
+            bitmapBuilder = new IonBitmapRequestBuilder(this);
+        return bitmapBuilder.asBitmap();
     }
 }

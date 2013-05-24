@@ -1,7 +1,12 @@
 package com.koushikdutta.ion;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.future.Future;
+import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.ion.loader.ContentLoader;
@@ -10,6 +15,7 @@ import com.koushikdutta.ion.loader.HttpLoader;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 /**
@@ -38,6 +44,7 @@ public class Ion {
     Context context;
     ResponseCacheMiddleware responseCache;
     AsyncHttpClient httpClient;
+    IonBitmapCache bitmapCache;
     private Ion(Context context) {
         httpClient = new AsyncHttpClient(new AsyncServer());
         this.context = context.getApplicationContext();
@@ -48,6 +55,8 @@ public class Ion {
         catch (Exception e) {
             IonLog.w("unable to set up response cache", e);
         }
+
+        bitmapCache = new IonBitmapCache(this);
 
         configure()
         .addLoader(new HttpLoader())
@@ -82,6 +91,9 @@ public class Ion {
     public Config configure() {
         return config;
     }
+
+    Hashtable<ImageView, String> pendingViews = new Hashtable<ImageView, String>();
+    Hashtable<String, ArrayList<SimpleFuture<BitmapDrawable>>> pendingDownloads = new Hashtable<String, ArrayList<SimpleFuture<BitmapDrawable>>>();
 
     private static Ion instance;
 }
