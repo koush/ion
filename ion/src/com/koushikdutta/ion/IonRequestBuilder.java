@@ -307,7 +307,9 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     @Override
     public Future<Bitmap> intoImageView(ImageView imageView) {
-        return null;
+        if (bitmapBuilder == null)
+            bitmapBuilder = new IonBitmapRequestBuilder(this);
+        return bitmapBuilder.intoImageView(imageView);
     }
 
     @Override

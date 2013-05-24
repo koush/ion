@@ -2,14 +2,22 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.TextUtils;
 import android.widget.ImageView;
+import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.ion.bitmap.Transform;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by koush on 5/23/13.
@@ -33,13 +41,16 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
 
     @Override
     public Future<Bitmap> intoImageView(ImageView imageView) {
-        ion.pendingViews.remove(imageView);
+        assert Thread.currentThread() == Looper.getMainLooper().getThread();
 
         final String url = builder.request.getUri().toString();
+        ion.pendingViews.put(imageView, url);
 
         final SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
         BitmapDrawable bd = builder.ion.bitmapCache.getDrawable(url);
         if (bd != null) {
+            if (imageView != null)
+                imageView.setImageDrawable(bd);
             ret.setComplete(bd.getBitmap());
             return ret;
         }
@@ -52,19 +63,28 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         }
         final ArrayList<SimpleFuture<BitmapDrawable>> pendingDownloads = pd;
 
+        // to post it all back onto the ui thread.
         final WeakReference<ImageView> iv = new WeakReference<ImageView>(imageView);
         SimpleFuture<BitmapDrawable> waiter = new SimpleFuture<BitmapDrawable>();
         waiter.setCallback(new FutureCallback<BitmapDrawable>() {
             @Override
-            public void onCompleted(Exception e, BitmapDrawable result) {
+            public void onCompleted(final Exception e, final BitmapDrawable result) {
+                // see if the imageview is still alive
+                ImageView imageView = iv.get();
+                if (imageView == null)
+                    return;
+
+                // see if it's still waiting for the same url as before
+                String waitingUrl = ion.pendingViews.get(imageView);
+                if (!TextUtils.equals(waitingUrl, url))
+                    return;
                 if (e != null) {
                     ret.setComplete(e);
                     return;
                 }
 
-                ImageView imageView = iv.get();
-                if (imageView != null)
-                    imageView.setImageDrawable(result);
+                ion.pendingViews.remove(imageView);
+                imageView.setImageDrawable(result);
                 ret.setComplete(result.getBitmap());
             }
         });
@@ -74,24 +94,44 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         if (!needsLoad)
             return ret;
 
-        builder.execute(new BitmapBody()).setCallback(new FutureCallback<Bitmap>() {
+        builder.setHandler(null);
+        final Handler handler = new Handler(Looper.getMainLooper());
+        builder.execute(new ByteArrayBody()).setCallback(new FutureCallback<byte[]>() {
             @Override
-            public void onCompleted(Exception e, Bitmap result) {
+            public void onCompleted(Exception e, byte[] result) {
                 if (e != null) {
                     ret.setComplete(e);
                     return;
                 }
 
-                IonBitmapCache.ZombieDrawable zd = ion.bitmapCache.put(url, result);
+                final ByteArrayInputStream bin = new ByteArrayInputStream(result);
 
-                while (pendingDownloads.size() > 0) {
-                    pendingDownloads.remove(0).setComplete(zd.cloneAndIncrementRefCounter());
-                }
+                // load the bitmap on a separate thread
+                executorService.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        final Bitmap bmp = ion.bitmapCache.loadBitmapFromStream(bin);
+
+                        // set the bitmap back on the handler thread
+                        AsyncServer.post(handler, new Runnable() {
+                            @Override
+                            public void run() {
+                                IonBitmapCache.ZombieDrawable zd = ion.bitmapCache.put(url, bmp);
+                                while (pendingDownloads.size() > 0) {
+                                    pendingDownloads.remove(0).setComplete(zd.cloneAndIncrementRefCounter());
+                                }
+                            }
+                        });
+                    }
+                });
+
             }
         });
 
         return ret;
     }
+
+    ExecutorService executorService = Executors.newFixedThreadPool(3);
 
     @Override
     public Future<Bitmap> asBitmap() {

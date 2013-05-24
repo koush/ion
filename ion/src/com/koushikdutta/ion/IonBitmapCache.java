@@ -5,13 +5,19 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.WindowManager;
 import com.koushikdutta.ion.bitmap.DrawableCache;
 import com.koushikdutta.ion.bitmap.LruBitmapCache;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 
 /**
@@ -39,7 +45,47 @@ class IonBitmapCache {
     }
 
     ZombieDrawable put(String url, Bitmap bitmap) {
+        if (bitmap == null)
+            return null;
         return new ZombieDrawable(url, bitmap);
+    }
+
+    boolean useBitmapScaling = true;
+    Bitmap loadBitmapFromStream(InputStream in) {
+        final int tw = mMetrics.widthPixels;
+        final int th = mMetrics.heightPixels;
+        final int targetWidth = tw <= 0 ? Integer.MAX_VALUE : tw;
+        final int targetHeight = th <= 0 ? Integer.MAX_VALUE : th;
+
+        try {
+            BitmapFactory.Options o = null;
+            if (useBitmapScaling) {
+                o = new BitmapFactory.Options();
+                o.inJustDecodeBounds = true;
+                in.mark(in.available());
+                BitmapFactory.decodeStream(in, null, o);
+                in.reset();
+                int scale = 0;
+                while ((o.outWidth >> scale) > targetWidth || (o.outHeight >> scale) > targetHeight) {
+                    scale++;
+                }
+                o = new BitmapFactory.Options();
+                o.inSampleSize = 1 << scale;
+            }
+            return BitmapFactory.decodeStream(in, null, o);
+        }
+        catch (final IOException e) {
+            return null;
+        }
+        finally {
+            if (in != null) {
+                try {
+                    in.close();
+                }
+                catch (IOException e) {
+                }
+            }
+        }
     }
 
     public BitmapDrawable getDrawable(String url) {
