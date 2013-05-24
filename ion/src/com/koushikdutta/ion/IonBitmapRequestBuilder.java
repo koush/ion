@@ -13,7 +13,6 @@ import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.ion.bitmap.Transform;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -69,6 +68,8 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         waiter.setCallback(new FutureCallback<BitmapDrawable>() {
             @Override
             public void onCompleted(final Exception e, final BitmapDrawable result) {
+                assert Thread.currentThread() == Looper.getMainLooper().getThread();
+
                 // see if the imageview is still alive
                 ImageView imageView = iv.get();
                 if (imageView == null)
@@ -84,8 +85,14 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
                 }
 
                 ion.pendingViews.remove(imageView);
-                imageView.setImageDrawable(result);
-                ret.setComplete(result.getBitmap());
+                if (result == null) {
+                    imageView.setImageBitmap(null);
+                    ret.setComplete((Bitmap)null);
+                }
+                else {
+                    imageView.setImageDrawable(result);
+                    ret.setComplete(result.getBitmap());
+                }
             }
         });
 
@@ -118,7 +125,12 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
                             public void run() {
                                 IonBitmapCache.ZombieDrawable zd = ion.bitmapCache.put(url, bmp);
                                 while (pendingDownloads.size() > 0) {
-                                    pendingDownloads.remove(0).setComplete(zd.cloneAndIncrementRefCounter());
+                                    BitmapDrawable bd;
+                                    if (zd != null)
+                                        bd = zd.cloneAndIncrementRefCounter();
+                                    else
+                                        bd = null;
+                                    pendingDownloads.remove(0).setComplete(bd);
                                 }
                             }
                         });
