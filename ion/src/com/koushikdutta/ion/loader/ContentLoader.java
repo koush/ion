@@ -1,7 +1,8 @@
 package com.koushikdutta.ion.loader;
 
 import android.net.Uri;
-import com.koushikdutta.async.future.FutureDataEmitter;
+import com.koushikdutta.async.DataEmitter;
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.stream.InputStreamDataEmitter;
@@ -14,11 +15,11 @@ import java.io.InputStream;
  * Created by koush on 5/22/13.
  */
 public class ContentLoader implements Loader {
-    private static final class InputStreamDataEmitterFuture extends SimpleFuture<InputStreamDataEmitter> implements FutureDataEmitter<InputStreamDataEmitter> {
+    private static final class InputStreamDataEmitterFuture extends SimpleFuture<DataEmitter> implements Future<DataEmitter> {
     }
 
     @Override
-    public FutureDataEmitter load(Ion ion, AsyncHttpRequest request) {
+    public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request) {
         if (!request.getUri().getScheme().startsWith("content"))
             return null;
 

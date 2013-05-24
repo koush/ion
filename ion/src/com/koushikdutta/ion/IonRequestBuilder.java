@@ -13,7 +13,6 @@ import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.DataParser;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.FutureDataEmitter;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.*;
 import com.koushikdutta.async.stream.OutputStreamDataCallback;
@@ -175,7 +174,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     <T> Future<T> execute(final DataParser<T> parser) {
         final SimpleFuture<T> ret = new SimpleFuture<T>();
         for (Loader loader: ion.config.loaders) {
-            FutureDataEmitter emitter = loader.load(ion, request);
+            Future<DataEmitter> emitter = loader.load(ion, request);
             if (emitter != null) {
                 emitter.setCallback(new FutureCallback<DataEmitter>() {
                     @Override

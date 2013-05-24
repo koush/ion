@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
-import com.koushikdutta.async.future.FutureDataEmitter;
+import com.koushikdutta.async.DataEmitter;
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 
 /**
@@ -9,5 +10,5 @@ import com.koushikdutta.async.http.AsyncHttpRequest;
 public interface Loader {
     // returns a Future if this loader can handle a request
     // otherwise it returns null, and Ion continues to the next loader.
-    public FutureDataEmitter load(Ion ion, AsyncHttpRequest request);
+    public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request);
 }
