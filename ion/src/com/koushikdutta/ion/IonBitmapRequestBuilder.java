@@ -1,5 +1,8 @@
 package com.koushikdutta.ion;
 
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -277,10 +280,9 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         return intoImageView(null);
     }
 
-    Bitmap placeholderBitmap;
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder placeholder(Bitmap bitmap) {
-        placeholderBitmap = bitmap;
+        placeholder(new BitmapDrawable(builder.context.get().getResources(), bitmap));
         return this;
     }
 
@@ -291,17 +293,15 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         return this;
     }
 
-    int placeholderResourceId;
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder placeholder(int resourceId) {
-        placeholderResourceId = resourceId;
+        placeholder(builder.context.get().getResources().getDrawable(resourceId));
         return this;
     }
 
-    Bitmap errorBitmap;
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder error(Bitmap bitmap) {
-        errorBitmap = bitmap;
+        error(new BitmapDrawable(builder.context.get().getResources(), bitmap));
         return this;
     }
 
@@ -312,47 +312,30 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         return this;
     }
 
-    int errorResourceId;
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder error(int resourceId) {
-        errorResourceId = resourceId;
+        error(builder.context.get().getResources().getDrawable(resourceId));
         return this;
     }
 
-    private static void setImageView(ImageView imageView, Bitmap bitmap, Drawable drawable, int drawableResource) {
+    private static void setImageView(ImageView imageView, Drawable drawable) {
         if (imageView == null)
             return;
-        if (bitmap != null) {
-            imageView.setImageBitmap(bitmap);
-            return;
-        }
-
-        if (drawable != null) {
-            imageView.setImageDrawable(drawable);
-            return;
-        }
-
-        if (0 != drawableResource) {
-            imageView.setImageResource(drawableResource);
-            return;
-        }
-
-        imageView.setImageBitmap(null);
-
+        imageView.setImageDrawable(drawable);
     }
 
     private void setPlaceholder(ImageView imageView) {
         if (imageView == null)
             return;
         doAnimation(imageView, loadAnimation);
-        setImageView(imageView, placeholderBitmap, placeholderDrawable, placeholderResourceId);
+        setImageView(imageView, placeholderDrawable);
     }
 
     private void setErrorImage(ImageView imageView) {
         if (imageView == null)
             return;
         doAnimation(imageView, inAnimation);
-        setImageView(imageView, errorBitmap, errorDrawable, errorResourceId);
+        setImageView(imageView, errorDrawable);
     }
 
     Animation inAnimation;
