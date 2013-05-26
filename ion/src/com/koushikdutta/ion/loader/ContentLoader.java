@@ -15,7 +15,7 @@ import java.io.InputStream;
  * Created by koush on 5/22/13.
  */
 public class ContentLoader implements Loader {
-    private static final class InputStreamDataEmitterFuture extends SimpleFuture<DataEmitter> implements Future<DataEmitter> {
+    private static final class InputStreamDataEmitterFuture extends SimpleFuture<DataEmitter> {
     }
 
     @Override

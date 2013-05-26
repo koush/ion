@@ -1,8 +1,8 @@
-package com.koushikdutta.ion.bitmap;
+package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 
-public class LruBitmapCache extends LruCache<String, Bitmap> {
+class LruBitmapCache extends LruCache<String, Bitmap> {
     public LruBitmapCache(int maxSize) {
         super(maxSize);
     }

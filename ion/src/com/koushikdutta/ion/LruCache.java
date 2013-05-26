@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.koushikdutta.ion.bitmap;
+package com.koushikdutta.ion;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,7 +26,7 @@ import java.util.Map;
  * framework's implementation. See the framework SDK documentation for a class
  * overview.
  */
-public class LruCache<K, V> {
+class LruCache<K, V> {
     private final LinkedHashMap<K, V> map;
 
     /** Size of this cache in units. Not necessarily the number of elements. */

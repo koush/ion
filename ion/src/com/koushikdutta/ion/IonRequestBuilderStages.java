@@ -1,7 +1,9 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.view.animation.Animation;
 import android.widget.ImageView;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.ion.bitmap.Transform;
@@ -54,6 +56,14 @@ public class IonRequestBuilderStages {
 
     public static interface IonMutableBitmapRequestBuilder extends IonBitmapFutureRequestBuilder {
         public IonMutableBitmapRequestBuilder transform(Transform transform);
+        public IonMutableBitmapRequestBuilder placeholder(Bitmap bitmap);
+        public IonMutableBitmapRequestBuilder placeholder(Drawable drawable);
+        public IonMutableBitmapRequestBuilder placeholder(int resourceId);
+        public IonMutableBitmapRequestBuilder error(Bitmap bitmap);
+        public IonMutableBitmapRequestBuilder error(Drawable drawable);
+        public IonMutableBitmapRequestBuilder error(int resourceId);
+        public IonMutableBitmapRequestBuilder animateIn(Animation in);
+        public IonMutableBitmapRequestBuilder animateLoad(Animation load);
     }
 
     public static interface IonBitmapFutureRequestBuilder {

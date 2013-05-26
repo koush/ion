@@ -14,7 +14,7 @@ import java.io.File;
  * Created by koush on 5/22/13.
  */
 public class FileLoader implements Loader {
-    private static final class FileFuture extends SimpleFuture<DataEmitter> implements Future<DataEmitter> {
+    private static final class FileFuture extends SimpleFuture<DataEmitter> {
     }
 
     @Override

@@ -9,13 +9,8 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.WindowManager;
-import com.koushikdutta.ion.bitmap.DrawableCache;
-import com.koushikdutta.ion.bitmap.LruBitmapCache;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
@@ -44,10 +39,10 @@ class IonBitmapCache {
         mResources = new Resources(mgr, mMetrics, ion.getContext().getResources().getConfiguration());
     }
 
-    ZombieDrawable put(String url, Bitmap bitmap) {
+    ZombieDrawable put(String key, Bitmap bitmap) {
         if (bitmap == null)
             return null;
-        return new ZombieDrawable(url, bitmap);
+        return new ZombieDrawable(key, bitmap);
     }
 
     boolean useBitmapScaling = true;
@@ -85,19 +80,19 @@ class IonBitmapCache {
         }
     }
 
-    public BitmapDrawable getDrawable(String url) {
-        if (TextUtils.isEmpty(url))
+    public BitmapDrawable getDrawable(String key) {
+        if (TextUtils.isEmpty(key))
             return null;
 
-        ZombieDrawable live = mLiveCache.get(url);
+        ZombieDrawable live = mLiveCache.get(key);
         if (live != null)
             return live.cloneAndIncrementRefCounter();
 
-        Bitmap bitmap = mDeadCache.remove(url);
+        Bitmap bitmap = mDeadCache.remove(key);
         if (bitmap == null)
             return null;
 
-        return new ZombieDrawable(url, bitmap);
+        return new ZombieDrawable(key, bitmap);
     }
 
 
@@ -115,28 +110,28 @@ class IonBitmapCache {
      *
      */
     class ZombieDrawable extends BitmapDrawable {
-        public ZombieDrawable(final String url, final Bitmap bitmap) {
-            this(url, bitmap, new Brains());
+        public ZombieDrawable(final String key, final Bitmap bitmap) {
+            this(key, bitmap, new Brains());
         }
 
         Brains mBrains;
-        private ZombieDrawable(final String url, final Bitmap bitmap, Brains brains) {
+        private ZombieDrawable(final String key, final Bitmap bitmap, Brains brains) {
             super(mResources, bitmap);
-            mUrl = url;
+            this.key = key;
             mBrains = brains;
 
             mAllCache.add(bitmap);
-            mDeadCache.remove(url);
-            mLiveCache.put(url, this);
+            mDeadCache.remove(key);
+            mLiveCache.put(key, this);
 
             mBrains.mRefCounter++;
         }
 
         public ZombieDrawable cloneAndIncrementRefCounter() {
-            return new ZombieDrawable(mUrl, getBitmap(), mBrains);
+            return new ZombieDrawable(key, getBitmap(), mBrains);
         }
 
-        String mUrl;
+        String key;
 
         @Override
         protected void finalize() throws Throwable {
@@ -145,16 +140,16 @@ class IonBitmapCache {
             mBrains.mRefCounter--;
             if (mBrains.mRefCounter == 0) {
                 if (!mBrains.mHeadshot)
-                    mDeadCache.put(mUrl, getBitmap());
+                    mDeadCache.put(key, getBitmap());
                 mAllCache.remove(getBitmap());
-                mLiveCache.remove(mUrl);
+                mLiveCache.remove(key);
             }
         }
 
         // kill this zombie, forever.
         public void headshot() {
             mBrains.mHeadshot = true;
-            mLiveCache.remove(mUrl);
+            mLiveCache.remove(key);
             mAllCache.remove(getBitmap());
         }
     }
