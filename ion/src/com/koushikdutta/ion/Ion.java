@@ -99,7 +99,6 @@ public class Ion {
     // but don't hold references to the ImageView...
     WeakHashMap<ImageView, String> pendingViews = new WeakHashMap<ImageView, String>();
 
-
     // track the downloads and transforms that are pending.
     // but don't maintain a reference.
     // The reference stays alive because the reference chain looks as follows:

@@ -31,12 +31,14 @@ import java.util.concurrent.Executors;
 public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitmapRequestBuilder {
     IonRequestBuilder builder;
     Ion ion;
+
     public IonBitmapRequestBuilder(IonRequestBuilder builder) {
         this.builder = builder;
         ion = builder.ion;
     }
 
     ArrayList<Transform> transforms;
+
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder transform(Transform transform) {
         if (transforms == null)
@@ -50,19 +52,23 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         Handler handler;
         Ion ion;
         String urlKey;
+
         public ByteArrayToBitmapFuture(Ion ion, Handler handler, String urlKey, ExecutorService executorService) {
             this.executorService = executorService;
             this.handler = handler;
             this.urlKey = urlKey;
             this.ion = ion;
         }
+
         class Setter implements Runnable {
             Bitmap bmp;
             Exception e;
+
             Setter(Exception e, Bitmap bmp) {
                 this.bmp = bmp;
                 this.e = e;
             }
+
             @Override
             public void run() {
                 ion.pendingDownloads.remove(urlKey);
@@ -74,6 +80,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
                 e = null;
             }
         }
+
         @Override
         public void onCompleted(Exception e, byte[] result) {
             assert Thread.currentThread() == Looper.getMainLooper().getThread();
@@ -108,6 +115,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         Ion ion;
         String transformKey;
         ArrayList<Transform> transforms;
+
         public BitmapToBitmap(Ion ion, Handler handler, String transformKey, ArrayList<Transform> transforms, ExecutorService executorService) {
             this.executorService = executorService;
             this.handler = handler;
@@ -115,13 +123,16 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
             this.transforms = transforms;
             this.ion = ion;
         }
+
         class Setter implements Runnable {
             Bitmap bmp;
             Exception e;
+
             Setter(Exception e, Bitmap bmp) {
                 this.bmp = bmp;
                 this.e = e;
             }
+
             @Override
             public void run() {
                 ion.pendingTransforms.remove(transformKey);
@@ -147,7 +158,8 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
                             tmpBitmap = transform.transform(tmpBitmap);
                         }
                         AsyncServer.post(handler, new Setter(null, tmpBitmap));
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e) {
                         AsyncServer.post(handler, new Setter(e, null));
                     }
                 }
@@ -177,6 +189,9 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
     public Future<Bitmap> intoImageView(ImageView imageView) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
 
+        if (imageView != null)
+            ion.pendingViews.remove(imageView);
+
 //        ResponseCacheMiddleware cache = ion.responseCache;
 //        IonLog.i("cache hits: " + cache.getCacheHitCount());
 //        IonLog.i("cond cache hits: " + cache.getConditionalCacheHitCount());
@@ -184,7 +199,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         // determine the key for this bitmap after all transformations
         String tmpKey = builder.request.getUri().toString();
         if (transforms != null) {
-            for (Transform transform: transforms) {
+            for (Transform transform : transforms) {
                 tmpKey += transform.getKey();
             }
         }
@@ -196,15 +211,16 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         // see if this request can be fulfilled from the cache
         BitmapDrawable bd = builder.ion.bitmapCache.getDrawable(transformKey);
         if (bd != null) {
-            if (imageView != null)
-                imageView.setImageDrawable(bd);
+            setImageView(imageView, bd);
+            doAnimation(imageView, null);
             ret.setComplete(bd.getBitmap());
             return ret;
         }
 
         // need to either load/transform this, so set up the loading images, and mark this view
         // as in progress.
-        ion.pendingViews.put(imageView, transformKey);
+        if (imageView != null)
+            ion.pendingViews.put(imageView, transformKey);
         setPlaceholder(imageView);
 
         final Handler handler = new Handler();
@@ -214,8 +230,8 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         ByteArrayToBitmapFuture pendingDownload = ion.pendingDownloads.get(urlKey);
         if (pendingDownload == null) {
             pendingDownload = new ByteArrayToBitmapFuture(ion, handler, urlKey, executorService);
-            ion.pendingDownloads.put(transformKey, pendingDownload);
-            // allow the bitmap load to cancel the downlaoder
+            ion.pendingDownloads.put(urlKey, pendingDownload);
+            // allow the bitmap load to cancel the downloader
             pendingDownload.setMutateFuture(builder.execute(new ByteArrayBody()));
         }
 
@@ -242,7 +258,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
                 // see if the imageview is still alive and cares about this result
                 ImageView imageView = iv.get();
                 if (imageView != null) {
-                    // see if it's still waiting for the same url key as before
+                    // see if the ImageView is still waiting for the same transform key as before
                     String waitingKey = ion.pendingViews.get(imageView);
                     if (!TextUtils.equals(waitingKey, transformKey))
                         imageView = null;
@@ -287,6 +303,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
     }
 
     Drawable placeholderDrawable;
+
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder placeholder(Drawable drawable) {
         placeholderDrawable = drawable;
@@ -306,6 +323,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
     }
 
     Drawable errorDrawable;
+
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder error(Drawable drawable) {
         errorDrawable = drawable;
@@ -339,6 +357,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
     }
 
     Animation inAnimation;
+
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder animateIn(Animation in) {
         inAnimation = in;
@@ -346,6 +365,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
     }
 
     Animation loadAnimation;
+
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder animateLoad(Animation load) {
         loadAnimation = load;

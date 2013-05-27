@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.DataEmitter;
+import com.koushikdutta.async.DataSink;
+import com.koushikdutta.async.NullDataCallback;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.DataParser;
 import com.koushikdutta.async.future.Future;
@@ -171,22 +173,44 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         });
     }
 
-    <T> Future<T> execute(final DataParser<T> parser) {
-        final SimpleFuture<T> ret = new SimpleFuture<T>();
-        for (Loader loader: ion.config.loaders) {
-            Future<DataEmitter> emitter = loader.load(ion, request);
-            if (emitter != null) {
-                emitter.setCallback(new FutureCallback<DataEmitter>() {
-                    @Override
-                    public void onCompleted(Exception e, DataEmitter result) {
-                        if (e != null) {
-                            postExecute(ret, e, parser);
-                            return;
-                        }
+    private static class ExecuteData<T> {
+        SimpleFuture<T> ret;
+        FutureCallback<DataEmitter> callback;
+        Future<DataEmitter> emitter;
+    }
 
-                        execute(ret, result, parser);
-                    }
-                });
+    <T> Future<T> execute(final DataParser<T> parser) {
+        assert parser != null;
+        final ExecuteData<T> data = new ExecuteData<T>();
+        SimpleFuture<T> ret = data.ret = new SimpleFuture<T>() {
+            @Override
+            protected void cancelCleanup() {
+                try {
+                    DataEmitter emitter = data.emitter.get();
+                    emitter.pause();
+                    emitter.setDataCallback(new NullDataCallback());
+                    if (emitter instanceof DataSink)
+                        ((DataSink)emitter).close();
+                }
+                catch (Exception e) {
+                }
+            }
+        };
+        FutureCallback<DataEmitter> callback = data.callback = new FutureCallback<DataEmitter>() {
+            @Override
+            public void onCompleted(Exception e, DataEmitter result) {
+                if (e != null) {
+                    postExecute(data.ret, e, parser);
+                    return;
+                }
+
+                execute(data.ret, result, parser);
+                assert result.getDataCallback() != null;
+            }
+        };
+        for (Loader loader: ion.config.loaders) {
+            Future<DataEmitter> emitter = data.emitter = loader.load(ion, request, callback);
+            if (emitter != null) {
                 ret.setParent(emitter);
                 return ret;
             }

@@ -3,6 +3,7 @@ package com.koushikdutta.ion.loader;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.FileDataEmitter;
 import com.koushikdutta.async.future.Future;
+import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.ion.Ion;
@@ -18,11 +19,18 @@ public class FileLoader implements Loader {
     }
 
     @Override
-    public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request) {
+    public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<DataEmitter> callback) {
         if (!request.getUri().getScheme().startsWith("file"))
             return null;
-        FileFuture ret = new FileFuture();
-        ret.setComplete(new FileDataEmitter(ion.getHttpClient().getServer(), new File(request.getUri())));
+        final FileFuture ret = new FileFuture();
+        ion.getHttpClient().getServer().post(new Runnable() {
+            @Override
+            public void run() {
+                FileDataEmitter emitter = new FileDataEmitter(ion.getHttpClient().getServer(), new File(request.getUri()));
+                ret.setComplete(emitter);
+                callback.onCompleted(null, emitter);
+            }
+        });
         return ret;
     }
 }

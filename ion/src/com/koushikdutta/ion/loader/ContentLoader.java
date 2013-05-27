@@ -3,6 +3,7 @@ package com.koushikdutta.ion.loader;
 import android.net.Uri;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.future.Future;
+import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.stream.InputStreamDataEmitter;
@@ -19,19 +20,26 @@ public class ContentLoader implements Loader {
     }
 
     @Override
-    public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request) {
+    public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<DataEmitter> callback) {
         if (!request.getUri().getScheme().startsWith("content"))
             return null;
 
-        InputStreamDataEmitterFuture ret = new InputStreamDataEmitterFuture();
-        try {
-            InputStream stream = ion.getContext().getContentResolver().openInputStream(Uri.parse(request.getUri().toString()));
-            InputStreamDataEmitter emitter = new InputStreamDataEmitter(ion.getHttpClient().getServer(), stream);
-            ret.setComplete(emitter);
-        }
-        catch (Exception e) {
-            ret.setComplete(e);
-        }
+        final InputStreamDataEmitterFuture ret = new InputStreamDataEmitterFuture();
+        ion.getHttpClient().getServer().post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    InputStream stream = ion.getContext().getContentResolver().openInputStream(Uri.parse(request.getUri().toString()));
+                    InputStreamDataEmitter emitter = new InputStreamDataEmitter(ion.getHttpClient().getServer(), stream);
+                    ret.setComplete(emitter);
+                    callback.onCompleted(null, emitter);
+                }
+                catch (Exception e) {
+                    ret.setComplete(e);
+                    callback.onCompleted(e, null);
+                }
+            }
+        });
         return ret;
     }
 }
