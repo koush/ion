@@ -109,7 +109,7 @@ public class IonRequestBuilderStages {
          * @param file Multipart file to send
          * @return
          */
-        public IonFormMultipartBodyRequestBuilder setMultiparFile(String name, File file);
+        public IonFormMultipartBodyRequestBuilder setMultipartFile(String name, File file);
     }
 
     // set additional body parameters for url form encoded

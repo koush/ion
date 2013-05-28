@@ -203,7 +203,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
             @Override
             protected void transform(DataEmitter emitter) throws Exception {
                 super.transform(emitter);
-                parser.parse(emitter, null).setCallback(new FutureCallback<T>() {
+                parser.parse(emitter).setCallback(new FutureCallback<T>() {
                     @Override
                     public void onCompleted(Exception e, T result) {
                         postExecute(self, e, result);
@@ -247,20 +247,20 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         }
     }
 
-    ArrayList<NameValuePair> bodyParameters;
+    Multimap bodyParameters;
     @Override
     public IonRequestBuilderStages.IonUrlEncodedBodyRequestBuilder setBodyParameter(String name, String value) {
         if (bodyParameters == null) {
-            bodyParameters = new ArrayList<NameValuePair>();
+            bodyParameters = new Multimap();
             setBody(new UrlEncodedFormBody(bodyParameters));
         }
-        bodyParameters.add(new BasicNameValuePair(name, value));
+        bodyParameters.add(name, value);
         return this;
     }
 
     MultipartFormDataBody multipartBody;
     @Override
-    public IonRequestBuilderStages.IonFormMultipartBodyRequestBuilder setMultiparFile(String name, File file) {
+    public IonRequestBuilderStages.IonFormMultipartBodyRequestBuilder setMultipartFile(String name, File file) {
         if (multipartBody == null) {
             multipartBody = new MultipartFormDataBody();
             setBody(multipartBody);
