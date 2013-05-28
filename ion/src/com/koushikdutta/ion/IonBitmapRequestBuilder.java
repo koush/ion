@@ -1,22 +1,19 @@
 package com.koushikdutta.ion;
 
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorSet;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.ion.bitmap.Transform;
 
 import java.io.ByteArrayInputStream;
@@ -47,7 +44,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         return this;
     }
 
-    static class ByteArrayToBitmapFuture extends MutateFuture<Bitmap, byte[]> {
+    static class ByteArrayToBitmapFuture extends MutateFuture<Bitmap, ByteBufferList> {
         ExecutorService executorService;
         Handler handler;
         Ion ion;
@@ -82,7 +79,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
         }
 
         @Override
-        public void onCompleted(Exception e, byte[] result) {
+        public void onCompleted(Exception e, ByteBufferList result) {
             assert Thread.currentThread() == Looper.getMainLooper().getThread();
 
             if (e != null) {
@@ -90,7 +87,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
                 return;
             }
 
-            final ByteArrayInputStream bin = new ByteArrayInputStream(result);
+            final ByteArrayInputStream bin = new ByteArrayInputStream(result.getAllByteArray());
 
             executorService.execute(new Runnable() {
                 @Override
@@ -232,7 +229,7 @@ public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutab
             pendingDownload = new ByteArrayToBitmapFuture(ion, handler, urlKey, executorService);
             ion.pendingDownloads.put(urlKey, pendingDownload);
             // allow the bitmap load to cancel the downloader
-            pendingDownload.setMutateFuture(builder.execute(new ByteArrayBody()));
+            pendingDownload.setMutateFuture(builder.execute(new ByteBufferListParser()));
         }
 
         // find/create the future for the bitmap transform

@@ -10,21 +10,23 @@ import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.DataSink;
-import com.koushikdutta.async.NullDataCallback;
+import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
-import com.koushikdutta.async.callback.DataParser;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
+import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.*;
-import com.koushikdutta.async.stream.OutputStreamDataCallback;
+import com.koushikdutta.async.parser.AsyncParser;
+import com.koushikdutta.async.parser.JSONObjectParser;
+import com.koushikdutta.async.parser.StringParser;
+import com.koushikdutta.async.stream.OutputStreamDataSink;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
@@ -151,136 +153,92 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
             AsyncServer.post(request.getHandler(), runner);
     }
 
-    private <T> void postExecute(final SimpleFuture<T> future, Exception ex, final DataParser<T> body) {
-        T value = null;
-        try {
-            if (ex == null)
-                value = body.get();
-        }
-        catch (Exception e) {
-            ex = e;
-        }
-        postExecute(future, ex, value);
-    }
-
-    private <T> void execute(final SimpleFuture<T> ret, final DataEmitter emitter, final DataParser<T> parser) {
-        emitter.setDataCallback(parser);
-        emitter.setEndCallback(new CompletedCallback() {
-            @Override
-            public void onCompleted(Exception ex) {
-                postExecute(ret, ex, parser);
-            }
-        });
-    }
-
-    private static class ExecuteData<T> {
-        SimpleFuture<T> ret;
-        FutureCallback<DataEmitter> callback;
-        Future<DataEmitter> emitter;
-    }
-
-    <T> Future<T> execute(final DataParser<T> parser) {
-        assert parser != null;
-        final ExecuteData<T> data = new ExecuteData<T>();
-        SimpleFuture<T> ret = data.ret = new SimpleFuture<T>() {
-            @Override
-            protected void cancelCleanup() {
-                try {
-                    DataEmitter emitter = data.emitter.get();
-                    emitter.pause();
-                    emitter.setDataCallback(new NullDataCallback());
-                    if (emitter instanceof DataSink)
-                        ((DataSink)emitter).close();
-                }
-                catch (Exception e) {
-                }
-            }
-        };
-        FutureCallback<DataEmitter> callback = data.callback = new FutureCallback<DataEmitter>() {
-            @Override
-            public void onCompleted(Exception e, DataEmitter result) {
-                if (e != null) {
-                    postExecute(data.ret, e, parser);
-                    return;
-                }
-
-                execute(data.ret, result, parser);
-                assert result.getDataCallback() != null;
-            }
-        };
+    private <T> void getLoaderEmitter(TransformFuture<T, DataEmitter> ret) {
         for (Loader loader: ion.config.loaders) {
-            Future<DataEmitter> emitter = data.emitter = loader.load(ion, request, callback);
-            if (emitter != null) {
-                ret.setParent(emitter);
-                return ret;
-            }
+            Future<DataEmitter> emitter = loader.load(ion, request, ret);
+            if (emitter != null)
+                return;
         }
         ret.setComplete(new Exception("Unknown uri scheme"));
+    }
+
+    private static class EmitterTransform<T> extends TransformFuture<T, DataEmitter> {
+        private DataEmitter emitter;
+        @Override
+        protected void cancelCleanup() {
+            if (emitter != null)
+                emitter.close();
+        }
+
+        @Override
+        protected void transform(DataEmitter emitter) throws Exception {
+            this.emitter = emitter;
+        }
+    }
+
+    <T> Future<T> execute(final DataSink sink, final boolean close, final T result) {
+        EmitterTransform<T> ret = new EmitterTransform<T>() {
+            TransformFuture<T, DataEmitter> self = this;
+            @Override
+            protected void transform(DataEmitter emitter) throws Exception {
+                super.transform(emitter);
+                Util.pump(emitter, sink, new CompletedCallback() {
+                    @Override
+                    public void onCompleted(Exception ex) {
+                        if (close)
+                            sink.close();
+                        postExecute(self, ex, result);
+                    }
+                });
+            }
+        };
+        getLoaderEmitter(ret);
+        return ret;
+    }
+
+    <T> Future<T> execute(final AsyncParser<T> parser) {
+        assert parser != null;
+        EmitterTransform<T> ret = new EmitterTransform<T>() {
+            TransformFuture<T, DataEmitter> self = this;
+            @Override
+            protected void transform(DataEmitter emitter) throws Exception {
+                super.transform(emitter);
+                parser.parse(emitter, null).setCallback(new FutureCallback<T>() {
+                    @Override
+                    public void onCompleted(Exception e, T result) {
+                        postExecute(self, e, result);
+                    }
+                });
+            }
+        };
+        getLoaderEmitter(ret);
         return ret;
     }
 
     @Override
     public Future<JSONObject> asJSONObject() {
-        return execute(new JSONObjectBody());
+        return execute(new JSONObjectParser());
     }
 
     @Override
     public Future<String> asString() {
-        return execute(new StringBody());
-    }
-
-    private static class OutputStreamWriter extends OutputStreamDataCallback implements DataParser<OutputStream> {
-        private boolean close;
-        public OutputStreamWriter(OutputStream outputStream, boolean close) {
-            super(outputStream);
-            this.close = close;
-        }
-        @Override
-        public OutputStream get() {
-            OutputStream ret = getOutputStream();
-            if (close) {
-                try {
-                    ret.close();
-                }
-                catch (Exception e) {
-                }
-            }
-            return ret;
-        }
+        return execute(new StringParser());
     }
 
     @Override
     public Future<OutputStream> write(OutputStream outputStream, boolean close) {
-        return execute(new OutputStreamWriter(outputStream, close));
+        return execute(new OutputStreamDataSink(outputStream), close, outputStream);
     }
 
     @Override
     public Future<OutputStream> write(OutputStream outputStream) {
-        return execute(new OutputStreamWriter(outputStream, true));
-    }
-
-    private static class FileWriter extends OutputStreamDataCallback implements DataParser<File> {
-        private File file;
-        public FileWriter(File file) throws IOException {
-            super(new FileOutputStream(file));
-            this.file = file;
-        }
-        @Override
-        public File get() {
-            OutputStream ret = getOutputStream();
-            try {
-                ret.close();
-            }
-            catch (Exception e) {
-            }
-            return file;
-        }
+        return execute(new OutputStreamDataSink(outputStream), true, outputStream);
     }
 
     @Override
     public Future<File> write(File file) {
         try {
-            return execute(new FileWriter(file));
+            return execute(new OutputStreamDataSink(new FileOutputStream(file)), true, file);
         }
         catch (Exception e) {
             SimpleFuture<File> ret = new SimpleFuture<File>();
