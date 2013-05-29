@@ -54,4 +54,19 @@ public interface Future<T> extends Cancellable, java.util.concurrent.Future<T> {
      */
     public Future<T> setCallback(FutureCallback<T> callback);
 }
+
+public static interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, IonBitmapImageViewFutureRequestBuilder {
+    /**
+     * Execute the request and get the result as a String
+     * @return
+     */
+    public Future<String> asString();
+
+    /**
+     * Execute the request and get the result as a JSONObject
+     * @return
+     */
+    public Future<JSONObject> asJSONObject();
+
+...
 ```
