@@ -1,7 +1,7 @@
 #### Get JSON
 
 ```java
-Ion.with(context).load('http://example.com/thing.json")
+Ion.with(context).load("http://example.com/thing.json")
 .asJSONObject()
 .setCallback(new FutureCallback<JSONObject>() {
    @Override
@@ -36,7 +36,7 @@ Ion.with(context).load("http://example.com/cm-11-m7.zip")
 
 ```java
 Images too
-Ion.with(context).load('http://example.com/image.png")
+Ion.with(context).load("http://example.com/image.png")
 .withBitmap()
 .placeholder(R.id.placeholder)
 .intoImageView(imageView);
