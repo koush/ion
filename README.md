@@ -66,8 +66,21 @@ Ion.with(context).load("http://example.co/cm-11-m7.zip")
 ```java
 Ion.with(context).load("http://example.com/image.png")
 .withBitmap()
-.placeholder(R.id.placeholder)
+.placeholder(R.drawable.placeholder_image
+.error(R.drawable.error_image)
+.animateLoad(spinAnimation)
+.animateIn(fadeInAnimation)
 .intoImageView(imageView);
+```
+
+#### Setting Headers
+
+```java
+Ion.with(context).load("http://example.com/test.txt")
+// set the header
+.setHeader("foo", "bar")
+.asString()
+.setCallback(...)
 ```
 
 #### Futures
