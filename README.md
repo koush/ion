@@ -81,15 +81,19 @@ public interface Future<T> extends Cancellable, java.util.concurrent.Future<T> {
 }
 
 Future<String> string = Ion.with(context)
-    .load("http://example.com/string.txt").asString();
+    .load("http://example.com/string.txt")
+    .asString();
 
 Future<JSONObject> json = Ion.with(context)
-    .load("http://example.com/json.json").asJSONObject();
+    .load("http://example.com/json.json")
+    .asJSONObject();
 
 Future<File> file = Ion.with(context)
-    .load("http://example.com/file.zip").write(new File("/sdcard/file.zip"));
+    .load("http://example.com/file.zip")
+    .write(new File("/sdcard/file.zip"));
 
 Future<Bitmap> bitmap = Ion.with(context)
-    .load("http://example.com/image.png").intoImageView(imageView);
+    .load("http://example.com/image.png")
+    .intoImageView(imageView);
 
 ```
