@@ -66,7 +66,7 @@ public class IonRequestBuilderStages {
         public IonBodyParamsRequestBuilder progress(ProgressCallback callback);
 
         /**
-         * {pst }the Future callback onto the given handler. Not specifying this explicitly
+         * Post the Future callback onto the given handler. Not specifying this explicitly
          * results in the default handle of Thread.currentThread to be used, if one exists.
          * @param handler Handler to use or null
          * @return
