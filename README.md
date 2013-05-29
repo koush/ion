@@ -11,7 +11,7 @@
  * All operations return a [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) and can be cancelled
  * Automatically cancels operations when the calling Activity finishes
  * Manages invocation back onto the UI thread
- * ImageView loading, caching, and memory management
+ * ImageView loading, caching, and memory management (including ListView and convertView recycling)
  * Supports file:/, http:/, and content:/ URIs
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
 
