@@ -2,9 +2,15 @@ package com.example.ion.test;
 
 import android.test.AndroidTestCase;
 import android.util.Log;
+import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
+import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.Multimap;
+import com.koushikdutta.async.http.server.AsyncHttpServer;
+import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
+import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
+import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.IonRequestBuilderStages.IonBodyParamsRequestBuilder.ProgressCallback;
 import org.json.JSONObject;
@@ -26,7 +32,9 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testString() throws Exception {
-        assertNotNull(Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json").asString().get());
+        assertNotNull(Ion.with(getContext())
+                .load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+                .asString().get());
     }
 
     public void testStringWithCallback() throws Exception {
@@ -56,6 +64,7 @@ public class HttpTests extends AndroidTestCase {
         Ion.with(getContext())
                 .load("https://github.com/koush/AndroidAsync/raw/master/AndroidAsyncTest/testdata/6691924d7d24237d3b3679310157d640")
                 .setHandler(null)
+                .setTimeout(600000)
                 .progress(new ProgressCallback() {
                     @Override
                     public void onProgress(int downloaded, int total) {
@@ -75,7 +84,7 @@ public class HttpTests extends AndroidTestCase {
                         semaphore.release();
                     }
                 });
-        assertTrue(semaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
+        assertTrue(semaphore.tryAcquire(600000, TimeUnit.MILLISECONDS));
         assertTrue(progressSemaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
     }
 
@@ -124,5 +133,25 @@ public class HttpTests extends AndroidTestCase {
             Log.i("CookieTest", cookie.getName() + ": " + cookie.getValue());
         }
         assertTrue(ion.getCookieMiddleware().getCookieManager().get(URI.create("http://google.com"), new Multimap()).size() > 0);
+    }
+
+
+    public void testGroupCancel() throws Exception {
+        Ion.getDefault(getContext()).cancelAll();
+        assertEquals(Ion.getDefault(getContext()).getPendingRequestCount(getContext()), 0);
+
+        Ion.with(getContext())
+                .load("http://koush.clockworkmod.com/test/hang")
+                .setHandler(null)
+                .asJSONObject();
+
+        Thread.sleep(500);
+        Ion.getDefault(getContext()).getHttpClient().getServer().dump();
+
+        Ion.getDefault(getContext()).cancelAll();
+        assertEquals(Ion.getDefault(getContext()).getPendingRequestCount(getContext()), 0);
+
+        Thread.sleep(500);
+        Ion.getDefault(getContext()).getHttpClient().getServer().dump();
     }
 }

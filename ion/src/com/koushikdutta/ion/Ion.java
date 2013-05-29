@@ -1,8 +1,10 @@
 package com.koushikdutta.ion;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
@@ -11,6 +13,7 @@ import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -47,6 +50,83 @@ public class Ion {
         return context;
     }
 
+
+    public void cancelAll(Object group) {
+        FutureSet members;
+        synchronized (this) {
+            members = inFlight.remove(group);
+        }
+
+        if (members == null)
+            return;
+
+        for (Future future: members.keySet()) {
+            if (future != null)
+                future.cancel();
+        }
+    }
+
+    void addFutureInFlight(Future future, Object group) {
+        if (group == null || future == null || future.isDone() || future.isCancelled())
+            return;
+
+        FutureSet members;
+        synchronized (this) {
+            members = inFlight.get(group);
+            if (members == null) {
+                members = new FutureSet();
+                inFlight.put(group, members);
+            }
+        }
+
+        members.put(future, true);
+    }
+
+    public void cancelAll() {
+        ArrayList<Object> groups;
+
+        synchronized (this) {
+            groups = new ArrayList<Object>(inFlight.keySet());
+        }
+
+        for (Object group: groups)
+            cancelAll(group);
+    }
+
+    public void cancelAll(Context context) {
+        cancelAll((Object)context);
+    }
+
+    public int getPendingRequestCount(Object group) {
+        synchronized (this) {
+            FutureSet members = inFlight.get(group);
+            if (members == null)
+                return 0;
+            int ret = 0;
+            for (Future future: members.keySet()) {
+                if (!future.isCancelled() && !future.isDone())
+                    ret++;
+            }
+            return ret;
+        }
+    }
+
+    public void dump() {
+        Log.i(LOGTAG, "Groups: " + inFlight.size());
+        for (FutureSet futures: inFlight.values()) {
+            Log.i(LOGTAG, "Group size: " + futures.size());
+            for (Future future: futures.keySet()) {
+                Log.i(LOGTAG, "" + (future.isDone() || future.isCancelled()));
+            }
+        }
+        httpClient.getServer().dump();
+    }
+
+    static class FutureSet extends WeakHashMap<Future, Boolean> {
+    }
+
+    // maintain a list of futures that are in being processed, allow for bulk cancellation
+    WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
     Context context;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;

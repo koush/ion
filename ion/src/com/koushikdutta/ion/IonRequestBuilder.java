@@ -157,13 +157,18 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     private <T> void getLoaderEmitter(TransformFuture<T, LoaderEmitter> ret) {
         for (Loader loader: ion.config.loaders) {
             Future<DataEmitter> emitter = loader.load(ion, request, ret);
-            if (emitter != null)
+            if (emitter != null) {
+                ret.setParent(emitter);
                 return;
+            }
         }
         ret.setComplete(new Exception("Unknown uri scheme"));
     }
 
     private class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> {
+        public EmitterTransform() {
+            ion.addFutureInFlight(this, context.get());
+        }
         DataEmitter emitter;
         @Override
         protected void cancelCleanup() {
@@ -177,16 +182,22 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
             final ProgressCallback cb = progress;
             final int total = emitter.length();
-            if (cb != null && !(emitter instanceof DataTrackingEmitter)) {
-                FilteredDataEmitter filtered = new FilteredDataEmitter();
-                filtered.setDataEmitter(this.emitter);
-                filtered.setDataTracker(new DataTracker() {
+            if (cb != null) {
+                DataTrackingEmitter tracker;
+                if (!(emitter instanceof DataTrackingEmitter)) {
+                    tracker = new FilteredDataEmitter();
+                    tracker.setDataEmitter(this.emitter);
+                }
+                else {
+                    tracker = (DataTrackingEmitter)this.emitter;
+                }
+                this.emitter = tracker;
+                tracker.setDataTracker(new DataTracker() {
                     @Override
                     public void onData(int totalBytesRead) {
                         cb.onProgress(totalBytesRead, total);
                     }
                 });
-                this.emitter = filtered;
             }
         }
     }

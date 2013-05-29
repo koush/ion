@@ -22,7 +22,10 @@ public class HttpLoader implements Loader {
         return (Future< DataEmitter >)(Future)ion.getHttpClient().execute(request, new HttpConnectCallback() {
             @Override
             public void onConnectCompleted(Exception ex, AsyncHttpResponse response) {
-                callback.onCompleted(ex, new LoaderEmitter(response, response.getHeaders().getContentLength()));
+                int length = -1;
+                if (response != null)
+                    length = response.getHeaders().getContentLength();
+                callback.onCompleted(ex, new LoaderEmitter(response, length));
             }
         });
     }
