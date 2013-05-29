@@ -1,3 +1,19 @@
+*The missing Networking Library for Android*
+
+### Features
+ * Download files, JSON, strings, bitmaps, and more
+ * Post text/plain, application/json, application/x-www-form-urlencoded, multipart/form-data
+ * Easy to use Fluent API
+ * Caching (transparent)
+ * Compression (transparent)
+ * Connection reuse (transparent)
+ * All operations return a [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) and can be cancelled
+ * Automatically cancel calls when an Activity finishes  
+ * Manages invocation back onto the UI thread
+ * ImageView loading, caching, and memory management
+ * Supports file:/, http:/, and content:/ URIs
+ * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O)
+
 #### Get JSON
 
 ```java
