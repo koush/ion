@@ -7,8 +7,9 @@
  * Caching (transparent)
  * Compression (transparent)
  * Connection reuse (transparent)
+ * Cookies (transparent)
  * All operations return a [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) and can be cancelled
- * Automatically cancel calls when an Activity finishes
+ * Automatically cancels operations when the calling Activity finishes
  * Manages invocation back onto the UI thread
  * ImageView loading, caching, and memory management
  * Supports file:/, http:/, and content:/ URIs
