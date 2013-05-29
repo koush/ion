@@ -4,11 +4,14 @@ import android.test.AndroidTestCase;
 import android.util.Log;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.IonRequestBuilderStages.IonBodyParamsRequestBuilder.ProgressCallback;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.net.HttpCookie;
+import java.net.URI;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -107,5 +110,19 @@ public class HttpTests extends AndroidTestCase {
                 .setMultipartParameter("goop", "noop")
                 .asJSONObject().get();
         assertEquals("noop", ret.getString("goop"));
+    }
+
+    public void testCookie() throws Exception {
+        Ion ion = Ion.getDefault(getContext());
+        ion.getCookieMiddleware().getCookieStore().removeAll();
+
+        ion.build(getContext()).load("http://google.com")
+                .asString()
+                .get();
+
+        for (HttpCookie cookie: ion.getCookieMiddleware().getCookieStore().get(URI.create("http://google.com"))) {
+            Log.i("CookieTest", cookie.getName() + ": " + cookie.getValue());
+        }
+        assertTrue(ion.getCookieMiddleware().getCookieManager().get(URI.create("http://google.com"), new Multimap()).size() > 0);
     }
 }

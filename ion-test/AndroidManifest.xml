@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.koushikdutta.ion.test">
     <uses-sdk
-            android:minSdkVersion="8"
+            android:minSdkVersion="9"
             android:targetSdkVersion="17"/>
     <instrumentation android:name="android.test.InstrumentationTestRunner"
                      android:targetPackage="com.koushikdutta.ion.test"/>

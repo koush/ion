@@ -5,6 +5,7 @@ import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.ion.cookie.CookieMiddleware;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
@@ -47,6 +48,7 @@ public class Ion {
     }
 
     Context context;
+    CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
     AsyncHttpClient httpClient;
     IonBitmapCache bitmapCache;
@@ -60,6 +62,7 @@ public class Ion {
         catch (Exception e) {
             IonLog.w("unable to set up response cache", e);
         }
+        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(this.context));
 
         bitmapCache = new IonBitmapCache(this);
 
@@ -67,6 +70,10 @@ public class Ion {
         .addLoader(new HttpLoader())
         .addLoader(new ContentLoader())
         .addLoader(new FileLoader());
+    }
+
+    public CookieMiddleware getCookieMiddleware() {
+        return cookieMiddleware;
     }
 
     public AsyncHttpClient getHttpClient() {
