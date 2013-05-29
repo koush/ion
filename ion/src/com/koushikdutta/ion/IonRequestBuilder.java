@@ -21,6 +21,7 @@ import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.JSONObjectParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
+import com.koushikdutta.ion.IonRequestBuilderStages.IonBodyParamsRequestBuilder;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
@@ -53,6 +54,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     private IonRequestBuilderStages.IonBodyParamsRequestBuilder  loadInternal(String method, String url) {
         request = new AsyncHttpRequest(URI.create(url), method);
+        setLogging(ion.LOGTAG, ion.logLevel);
         return this;
     }
 
@@ -305,5 +307,11 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         if (bitmapBuilder == null)
             bitmapBuilder = new IonBitmapRequestBuilder(this);
         return bitmapBuilder.asBitmap();
+    }
+
+    @Override
+    public IonBodyParamsRequestBuilder setLogging(String tag, int level) {
+        request.setLogging(tag, level);
+        return this;
     }
 }

@@ -44,6 +44,14 @@ public class IonRequestBuilderStages {
     // set parameters
     public static interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequestBuilder, IonUrlEncodedBodyRequestBuilder {
         /**
+         * Enable logging for this request
+         * @param tag LOGTAG to use
+         * @param level Log level of messages to display
+         * @return
+         */
+        public IonBodyParamsRequestBuilder setLogging(String tag, int level);
+
+        /**
          * {pst }the Future callback onto the given handler. Not specifying this explicitly
          * results in the default handle of Thread.currentThread to be used, if one exists.
          * @param handler Handler to use or null

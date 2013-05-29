@@ -1,6 +1,7 @@
 package com.example.ion.test;
 
 import android.test.AndroidTestCase;
+import android.util.Log;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
@@ -13,6 +14,12 @@ import java.util.concurrent.TimeUnit;
  * Created by koush on 5/22/13.
  */
 public class HttpTests extends AndroidTestCase {
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        Ion.getDefault(getContext()).setLogging("HttpTests", Log.DEBUG);
+    }
+
     public void testString() throws Exception {
         assertNotNull(Ion.with(getContext()).load("https://raw.github.com/koush/ion/master/ion-test/testdata/test.json").asString().get());
     }

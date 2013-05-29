@@ -1,25 +1,18 @@
 package com.koushikdutta.ion;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.os.Handler;
-import android.os.Looper;
 import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
-import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Created by koush on 5/21/13.
@@ -31,9 +24,18 @@ public class Ion {
      * @return
      */
     public static IonRequestBuilderStages.IonLoadRequestBuilder with(Context context) {
+        return getDefault(context).build(context);
+    }
+
+    /**
+     * Get the default Ion instance
+     * @param context
+     * @return
+     */
+    public static Ion getDefault(Context context) {
         if (instance == null)
             instance = new Ion(context);
-        return instance.build(context);
+        return instance;
     }
 
     public IonRequestBuilderStages.IonLoadRequestBuilder build(Context context) {
@@ -88,6 +90,13 @@ public class Ion {
         public List<Loader> getLoaders() {
             return loaders;
         }
+    }
+
+    String LOGTAG;
+    int logLevel;
+    public void setLogging(String logtag, int logLevel) {
+        LOGTAG = logtag;
+        this.logLevel = logLevel;
     }
 
     Config config = new Config();
