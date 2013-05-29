@@ -5,7 +5,7 @@ import android.util.Log;
 /**
  * Created by koush on 5/21/13.
  */
-public class IonLog {
+class IonLog {
     public static final String LOGTAG = "ION";
     public static boolean debug = true;
     public static void d(String message, Exception e) {

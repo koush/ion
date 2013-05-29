@@ -5,7 +5,7 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.AsyncHttpResponse;
-import com.koushikdutta.async.http.HttpConnectCallback;
+import com.koushikdutta.async.http.callback.HttpConnectCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 

@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 /**
  * Created by koush on 5/23/13.
  */
-public class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitmapRequestBuilder {
+class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitmapRequestBuilder {
     IonRequestBuilder builder;
     Ion ion;
 
