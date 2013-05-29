@@ -52,6 +52,20 @@ public class IonRequestBuilderStages {
         public IonBodyParamsRequestBuilder setLogging(String tag, int level);
 
         /**
+         * Callback that is invoked on download progress
+         */
+        public interface ProgressCallback {
+            void onProgress(int downloaded, int total);
+        }
+
+        /**
+         * Specify a callback that is invoked on download progress.
+         * @param callback
+         * @return
+         */
+        public IonBodyParamsRequestBuilder progress(ProgressCallback callback);
+
+        /**
          * {pst }the Future callback onto the given handler. Not specifying this explicitly
          * results in the default handle of Thread.currentThread to be used, if one exists.
          * @param handler Handler to use or null
@@ -158,7 +172,7 @@ public class IonRequestBuilderStages {
          * @param outputStream OutputStream to write the request
          * @return
          */
-        public Future<OutputStream> write(OutputStream outputStream);
+        public <T extends OutputStream> Future<T> write(T outputStream);
 
         /**
          * Execute the request and write it to the given OutputStream.
@@ -167,7 +181,7 @@ public class IonRequestBuilderStages {
          * @param close Indicate whether the OutputStream should be closed on completion.
          * @return
          */
-        public Future<OutputStream> write(OutputStream outputStream, boolean close);
+        public <T extends OutputStream> Future<T> write(T outputStream, boolean close);
 
         /**
          * Execute the request and write the results to a file

@@ -20,7 +20,7 @@ public class ContentLoader implements Loader {
     }
 
     @Override
-    public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<DataEmitter> callback) {
+    public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
         if (!request.getUri().getScheme().startsWith("content"))
             return null;
 
@@ -30,9 +30,12 @@ public class ContentLoader implements Loader {
             public void run() {
                 try {
                     InputStream stream = ion.getContext().getContentResolver().openInputStream(Uri.parse(request.getUri().toString()));
+                    if (stream == null)
+                        throw new Exception("Unable to load content stream");
+                    int available = stream.available();
                     InputStreamDataEmitter emitter = new InputStreamDataEmitter(ion.getHttpClient().getServer(), stream);
                     ret.setComplete(emitter);
-                    callback.onCompleted(null, emitter);
+                    callback.onCompleted(null, new LoaderEmitter(emitter, available));
                 }
                 catch (Exception e) {
                     ret.setComplete(e);

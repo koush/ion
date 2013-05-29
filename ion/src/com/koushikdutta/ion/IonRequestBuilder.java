@@ -7,10 +7,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
-import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.DataEmitter;
-import com.koushikdutta.async.DataSink;
-import com.koushikdutta.async.Util;
+import com.koushikdutta.async.*;
+import com.koushikdutta.async.DataTrackingEmitter.DataTracker;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
@@ -22,6 +20,7 @@ import com.koushikdutta.async.parser.JSONObjectParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
 import com.koushikdutta.ion.IonRequestBuilderStages.IonBodyParamsRequestBuilder;
+import com.koushikdutta.ion.Loader.LoaderEmitter;
 import org.apache.http.NameValuePair;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
@@ -155,7 +154,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
             AsyncServer.post(request.getHandler(), runner);
     }
 
-    private <T> void getLoaderEmitter(TransformFuture<T, DataEmitter> ret) {
+    private <T> void getLoaderEmitter(TransformFuture<T, LoaderEmitter> ret) {
         for (Loader loader: ion.config.loaders) {
             Future<DataEmitter> emitter = loader.load(ion, request, ret);
             if (emitter != null)
@@ -164,8 +163,8 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         ret.setComplete(new Exception("Unknown uri scheme"));
     }
 
-    private static class EmitterTransform<T> extends TransformFuture<T, DataEmitter> {
-        private DataEmitter emitter;
+    private class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> {
+        DataEmitter emitter;
         @Override
         protected void cancelCleanup() {
             if (emitter != null)
@@ -173,18 +172,39 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         }
 
         @Override
-        protected void transform(DataEmitter emitter) throws Exception {
-            this.emitter = emitter;
+        protected void transform(LoaderEmitter emitter) throws Exception {
+            this.emitter = emitter.getDataEmitter();
+
+            final ProgressCallback cb = progress;
+            final int total = emitter.length();
+            if (cb != null && !(emitter instanceof DataTrackingEmitter)) {
+                FilteredDataEmitter filtered = new FilteredDataEmitter();
+                filtered.setDataEmitter(this.emitter);
+                filtered.setDataTracker(new DataTracker() {
+                    @Override
+                    public void onData(int totalBytesRead) {
+                        cb.onProgress(totalBytesRead, total);
+                    }
+                });
+                this.emitter = filtered;
+            }
         }
+    }
+
+    ProgressCallback progress;
+    @Override
+    public IonBodyParamsRequestBuilder progress(ProgressCallback callback) {
+        progress = callback;
+        return this;
     }
 
     <T> Future<T> execute(final DataSink sink, final boolean close, final T result) {
         EmitterTransform<T> ret = new EmitterTransform<T>() {
-            TransformFuture<T, DataEmitter> self = this;
+            TransformFuture<T, LoaderEmitter> self = this;
             @Override
-            protected void transform(DataEmitter emitter) throws Exception {
+            protected void transform(LoaderEmitter emitter) throws Exception {
                 super.transform(emitter);
-                Util.pump(emitter, sink, new CompletedCallback() {
+                Util.pump(this.emitter, sink, new CompletedCallback() {
                     @Override
                     public void onCompleted(Exception ex) {
                         if (close)
@@ -201,11 +221,11 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     <T> Future<T> execute(final AsyncParser<T> parser) {
         assert parser != null;
         EmitterTransform<T> ret = new EmitterTransform<T>() {
-            TransformFuture<T, DataEmitter> self = this;
+            TransformFuture<T, LoaderEmitter> self = this;
             @Override
-            protected void transform(DataEmitter emitter) throws Exception {
+            protected void transform(LoaderEmitter emitter) throws Exception {
                 super.transform(emitter);
-                parser.parse(emitter).setCallback(new FutureCallback<T>() {
+                parser.parse(this.emitter).setCallback(new FutureCallback<T>() {
                     @Override
                     public void onCompleted(Exception e, T result) {
                         postExecute(self, e, result);
@@ -228,12 +248,12 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     @Override
-    public Future<OutputStream> write(OutputStream outputStream, boolean close) {
+    public <T extends OutputStream> Future<T> write(T outputStream, boolean close) {
         return execute(new OutputStreamDataSink(outputStream), close, outputStream);
     }
 
     @Override
-    public Future<OutputStream> write(OutputStream outputStream) {
+    public <T extends OutputStream> Future<T> write(T outputStream) {
         return execute(new OutputStreamDataSink(outputStream), true, outputStream);
     }
 

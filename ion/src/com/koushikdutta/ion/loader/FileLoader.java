@@ -19,16 +19,17 @@ public class FileLoader implements Loader {
     }
 
     @Override
-    public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<DataEmitter> callback) {
+    public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
         if (!request.getUri().getScheme().startsWith("file"))
             return null;
         final FileFuture ret = new FileFuture();
         ion.getHttpClient().getServer().post(new Runnable() {
             @Override
             public void run() {
-                FileDataEmitter emitter = new FileDataEmitter(ion.getHttpClient().getServer(), new File(request.getUri()));
+                File file = new File(request.getUri());
+                FileDataEmitter emitter = new FileDataEmitter(ion.getHttpClient().getServer(), file);
                 ret.setComplete(emitter);
-                callback.onCompleted(null, emitter);
+                callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length()));
             }
         });
         return ret;

@@ -13,15 +13,16 @@ import com.koushikdutta.ion.Loader;
  * Created by koush on 5/22/13.
  */
 public class HttpLoader implements Loader {
+
     @SuppressWarnings("unchecked")
     @Override
-    public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, final FutureCallback<DataEmitter> callback) {
+    public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
         if (!request.getUri().getScheme().startsWith("http"))
             return null;
         return (Future< DataEmitter >)(Future)ion.getHttpClient().execute(request, new HttpConnectCallback() {
             @Override
             public void onConnectCompleted(Exception ex, AsyncHttpResponse response) {
-                callback.onCompleted(ex, response);
+                callback.onCompleted(ex, new LoaderEmitter(response, response.getHeaders().getContentLength()));
             }
         });
     }
