@@ -40,3 +40,18 @@ Ion.with(context).load("http://example.com/image.png")
 .placeholder(R.id.placeholder)
 .intoImageView(imageView);
 ```
+
+#### Futures
+All operations return a custom [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) that allows
+you too specify a callback that on completion.
+
+```java
+public interface Future<T> extends Cancellable, java.util.concurrent.Future<T> {
+    /**
+     * Set a callback to be invoked when this Future completes.
+     * @param callback
+     * @return
+     */
+    public Future<T> setCallback(FutureCallback<T> callback);
+}
+```
