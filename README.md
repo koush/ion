@@ -8,11 +8,13 @@
  * Compression (transparent)
  * Connection reuse (transparent)
  * All operations return a [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) and can be cancelled
- * Automatically cancel calls when an Activity finishes  
+ * Automatically cancel calls when an Activity finishes
  * Manages invocation back onto the UI thread
  * ImageView loading, caching, and memory management
  * Supports file:/, http:/, and content:/ URIs
- * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O)
+ * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
+
+### Examples
 
 #### Get JSON
 
@@ -32,7 +34,8 @@ Ion.with(context).load("http://example.com/thing.json")
 ```java
 Ion.with(context).load("http://example.com/post")
 .setJSONObjectBody(new JSONObject())
-.asJSONObject(new FutureCallback<JSONObject>() {
+.asJSONObject()
+.setCallback(new FutureCallback<JSONObject>() {
    @Override
     public void onCompleted(Exception e, String result) {
         // do stuff with the result or error
@@ -40,12 +43,18 @@ Ion.with(context).load("http://example.com/post")
 });
 ```
 
-#### Save to a File
+#### Download a File
 
 ```java
-Save files
-Ion.with(context).load("http://example.com/cm-11-m7.zip")
-.write(new File("/sdcard/cm-11.zip");
+Ion.with(context).load("http://example.co/cm-11-m7.zip")
+.write(new File("/sdcard/cm-11.zip")
+.setCallback(new FutureCallback<File>() {
+   @Override
+    public void onCompleted(Exception e, String File) {
+        // download done...
+        // do stuff with the File or error
+    }
+});
 ```
 
 #### Load an image into an ImageView
