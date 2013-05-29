@@ -32,8 +32,11 @@ Ion.with(context).load("http://example.com/thing.json")
 #### Post JSON and read JSON
 
 ```java
+JSONObject json = new JSONObject();
+json.putString("foo", "bar");
+
 Ion.with(context).load("http://example.com/post")
-.setJSONObjectBody(new JSONObject())
+.setJSONObjectBody(json)
 .asJSONObject()
 .setCallback(new FutureCallback<JSONObject>() {
    @Override
@@ -67,7 +70,7 @@ Ion.with(context).load("http://example.com/image.png")
 ```
 
 #### Futures
-_All__ operations return a custom [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) that allows
+_All_ operations return a custom [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) that allows
 you to specify a callback that runs on completion.
 
 ```java
