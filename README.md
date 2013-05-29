@@ -80,9 +80,16 @@ public interface Future<T> extends Cancellable, java.util.concurrent.Future<T> {
     public Future<T> setCallback(FutureCallback<T> callback);
 }
 
-Future<String> string = Ion.with(context).load("http://example.com/string.txt").asString();
-Future<JSONObject> json = Ion.with(context).load("http://example.com/json.json").asJSONObject();
-Future<File> file = Ion.with(context).load("http://example.com/file.zip").write(new File("/sdcard/file.zip"));
-Future<Bitmap> bitmap = Ion.with(context).load("http://example.com/image.png").intoImageView(imageView);
+Future<String> string = Ion.with(context)
+    .load("http://example.com/string.txt").asString();
+
+Future<JSONObject> json = Ion.with(context)
+    .load("http://example.com/json.json").asJSONObject();
+
+Future<File> file = Ion.with(context)
+    .load("http://example.com/file.zip").write(new File("/sdcard/file.zip"));
+
+Future<Bitmap> bitmap = Ion.with(context)
+    .load("http://example.com/image.png").intoImageView(imageView);
 
 ```
