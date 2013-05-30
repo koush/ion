@@ -13,7 +13,6 @@ import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 
 import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -23,7 +22,7 @@ import java.util.WeakHashMap;
  */
 public class Ion {
     /***
-     * Get the default Ion object instance.
+     * Get the default Ion object instance and being building a request
      * @param context
      * @return
      */
@@ -42,15 +41,19 @@ public class Ion {
         return instance;
     }
 
+    /**
+     * Create a builder that can be used to build an network request
+     * @param context
+     * @return
+     */
     public IonRequestBuilderStages.IonLoadRequestBuilder build(Context context) {
         return new IonRequestBuilder(context, this);
     }
 
-    public Context getContext() {
-        return context;
-    }
-
-
+    /**
+     * Cancel all pending requests associated with the request group
+     * @param group
+     */
     public void cancelAll(Object group) {
         FutureSet members;
         synchronized (this) {
@@ -82,6 +85,9 @@ public class Ion {
         members.put(future, true);
     }
 
+    /**
+     * Cancel all pending requests
+     */
     public void cancelAll() {
         ArrayList<Object> groups;
 
@@ -93,6 +99,10 @@ public class Ion {
             cancelAll(group);
     }
 
+    /**
+     * Cancel all pending requests associated with the given context
+     * @param context
+     */
     public void cancelAll(Context context) {
         cancelAll((Object)context);
     }
@@ -125,16 +135,24 @@ public class Ion {
     static class FutureSet extends WeakHashMap<Future, Boolean> {
     }
 
+    /**
+     * Get the application Context object in use by this Ion instance
+     * @return
+     */
+    public Context getContext() {
+        return context;
+    }
+
     // maintain a list of futures that are in being processed, allow for bulk cancellation
     WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
-    Context context;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
     AsyncHttpClient httpClient;
     IonBitmapCache bitmapCache;
+    Context context;
     private Ion(Context context) {
         httpClient = new AsyncHttpClient(new AsyncServer());
-        this.context = context.getApplicationContext();
+        this.context = context = context.getApplicationContext();
 
         try {
             responseCache = ResponseCacheMiddleware.addCache(httpClient, new File(context.getCacheDir(), "ion"), 10L * 1024L * 1024L);
@@ -142,7 +160,7 @@ public class Ion {
         catch (Exception e) {
             IonLog.w("unable to set up response cache", e);
         }
-        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(this.context));
+        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context));
 
         bitmapCache = new IonBitmapCache(this);
 

@@ -30,13 +30,14 @@ class IonBitmapCache {
 
     Ion ion;
     public IonBitmapCache(Ion ion) {
+        Context context = ion.getContext();
         this.ion = ion;
-        mDeadCache = new LruBitmapCache(getHeapSize(ion.getContext()));
+        mDeadCache = new LruBitmapCache(getHeapSize(context));
         mMetrics = new DisplayMetrics();
-        ((WindowManager) ion.getContext().getSystemService(Context.WINDOW_SERVICE))
+        ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
                 .getDefaultDisplay().getMetrics(mMetrics);
-        final AssetManager mgr = ion.getContext().getAssets();
-        mResources = new Resources(mgr, mMetrics, ion.getContext().getResources().getConfiguration());
+        final AssetManager mgr = context.getAssets();
+        mResources = new Resources(mgr, mMetrics, context.getResources().getConfiguration());
     }
 
     ZombieDrawable put(String key, Bitmap bitmap) {

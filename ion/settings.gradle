@@ -1,0 +1,2 @@
+include ':AndroidAsync'
+project(':AndroidAsync').projectDir = new File('../../AndroidAsync/AndroidAsync')
