@@ -74,7 +74,8 @@ Ion.with(context).load("http://example.co/cm-11-m7.zip")
 #### Load an image into an ImageView
 
 ```java
-Ion.with(context).load("http://example.com/image.png")
+Ion.with(context)
+.load("http://example.com/image.png")
 .withBitmap()
 .placeholder(R.drawable.placeholder_image)
 .error(R.drawable.error_image)
