@@ -67,10 +67,17 @@ Ion.with(context).load("http://example.com/post")
 });
 ```
 
-#### Download a File
+#### Download a File with a progress bar
 
 ```java
 Ion.with(context).load("http://example.co/cm-11-m7.zip")
+.progress(new ProgressCallback() {
+    @Override
+    public void onProgress(int downloaded, int total) {
+        float percent = (float)downloaded / total;
+        progressBar.setProgress((int)progress);
+    }
+})
 .write(new File("/sdcard/cm-11.zip")
 .setCallback(new FutureCallback<File>() {
    @Override
