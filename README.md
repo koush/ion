@@ -26,6 +26,7 @@
  * Supports file:/, http:/, and content:/ URIs
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
  * Request level logging and profiling
+ * Download progress callbacks
 
 #### Simple Twitter Client Sample
 
@@ -111,6 +112,14 @@ Ion.with(imageView)
 .animateIn(fadeInAnimation)
 .load("http://example.com/image.png");
 ```
+
+The Ion Image load API is quite robust, and has the following features:
+ * Disk and memory caching
+ * Bitmaps are held via weak references so memory is managed very effeciently
+ * ListView Adapter recycling support
+ * Bitmap transformations via the .transform(Transform)
+ * Animate loading and loaded ImageView states
+
 
 #### Futures
 _All_ operations return a custom [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) that allows

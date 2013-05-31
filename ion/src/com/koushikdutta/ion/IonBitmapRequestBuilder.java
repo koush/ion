@@ -409,4 +409,17 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
         imageView.startAnimation(animation);
     }
+
+    // adapted from Picasso
+    static class DefaultTransform implements Transform {
+        @Override
+        public Bitmap transform(Bitmap b) {
+            return null;
+        }
+
+        @Override
+        public String getKey() {
+            return null;
+        }
+    }
 }
