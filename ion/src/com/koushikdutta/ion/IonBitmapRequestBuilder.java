@@ -247,7 +247,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         // find/create the future for this download.
         String urlKey = builder.request.getUri().toString();
         ByteArrayToBitmapFuture pendingDownload = ion.pendingDownloads.get(urlKey);
-        if (pendingDownload == null) {
+        if (pendingDownload == null || pendingDownload.isCancelled()) {
             pendingDownload = new ByteArrayToBitmapFuture(ion, handler, urlKey, executorService);
             ion.pendingDownloads.put(urlKey, pendingDownload);
             // allow the bitmap load to cancel the downloader
@@ -256,7 +256,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
         // find/create the future for the bitmap transform
         BitmapToBitmap pendingTransform = ion.pendingTransforms.get(transformKey);
-        if (pendingTransform == null) {
+        if (pendingTransform == null || pendingTransform.isCancelled()) {
             pendingTransform = new BitmapToBitmap(ion, handler, transformKey, transforms, executorService);
             ion.pendingTransforms.put(transformKey, pendingTransform);
             // allow the bitmap transform to cancel the bitmap load
@@ -331,6 +331,10 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
     @Override
     public IonBitmapRequestBuilder placeholder(int resourceId) {
+        if (resourceId == 0) {
+            placeholderDrawable = null;
+            return this;
+        }
         placeholder(builder.context.get().getResources().getDrawable(resourceId));
         return this;
     }
@@ -351,6 +355,10 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
     @Override
     public IonBitmapRequestBuilder error(int resourceId) {
+        if (resourceId == 0) {
+            errorDrawable = null;
+            return this;
+        }
         error(builder.context.get().getResources().getDrawable(resourceId));
         return this;
     }
