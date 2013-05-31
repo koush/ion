@@ -1,5 +1,8 @@
 *The missing Networking Library for Android*
 
+![](ion-sample/ion-sample.png)
+Twitter client sample written in ~100 lines of code.
+
 ### Features
  * Asynchronously download:
    * Images (into ImageViews or Bitmaps)
@@ -26,8 +29,6 @@
  * Request level logging and profiling
 
 ### Simple Twitter Client Sample
-
-![](ion-sample/ion-sample.png)
 
 The included documented ion-sample project is a minimal Twitter client that demonstrates some common Android operations:
  * Download JSON from a server (twitter feed)
