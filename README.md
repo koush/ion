@@ -71,9 +71,20 @@ Ion.with(context).load("http://example.co/cm-11-m7.zip")
 });
 ```
 
+#### Setting Headers
+
+```java
+Ion.with(context).load("http://example.com/test.txt")
+// set the header
+.setHeader("foo", "bar")
+.asString()
+.setCallback(...)
+```
+
 #### Load an image into an ImageView
 
 ```java
+// This is the "long" way to do build an ImageView request... it allows you to set headers, etc.
 Ion.with(context)
 .load("http://example.com/image.png")
 .withBitmap()
@@ -83,23 +94,13 @@ Ion.with(context)
 .animateIn(fadeInAnimation)
 .intoImageView(imageView);
 
-// or for brevity, use the ImageView specific builder...
+// but for brevity, use the ImageView specific builder...
 Ion.with(imageView)
 .placeholder(R.drawable.placeholder_image)
 .error(R.drawable.error_image)
 .animateLoad(spinAnimation)
 .animateIn(fadeInAnimation)
 .load("http://example.com/image.png");
-```
-
-#### Setting Headers
-
-```java
-Ion.with(context).load("http://example.com/test.txt")
-// set the header
-.setHeader("foo", "bar")
-.asString()
-.setCallback(...)
 ```
 
 #### Futures
