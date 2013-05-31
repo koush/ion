@@ -32,11 +32,11 @@
 
 The included documented [ion-sample](https://github.com/koush/ion/tree/master/ion-sample) project includes some samples that demo common Android network operations:
 
- * Twitter Client Sample
+ * [Twitter Client Sample](https://github.com/koush/ion/blob/master/ion-sample/src/com/koushikdutta/ion/sample/Twitter.java)
    * Download JSON from a server (twitter feed)
    * Populate a ListView Adapter and fetch more data as you scroll to the end
    * Put images from a URLs into ImageViews (twitter profile pictures)
- * File Download with Progress Bar Sample
+ * File Download with [Progress Bar Sample](https://github.com/koush/ion/blob/master/ion-sample/src/com/koushikdutta/ion/sample/ProgressBarDownload.java)
  
 #### More Examples
 
