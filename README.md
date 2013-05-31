@@ -1,4 +1,4 @@
-*The missing Networking Library for Android*
+*Android Networking Made Easy*
 
 ![](ion-sample/ion-sample.png)
 
@@ -18,7 +18,7 @@
    * application/json
    * application/x-www-form-urlencoded
    * multipart/form-data
- * Transparent usage of HTTP features and optizations:
+ * Transparent usage of HTTP features and optimizations:
    * Caching
    * Gzip/Deflate Compression
    * Connection reuse
@@ -126,7 +126,7 @@ Ion.with(imageView)
 .load("http://example.com/image.png");
 ```
 
-The Ion Image load API is quite robust, and has the following features:
+The Ion Image load API has the following features:
  * Disk and memory caching
  * Bitmaps are held via weak references so memory is managed very effeciently
  * ListView Adapter recycling support
