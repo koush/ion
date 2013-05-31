@@ -2,7 +2,7 @@
 
 ![](ion-sample/ion-sample.png)
 
-### Features
+#### Features
  * Asynchronously download:
    * Images (into ImageViews or Bitmaps)
    * JSON
@@ -27,7 +27,7 @@
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
  * Request level logging and profiling
 
-### Simple Twitter Client Sample
+#### Simple Twitter Client Sample
 
 The included documented ion-sample project is a minimal Twitter client that demonstrates some common Android operations:
  * Download JSON from a server (twitter feed)
@@ -35,8 +35,6 @@ The included documented ion-sample project is a minimal Twitter client that demo
  * Put images from a URLs into ImageViews (twitter profile pictures)
 
 Looking for more? Check out the examples below that demonstrate some other common scenarios.
-
-### Examples
 
 #### Get JSON
 
@@ -144,4 +142,13 @@ Future<Bitmap> bitmap = Ion.with(context)
     .load("http://example.com/image.png")
     .intoImageView(imageView);
 
+```
+
+#### Blocking on Requests
+
+Though you should try to use callbacks for handling requests whenever possible, blocking on requests is possible too.
+All Futures have a Future<T>.get() method that waits for the result of the request, by blocking if necessary.
+
+```java
+JSONObject json = Ion.with(context).load("http://example.com/thing.json").asJSONObject().get();
 ```
