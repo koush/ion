@@ -1,0 +1,92 @@
+package com.koushikdutta.ion.sample;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+import com.koushikdutta.async.future.Future;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
+
+import java.io.File;
+
+/**
+ * Created by koush on 5/31/13.
+ */
+public class ProgressBarDownload extends Activity {
+    Button download;
+    TextView downloadCount;
+    ProgressBar progressBar;
+
+    Future<File> downloading;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.progress);
+
+        download = (Button)findViewById(R.id.download);
+        downloadCount = (TextView)findViewById(R.id.download_count);
+        progressBar = (ProgressBar)findViewById(R.id.progress);
+
+        download.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (downloading != null && !downloading.isCancelled()) {
+                    resetDownload();
+                    return;
+                }
+
+                download.setText("Cancel");
+                downloading = Ion.with(ProgressBarDownload.this)
+                    // this is a 180MB zip file to test with
+                    .load("http://developer.clockworkmod.com/downloads/51/4883/cm-10.1-20130512-CPUFREQ-m7.zip")
+                    // progress can be notified on non ui thread by using
+                    // the .progress call. ProgressBars can be updated on a non-UI thread.
+                    .progress(new IonBodyParamsRequestBuilder.ProgressCallback() {
+                         @Override
+                         public void onProgress(int downloaded, int total) {
+                             float percent = (float) downloaded / total * 100f;
+                             progressBar.setProgress((int) percent);
+                         }
+                     })
+                    // notification on progress can also happen on the UI thread
+                    // via progressHandler. This is useful if you need to update a TextView.
+                    // Updates to TextViews MUST happen on the UI thread.
+                    .progressHandler(new IonBodyParamsRequestBuilder.ProgressCallback() {
+                        @Override
+                        public void onProgress(int downloaded, int total) {
+                            downloadCount.setText("" + downloaded + " / " + total);
+                        }
+                    })
+                    // write to a file
+                    .write(getFileStreamPath("zip-" + System.currentTimeMillis() + ".zip"))
+                    // run a callback on completion
+                    .setCallback(new FutureCallback<File>() {
+                        @Override
+                        public void onCompleted(Exception e, File result) {
+                            resetDownload();
+                            if (e != null) {
+                                Toast.makeText(ProgressBarDownload.this, "Error downloading file", Toast.LENGTH_LONG).show();
+                                return;
+                            }
+                            Toast.makeText(ProgressBarDownload.this, "File download complete", Toast.LENGTH_LONG).show();
+                        }
+                    });
+            }
+        });
+    }
+
+    void resetDownload() {
+        downloading.cancel();
+        downloading = null;
+        download.setText("Download");
+        downloadCount.setText(null);
+        progressBar.setProgress(0);
+    }
+}
