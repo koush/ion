@@ -76,11 +76,19 @@ Ion.with(context).load("http://example.co/cm-11-m7.zip")
 ```java
 Ion.with(context).load("http://example.com/image.png")
 .withBitmap()
-.placeholder(R.drawable.placeholder_image
+.placeholder(R.drawable.placeholder_image)
 .error(R.drawable.error_image)
 .animateLoad(spinAnimation)
 .animateIn(fadeInAnimation)
 .intoImageView(imageView);
+
+// or for brevity...
+Ion.with(imageView)
+.placeholder(R.drawable.placeholder_image)
+.error(R.drawable.error_image)
+.animateLoad(spinAnimation)
+.animateIn(fadeInAnimation)
+.load("http://example.com/image.png");
 ```
 
 #### Setting Headers
