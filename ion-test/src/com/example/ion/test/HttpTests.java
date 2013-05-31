@@ -2,17 +2,12 @@ package com.example.ion.test;
 
 import android.test.AndroidTestCase;
 import android.util.Log;
-import com.koushikdutta.async.AsyncServer;
+
 import com.koushikdutta.async.ByteBufferList;
-import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.Multimap;
-import com.koushikdutta.async.http.server.AsyncHttpServer;
-import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
-import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
-import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.IonRequestBuilderStages.IonBodyParamsRequestBuilder.ProgressCallback;
+import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder.ProgressCallback;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;

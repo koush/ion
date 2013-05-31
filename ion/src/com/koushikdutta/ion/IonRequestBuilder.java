@@ -19,9 +19,15 @@ import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.JSONObjectParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
-import com.koushikdutta.ion.IonRequestBuilderStages.IonBodyParamsRequestBuilder;
-import com.koushikdutta.ion.IonRequestBuilderStages.IonMutableBitmapRequestPostLoadBuilder;
+import com.koushikdutta.ion.builder.IonFormMultipartBodyRequestBuilder;
+import com.koushikdutta.ion.builder.IonFutureRequestBuilder;
+import com.koushikdutta.ion.builder.IonLoadRequestBuilder;
+import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
+import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
+import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.Loader.LoaderEmitter;
+import com.koushikdutta.ion.builder.IonUrlEncodedBodyRequestBuilder;
+
 import org.json.JSONObject;
 
 import java.io.File;
@@ -34,7 +40,7 @@ import java.util.List;
 /**
  * Created by koush on 5/21/13.
  */
-class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder, IonRequestBuilderStages.IonBodyParamsRequestBuilder {
+class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBuilder {
     AsyncHttpRequest request;
     Ion ion;
     WeakReference<Context> context;
@@ -45,11 +51,11 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     @Override
-    public IonRequestBuilderStages.IonBodyParamsRequestBuilder load(String url) {
+    public IonBodyParamsRequestBuilder load(String url) {
         return loadInternal(AsyncHttpGet.METHOD, url);
     }
 
-    private IonRequestBuilderStages.IonBodyParamsRequestBuilder  loadInternal(String method, String url) {
+    private IonBodyParamsRequestBuilder loadInternal(String method, String url) {
         request = new AsyncHttpRequest(URI.create(url), method);
         setLogging(ion.LOGTAG, ion.logLevel);
         return this;
@@ -57,36 +63,36 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     boolean methodWasSet;
     @Override
-    public IonRequestBuilderStages.IonBodyParamsRequestBuilder load(String method, String url) {
+    public IonBodyParamsRequestBuilder load(String method, String url) {
         methodWasSet = true;
         return loadInternal(method, url);
     }
 
     @Override
-    public IonRequestBuilderStages.IonBodyParamsRequestBuilder setHeader(String name, String value) {
+    public IonBodyParamsRequestBuilder setHeader(String name, String value) {
         request.setHeader(name, value);
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonBodyParamsRequestBuilder addHeader(String name, String value) {
+    public IonBodyParamsRequestBuilder addHeader(String name, String value) {
         request.addHeader(name, value);
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonBodyParamsRequestBuilder setTimeout(int timeoutMilliseconds) {
+    public IonBodyParamsRequestBuilder setTimeout(int timeoutMilliseconds) {
         request.setTimeout(timeoutMilliseconds);
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonBodyParamsRequestBuilder setHandler(Handler handler) {
+    public IonBodyParamsRequestBuilder setHandler(Handler handler) {
         request.setHandler(handler);
         return this;
     }
 
-    private <T> IonRequestBuilderStages.IonFutureRequestBuilder setBody(AsyncHttpRequestBody<T> body) {
+    private <T> IonFutureRequestBuilder setBody(AsyncHttpRequestBody<T> body) {
         request.setBody(body);
         if (!methodWasSet)
             request.setMethod(AsyncHttpPost.METHOD);
@@ -94,13 +100,13 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     @Override
-    public IonRequestBuilderStages.IonFutureRequestBuilder setJSONObjectBody(JSONObject jsonObject) {
+    public IonFutureRequestBuilder setJSONObjectBody(JSONObject jsonObject) {
         setHeader("Content-Type", "application/json");
         return setBody(new JSONObjectBody(jsonObject));
     }
 
     @Override
-    public IonRequestBuilderStages.IonFutureRequestBuilder setStringBody(String string) {
+    public IonFutureRequestBuilder setStringBody(String string) {
         setHeader("Content-Type", "text/plain");
         return setBody(new StringBody(string));
     }
@@ -285,7 +291,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     Multimap bodyParameters;
     @Override
-    public IonRequestBuilderStages.IonUrlEncodedBodyRequestBuilder setBodyParameter(String name, String value) {
+    public IonUrlEncodedBodyRequestBuilder setBodyParameter(String name, String value) {
         if (bodyParameters == null) {
             bodyParameters = new Multimap();
             setBody(new UrlEncodedFormBody(bodyParameters));
@@ -296,7 +302,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     MultipartFormDataBody multipartBody;
     @Override
-    public IonRequestBuilderStages.IonFormMultipartBodyRequestBuilder setMultipartFile(String name, File file) {
+    public IonFormMultipartBodyRequestBuilder setMultipartFile(String name, File file) {
         if (multipartBody == null) {
             multipartBody = new MultipartFormDataBody();
             setBody(multipartBody);
@@ -306,7 +312,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     @Override
-    public IonRequestBuilderStages.IonFormMultipartBodyRequestBuilder setMultipartParameter(String name, String value) {
+    public IonFormMultipartBodyRequestBuilder setMultipartParameter(String name, String value) {
         if (multipartBody == null) {
             multipartBody = new MultipartFormDataBody();
             setBody(multipartBody);
@@ -316,7 +322,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder withBitmap() {
+    public IonMutableBitmapRequestBuilder withBitmap() {
         return new IonBitmapRequestBuilder(this);
     }
 
@@ -330,7 +336,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     @Override
-    public IonRequestBuilderStages.IonFutureRequestBuilder load(File file) {
+    public IonFutureRequestBuilder load(File file) {
         loadInternal(null, file.toURI().toString());
         return this;
     }

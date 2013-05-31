@@ -14,8 +14,10 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.parser.ByteBufferListParser;
-import com.koushikdutta.ion.IonRequestBuilderStages.IonImageViewRequestPostLoadBuilder;
-import com.koushikdutta.ion.IonRequestBuilderStages.IonImageViewRequestPreLoadBuilder;
+import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
+import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
+import com.koushikdutta.ion.builder.IonImageViewRequestPostLoadBuilder;
+import com.koushikdutta.ion.builder.IonImageViewRequestPreLoadBuilder;
 import com.koushikdutta.ion.bitmap.Transform;
 
 import java.io.ByteArrayInputStream;
@@ -27,7 +29,7 @@ import java.util.concurrent.Executors;
 /**
  * Created by koush on 5/23/13.
  */
-class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitmapRequestBuilder, IonRequestBuilderStages.IonMutableBitmapRequestPostLoadBuilder, IonImageViewRequestPreLoadBuilder, IonImageViewRequestPostLoadBuilder {
+class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMutableBitmapRequestPostLoadBuilder, IonImageViewRequestPreLoadBuilder, IonImageViewRequestPostLoadBuilder {
     IonRequestBuilder builder;
     Ion ion;
 
