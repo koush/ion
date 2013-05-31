@@ -126,24 +126,31 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         return false;
     }
 
+    private boolean checkContext() {
+        Context context = IonRequestBuilder.this.context.get();
+        if (context == null)
+            return false;
+        if (context instanceof Activity) {
+            Activity activity = (Activity)context;
+            if (activity.isFinishing())
+                return false;
+        }
+        else if (context instanceof Service) {
+            Service service = (Service)context;
+            if (!isServiceRunning(service))
+                return false;
+        }
+
+        return true;
+    }
+
     private <T> void postExecute(final SimpleFuture<T> future, final Exception ex, final T value) {
         final Runnable runner = new Runnable() {
             @Override
             public void run() {
                 // check if the context is still alive...
-                Context context = IonRequestBuilder.this.context.get();
-                if (context == null)
+                if (!checkContext())
                     return;
-                if (context instanceof Activity) {
-                    Activity activity = (Activity)context;
-                    if (activity.isFinishing())
-                        return;
-                }
-                else if (context instanceof Service) {
-                    Service service = (Service)context;
-                    if (!isServiceRunning(service))
-                        return;
-                }
 
                 // unless we're invoked onto the handler/main/service thread, there's no frakking way to avoid a
                 // race condition where the service or activity dies before this callback is invoked.
@@ -191,25 +198,38 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         protected void transform(LoaderEmitter emitter) throws Exception {
             this.emitter = emitter.getDataEmitter();
 
-            final ProgressCallback cb = progress;
             final int total = emitter.length();
-            if (cb != null) {
-                DataTrackingEmitter tracker;
-                if (!(emitter instanceof DataTrackingEmitter)) {
-                    tracker = new FilteredDataEmitter();
-                    tracker.setDataEmitter(this.emitter);
-                }
-                else {
-                    tracker = (DataTrackingEmitter)this.emitter;
-                }
-                this.emitter = tracker;
-                tracker.setDataTracker(new DataTracker() {
-                    @Override
-                    public void onData(int totalBytesRead) {
-                        cb.onProgress(totalBytesRead, total);
-                    }
-                });
+            DataTrackingEmitter tracker;
+            if (!(emitter instanceof DataTrackingEmitter)) {
+                tracker = new FilteredDataEmitter();
+                tracker.setDataEmitter(this.emitter);
             }
+            else {
+                tracker = (DataTrackingEmitter)this.emitter;
+            }
+            this.emitter = tracker;
+            tracker.setDataTracker(new DataTracker() {
+                @Override
+                public void onData(final int totalBytesRead) {
+                    // if the requesting context dies during the transfer... cancel
+                    if (!checkContext()) {
+                        cancel();
+                        return;
+                    }
+
+                    if (progress != null)
+                        progress.onProgress(totalBytesRead, total);
+
+                    if (progressHandler != null) {
+                        request.getHandler().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                progressHandler.onProgress(totalBytesRead, total);
+                            }
+                        });
+                    }
+                }
+            });
         }
     }
 
@@ -220,8 +240,29 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         return this;
     }
 
+    ProgressCallback progressHandler;
+    @Override
+    public IonBodyParamsRequestBuilder progressHandler(ProgressCallback callback) {
+        progressHandler = callback;
+        return this;
+    }
+
     <T> Future<T> execute(final DataSink sink, final boolean close, final T result) {
+        return execute(sink, close, result, null);
+    }
+
+
+    <T> Future<T> execute(final DataSink sink, final boolean close, final T result, final Runnable cancel) {
         EmitterTransform<T> ret = new EmitterTransform<T>() {
+            @Override
+            protected void cancelCleanup() {
+                super.cancelCleanup();
+                if (close)
+                    sink.close();
+                if (cancel != null)
+                    cancel.run();
+            }
+
             TransformFuture<T, LoaderEmitter> self = this;
             @Override
             protected void transform(LoaderEmitter emitter) throws Exception {
@@ -285,9 +326,14 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     }
 
     @Override
-    public Future<File> write(File file) {
+    public Future<File> write(final File file) {
         try {
-            return execute(new OutputStreamDataSink(new FileOutputStream(file)), true, file);
+            return execute(new OutputStreamDataSink(new FileOutputStream(file)), true, file, new Runnable() {
+                @Override
+                public void run() {
+                    file.delete();
+                }
+            });
         }
         catch (Exception e) {
             SimpleFuture<File> ret = new SimpleFuture<File>();

@@ -24,11 +24,20 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
     }
 
     /**
-     * Specify a callback that is invoked on download progress.
+     * Specify a callback that is invoked on download progress. This will not be invoked
+     * on the UI thread.
      * @param callback
      * @return
      */
     public IonBodyParamsRequestBuilder progress(ProgressCallback callback);
+
+    /**
+     * Specify a callback that is invoked on download progress. This will be invoked
+     * on the UI thread.
+     * @param callback
+     * @return
+     */
+    public IonBodyParamsRequestBuilder progressHandler(ProgressCallback callback);
 
     /**
      * Post the Future callback onto the given handler. Not specifying this explicitly

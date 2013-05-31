@@ -3,11 +3,24 @@
           package="com.koushikdutta.ion.sample"
           android:versionCode="1"
           android:versionName="1.0">
-    <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="17" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:theme="@style/Theme">
-        <activity android:name=".Twitter"
-                  android:label="@string/app_name">
+
+    <uses-sdk
+            android:minSdkVersion="9"
+            android:targetSdkVersion="17"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <application
+            android:label="@string/app_name"
+            android:icon="@drawable/ic_launcher"
+            android:theme="@style/Theme">
+        <activity
+                android:name=".Twitter"
+                android:label="Twitter Client Sample"/>
+        <activity
+                android:name=".ProgressBarDownload"
+                android:label="Progress Bar Download"/>
+        <activity
+                android:name=".Samples"
+                android:label="ion samples">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
