@@ -28,14 +28,20 @@
  * Request level logging and profiling
  * Download progress callbacks
 
-#### Simple Twitter Client Sample
+#### Samples
 
-The included documented ion-sample project is a minimal Twitter client that demonstrates some common Android operations:
- * Download JSON from a server (twitter feed)
- * Populate a ListView Adapter and fetch more data as you scroll to the end
- * Put images from a URLs into ImageViews (twitter profile pictures)
+The included documented [ion-sample](https://github.com/koush/ion/tree/master/ion-sample) project includes some samples that demo common Android network operations:
 
-Looking for more? Check out the examples below that demonstrate some other common scenarios.
+ * Twitter Client Sample
+   * Download JSON from a server (twitter feed)
+   * Populate a ListView Adapter and fetch more data as you scroll to the end
+   * Put images from a URLs into ImageViews (twitter profile pictures)
+ * File Download with Progress Bar Sample
+ 
+#### More Examples
+
+Looking for more? Check out the examples below that demonstrate some other common scenarios. You can also take a look
+at 30+ ion unit tests in the [ion-test](https://github.com/koush/ion/tree/master/ion-test).
 
 #### Get JSON
 
