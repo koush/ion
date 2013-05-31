@@ -1,7 +1,6 @@
 *The missing Networking Library for Android*
 
 ![](ion-sample/ion-sample.png)
-Twitter client sample written in ~100 lines of code.
 
 ### Features
  * Asynchronously download:
