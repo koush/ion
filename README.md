@@ -32,7 +32,7 @@ The included documented ion-sample project is a minimal Twitter client that demo
  * Populate a ListView Adapter and fetch more data as you scroll to the end
  * Put images from a URLs into ImageViews (twitter profile pictures)
 
-Looking for more? Check out 
+Looking for more? Check out the examples below that demonstrate some other common scenarios.
 
 ### Examples
 
