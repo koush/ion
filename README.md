@@ -83,7 +83,7 @@ Ion.with(context)
 .animateIn(fadeInAnimation)
 .intoImageView(imageView);
 
-// or for brevity...
+// or for brevity, use the ImageView specific builder...
 Ion.with(imageView)
 .placeholder(R.drawable.placeholder_image)
 .error(R.drawable.error_image)
