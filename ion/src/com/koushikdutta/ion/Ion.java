@@ -7,6 +7,8 @@ import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.ion.IonRequestBuilderStages.IonLoadRequestBuilder;
+import com.koushikdutta.ion.IonRequestBuilderStages.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
@@ -26,7 +28,7 @@ public class Ion {
      * @param context
      * @return
      */
-    public static IonRequestBuilderStages.IonLoadRequestBuilder with(Context context) {
+    public static IonLoadRequestBuilder with(Context context) {
         return getDefault(context).build(context);
     }
 
@@ -42,12 +44,31 @@ public class Ion {
     }
 
     /**
+     * Create a ImageView bitmap request builder
+     * @param imageView
+     * @return
+     */
+    public static IonMutableBitmapRequestPostLoadBuilder with(ImageView imageView) {
+        Ion ion = getDefault(imageView.getContext());
+        return new IonRequestBuilder(imageView.getContext(), ion).withImageView(imageView);
+    }
+
+    /**
      * Create a builder that can be used to build an network request
      * @param context
      * @return
      */
-    public IonRequestBuilderStages.IonLoadRequestBuilder build(Context context) {
+    public IonLoadRequestBuilder build(Context context) {
         return new IonRequestBuilder(context, this);
+    }
+
+    /**
+     * Create a builder that can be used to build an network request
+     * @param imageView
+     * @return
+     */
+    public IonLoadRequestBuilder build(ImageView imageView) {
+        return new IonRequestBuilder(imageView.getContext(), this);
     }
 
     /**
@@ -141,6 +162,14 @@ public class Ion {
      */
     public Context getContext() {
         return context;
+    }
+
+    /**
+     * Return the bitmap cache used by this Ion instance
+     * @return
+     */
+    public IonBitmapCache getBitmapCache() {
+        return bitmapCache;
     }
 
     // maintain a list of futures that are in being processed, allow for bulk cancellation

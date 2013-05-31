@@ -200,6 +200,16 @@ public class IonRequestBuilderStages {
         public IonMutableBitmapRequestBuilder transform(Transform transform);
     }
 
+    public static interface IonMutableBitmapRequestPostLoadBuilder extends IonImageViewRequestPostLoadBuilder {
+        /**
+         * Apply a transformation to a Bitmap
+         * @param transform Transform to apply
+         * @return
+         */
+        public IonMutableBitmapRequestPostLoadBuilder transform(Transform transform);
+    }
+
+
     public static interface IonImageViewRequestBuilder extends IonBitmapImageViewFutureRequestBuilder {
         /**
          * Set a placeholder on the ImageView while the request is loading
@@ -260,6 +270,95 @@ public class IonRequestBuilderStages {
          * @return
          */
         public IonImageViewRequestBuilder animateLoad(Animation load);
+    }
+
+    public static interface IonImageViewRequestPreLoadBuilder extends IonImageViewRequestBuilder, IonBitmapImageViewFutureRequestBuilder {
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPreLoadBuilder placeholder(Bitmap bitmap);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPreLoadBuilder placeholder(Drawable drawable);
+
+        /**
+         * Set a placeholder on the ImageView while the request is loading
+         * @param resourceId
+         * @return
+         */
+        public IonImageViewRequestPreLoadBuilder placeholder(int resourceId);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPreLoadBuilder error(Bitmap bitmap);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPreLoadBuilder error(Drawable drawable);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPreLoadBuilder error(int resourceId);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPreLoadBuilder animateIn(Animation in);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPreLoadBuilder animateLoad(Animation load);
+    }
+
+    public static interface IonImageViewRequestPostLoadBuilder extends IonImageViewRequestBuilder {
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPostLoadBuilder placeholder(Bitmap bitmap);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPostLoadBuilder placeholder(Drawable drawable);
+
+        /**
+         * Set a placeholder on the ImageView while the request is loading
+         * @param resourceId
+         * @return
+         */
+        public IonImageViewRequestPostLoadBuilder placeholder(int resourceId);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPostLoadBuilder error(Bitmap bitmap);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPostLoadBuilder error(Drawable drawable);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPostLoadBuilder error(int resourceId);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPostLoadBuilder animateIn(Animation in);
+
+        /** {@inheritDoc}
+         */
+        public IonImageViewRequestPostLoadBuilder animateLoad(Animation load);
+
+        /**
+         * Load an uri.
+         * @param uri Uri to load. This may be a http(s), file, or content uri.
+         * @return
+         */
+        public Future<Bitmap> load(String uri);
+
+        /**
+         * Load an url using the given an HTTP method such as GET or POST.
+         * @param method HTTP method such as GET or POST.
+         * @param url Url to load.
+         * @return
+         */
+        public Future<Bitmap> load(String method, String url);
     }
 
     public static interface IonBitmapFutureRequestBuilder {

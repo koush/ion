@@ -18,7 +18,7 @@ import java.util.HashSet;
 /**
  * Created by koush on 5/23/13.
  */
-class IonBitmapCache {
+public class IonBitmapCache {
     private static DrawableCache<ZombieDrawable> mLiveCache = new DrawableCache<ZombieDrawable>();
     private static LruBitmapCache mDeadCache;
     // this cache is simply to maintain a reference to the bitmap

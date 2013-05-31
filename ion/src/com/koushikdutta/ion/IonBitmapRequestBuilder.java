@@ -14,6 +14,8 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.parser.ByteBufferListParser;
+import com.koushikdutta.ion.IonRequestBuilderStages.IonImageViewRequestPostLoadBuilder;
+import com.koushikdutta.ion.IonRequestBuilderStages.IonImageViewRequestPreLoadBuilder;
 import com.koushikdutta.ion.bitmap.Transform;
 
 import java.io.ByteArrayInputStream;
@@ -25,9 +27,27 @@ import java.util.concurrent.Executors;
 /**
  * Created by koush on 5/23/13.
  */
-class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitmapRequestBuilder {
+class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitmapRequestBuilder, IonRequestBuilderStages.IonMutableBitmapRequestPostLoadBuilder, IonImageViewRequestPreLoadBuilder, IonImageViewRequestPostLoadBuilder {
     IonRequestBuilder builder;
     Ion ion;
+
+    @Override
+    public Future<Bitmap> load(String uri) {
+        builder.load(uri);
+        return intoImageView(imageViewPostRef.get());
+    }
+
+    @Override
+    public Future<Bitmap> load(String method, String url) {
+        builder.load(method, url);
+        return intoImageView(imageViewPostRef.get());
+    }
+
+    WeakReference<ImageView> imageViewPostRef;
+    IonBitmapRequestBuilder withImageView(ImageView imageView) {
+        imageViewPostRef = new WeakReference<ImageView>(imageView);
+        return this;
+    }
 
     public IonBitmapRequestBuilder(IonRequestBuilder builder) {
         this.builder = builder;
@@ -37,7 +57,7 @@ class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitma
     ArrayList<Transform> transforms;
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder transform(Transform transform) {
+    public IonBitmapRequestBuilder transform(Transform transform) {
         if (transforms == null)
             transforms = new ArrayList<Transform>();
         transforms.add(transform);
@@ -294,7 +314,7 @@ class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitma
     }
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder placeholder(Bitmap bitmap) {
+    public IonBitmapRequestBuilder placeholder(Bitmap bitmap) {
         placeholder(new BitmapDrawable(builder.context.get().getResources(), bitmap));
         return this;
     }
@@ -302,19 +322,19 @@ class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitma
     Drawable placeholderDrawable;
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder placeholder(Drawable drawable) {
+    public IonBitmapRequestBuilder placeholder(Drawable drawable) {
         placeholderDrawable = drawable;
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder placeholder(int resourceId) {
+    public IonBitmapRequestBuilder placeholder(int resourceId) {
         placeholder(builder.context.get().getResources().getDrawable(resourceId));
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder error(Bitmap bitmap) {
+    public IonBitmapRequestBuilder error(Bitmap bitmap) {
         error(new BitmapDrawable(builder.context.get().getResources(), bitmap));
         return this;
     }
@@ -322,13 +342,13 @@ class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitma
     Drawable errorDrawable;
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder error(Drawable drawable) {
+    public IonBitmapRequestBuilder error(Drawable drawable) {
         errorDrawable = drawable;
         return this;
     }
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder error(int resourceId) {
+    public IonBitmapRequestBuilder error(int resourceId) {
         error(builder.context.get().getResources().getDrawable(resourceId));
         return this;
     }
@@ -350,13 +370,13 @@ class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitma
         if (imageView == null)
             return;
         doAnimation(imageView, inAnimation);
-        setImageView(imageView, errorDrawable);
+        setImageView(imageView, errorDrawable != null ? errorDrawable : placeholderDrawable);
     }
 
     Animation inAnimation;
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder animateIn(Animation in) {
+    public IonBitmapRequestBuilder animateIn(Animation in) {
         inAnimation = in;
         return this;
     }
@@ -364,7 +384,7 @@ class IonBitmapRequestBuilder implements IonRequestBuilderStages.IonMutableBitma
     Animation loadAnimation;
 
     @Override
-    public IonRequestBuilderStages.IonMutableBitmapRequestBuilder animateLoad(Animation load) {
+    public IonBitmapRequestBuilder animateLoad(Animation load) {
         loadAnimation = load;
         return this;
     }

@@ -20,9 +20,8 @@ import com.koushikdutta.async.parser.JSONObjectParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
 import com.koushikdutta.ion.IonRequestBuilderStages.IonBodyParamsRequestBuilder;
+import com.koushikdutta.ion.IonRequestBuilderStages.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.Loader.LoaderEmitter;
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -30,7 +29,6 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -155,6 +153,11 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     private <T> void getLoaderEmitter(TransformFuture<T, LoaderEmitter> ret) {
+        if (request == null || request.getUri() == null || request.getUri().getScheme() == null) {
+            ret.setComplete(new Exception("Invalid URI"));
+            return;
+        }
+
         for (Loader loader: ion.config.loaders) {
             Future<DataEmitter> emitter = loader.load(ion, request, ret);
             if (emitter != null) {
@@ -259,12 +262,12 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
     }
 
     @Override
-    public <T extends OutputStream> Future<T> write(T outputStream, boolean close) {
+    public <F extends OutputStream> Future<F> write(F outputStream, boolean close) {
         return execute(new OutputStreamDataSink(outputStream), close, outputStream);
     }
 
     @Override
-    public <T extends OutputStream> Future<T> write(T outputStream) {
+    public <F extends OutputStream> Future<F> write(F outputStream) {
         return execute(new OutputStreamDataSink(outputStream), true, outputStream);
     }
 
@@ -312,19 +315,18 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
         return this;
     }
 
-    IonBitmapRequestBuilder bitmapBuilder;
     @Override
     public IonRequestBuilderStages.IonMutableBitmapRequestBuilder withBitmap() {
-        if (bitmapBuilder == null)
-            bitmapBuilder = new IonBitmapRequestBuilder(this);
-        return bitmapBuilder;
+        return new IonBitmapRequestBuilder(this);
+    }
+
+    IonMutableBitmapRequestPostLoadBuilder withImageView(ImageView imageView) {
+        return new IonBitmapRequestBuilder(this).withImageView(imageView);
     }
 
     @Override
     public Future<Bitmap> intoImageView(ImageView imageView) {
-        if (bitmapBuilder == null)
-            bitmapBuilder = new IonBitmapRequestBuilder(this);
-        return bitmapBuilder.intoImageView(imageView);
+        return new IonBitmapRequestBuilder(this).intoImageView(imageView);
     }
 
     @Override
@@ -335,9 +337,7 @@ class IonRequestBuilder implements IonRequestBuilderStages.IonLoadRequestBuilder
 
     @Override
     public Future<Bitmap> asBitmap() {
-        if (bitmapBuilder == null)
-            bitmapBuilder = new IonBitmapRequestBuilder(this);
-        return bitmapBuilder.asBitmap();
+        return new IonBitmapRequestBuilder(this).asBitmap();
     }
 
     @Override
