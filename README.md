@@ -27,7 +27,7 @@
 
 ### Simple Twitter Client Sample
 
-![ion-sample/ion-sample.png]()
+![](ion-sample/ion-sample.png)
 
 The included documented ion-sample project is a minimal Twitter client that demonstrates some common Android operations:
  * Download JSON from a server (twitter feed)
