@@ -67,8 +67,8 @@ public class Ion {
      * @param imageView
      * @return
      */
-    public IonLoadRequestBuilder build(ImageView imageView) {
-        return new IonRequestBuilder(imageView.getContext(), this);
+    public IonMutableBitmapRequestPostLoadBuilder build(ImageView imageView) {
+        return new IonRequestBuilder(imageView.getContext(), this).withImageView(imageView);
     }
 
     /**

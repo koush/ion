@@ -2,6 +2,7 @@ package com.koushikdutta.ion.builder;
 
 import com.koushikdutta.async.future.Future;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -22,6 +23,12 @@ public interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, 
      * @return
      */
     public Future<JSONObject> asJSONObject();
+
+    /**
+     * Execute the request and get the result as a JSONArray
+     * @return
+     */
+    public Future<JSONArray> asJSONArray();
 
     /**
      * Use the request as a Bitmap which can then be modified and/or applied to an ImageView.

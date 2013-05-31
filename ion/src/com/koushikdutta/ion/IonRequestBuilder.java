@@ -16,6 +16,7 @@ import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.*;
 import com.koushikdutta.async.parser.AsyncParser;
+import com.koushikdutta.async.parser.JSONArrayParser;
 import com.koushikdutta.async.parser.JSONObjectParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
@@ -28,6 +29,7 @@ import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.Loader.LoaderEmitter;
 import com.koushikdutta.ion.builder.IonUrlEncodedBodyRequestBuilder;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -260,6 +262,11 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     @Override
     public Future<JSONObject> asJSONObject() {
         return execute(new JSONObjectParser());
+    }
+
+    @Override
+    public Future<JSONArray> asJSONArray() {
+        return execute(new JSONArrayParser());
     }
 
     @Override
