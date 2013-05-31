@@ -25,6 +25,15 @@
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
  * Request level logging and profiling
 
+### Simple Twitter Client Sample
+
+The included documented ion-sample project is a minimal Twitter client that demonstrates some common Android operations:
+ * Download JSON from a server (twitter feed)
+ * Populate a ListView Adapter and fetch more data as you scroll to the end
+ * Put images from a URLs into ImageViews (twitter profile pictures)
+
+Looking for more? Check out 
+
 ### Examples
 
 #### Get JSON

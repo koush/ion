@@ -407,7 +407,6 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
             return;
         }
 
-        imageView.setAnimation(animation);
-        animation.start();
+        imageView.startAnimation(animation);
     }
 }

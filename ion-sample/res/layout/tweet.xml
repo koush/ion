@@ -6,7 +6,7 @@
               android:layout_width="match_parent"
               android:layout_height="wrap_content">
 
-    <com.koushikdutta.ion.NetworkImageView
+    <ImageView
             android:id="@+id/image"
             android:layout_width="64dp"
             android:layout_height="64dp"
