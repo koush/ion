@@ -37,7 +37,7 @@ public class Twitter extends Activity {
                 if (convertView == null)
                     convertView = getLayoutInflater().inflate(R.layout.tweet, null);
 
-                // we're near the end, so load more
+                // we're near the end of the list adapter, so load more items
                 if (position >= getCount() - 3)
                     load();
 

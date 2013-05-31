@@ -46,16 +46,10 @@ public class ProgressBarDownload extends Activity {
                 downloading = Ion.with(ProgressBarDownload.this)
                     // this is a 180MB zip file to test with
                     .load("http://developer.clockworkmod.com/downloads/51/4883/cm-10.1-20130512-CPUFREQ-m7.zip")
-                    // progress can be notified on non ui thread by using
-                    // the .progress call. ProgressBars can be updated on a non-UI thread.
-                    .progress(new IonBodyParamsRequestBuilder.ProgressCallback() {
-                         @Override
-                         public void onProgress(int downloaded, int total) {
-                             float percent = (float) downloaded / total * 100f;
-                             progressBar.setProgress((int) percent);
-                         }
-                     })
-                    // notification on progress can also happen on the UI thread
+                    // attach the percentage report to a progress bar.
+                    // can also attach to a ProgressDialog with progressDialog.
+                    .progressBar(progressBar)
+                    // callbacks on progress can happen on the UI thread
                     // via progressHandler. This is useful if you need to update a TextView.
                     // Updates to TextViews MUST happen on the UI thread.
                     .progressHandler(new IonBodyParamsRequestBuilder.ProgressCallback() {

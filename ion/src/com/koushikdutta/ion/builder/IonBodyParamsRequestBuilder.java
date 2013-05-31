@@ -1,6 +1,8 @@
 package com.koushikdutta.ion.builder;
 
+import android.app.ProgressDialog;
 import android.os.Handler;
+import android.widget.ProgressBar;
 
 import org.json.JSONObject;
 
@@ -38,6 +40,20 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @return
      */
     public IonBodyParamsRequestBuilder progressHandler(ProgressCallback callback);
+
+    /**
+     * Specify a ProgressBar to update during the request
+     * @param progressBar
+     * @return
+     */
+    public IonBodyParamsRequestBuilder progressBar(ProgressBar progressBar);
+
+    /**
+     * Specify a ProgressDialog to update during the request
+     * @param progressDialog
+     * @return
+     */
+    public IonBodyParamsRequestBuilder progressDialog(ProgressDialog progressDialog);
 
     /**
      * Post the Future callback onto the given handler. Not specifying this explicitly

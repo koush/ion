@@ -2,31 +2,47 @@ package com.koushikdutta.ion;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.widget.ImageView;
-import com.koushikdutta.async.*;
+import android.widget.ProgressBar;
+
+import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.DataEmitter;
+import com.koushikdutta.async.DataSink;
+import com.koushikdutta.async.DataTrackingEmitter;
 import com.koushikdutta.async.DataTrackingEmitter.DataTracker;
+import com.koushikdutta.async.FilteredDataEmitter;
+import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.future.TransformFuture;
-import com.koushikdutta.async.http.*;
+import com.koushikdutta.async.http.AsyncHttpGet;
+import com.koushikdutta.async.http.AsyncHttpPost;
+import com.koushikdutta.async.http.AsyncHttpRequest;
+import com.koushikdutta.async.http.AsyncHttpRequestBody;
+import com.koushikdutta.async.http.JSONObjectBody;
+import com.koushikdutta.async.http.Multimap;
+import com.koushikdutta.async.http.MultipartFormDataBody;
+import com.koushikdutta.async.http.StringBody;
+import com.koushikdutta.async.http.UrlEncodedFormBody;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.JSONArrayParser;
 import com.koushikdutta.async.parser.JSONObjectParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
+import com.koushikdutta.ion.Loader.LoaderEmitter;
+import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
 import com.koushikdutta.ion.builder.IonFormMultipartBodyRequestBuilder;
 import com.koushikdutta.ion.builder.IonFutureRequestBuilder;
 import com.koushikdutta.ion.builder.IonLoadRequestBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
-import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
-import com.koushikdutta.ion.Loader.LoaderEmitter;
 import com.koushikdutta.ion.builder.IonUrlEncodedBodyRequestBuilder;
 
 import org.json.JSONArray;
@@ -217,6 +233,19 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
                         return;
                     }
 
+                    int percent = (int)((float)totalBytesRead / total * 100f);
+
+                    if (progressBar != null) {
+                        ProgressBar bar = progressBar.get();
+                        if (bar != null)
+                            bar.setProgress(percent);
+                    }
+                    if (progressDialog != null) {
+                        ProgressDialog dlg = progressDialog.get();
+                        if (dlg != null)
+                            dlg.setProgress(percent);
+                    }
+
                     if (progress != null)
                         progress.onProgress(totalBytesRead, total);
 
@@ -232,6 +261,21 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
             });
         }
     }
+
+    @Override
+    public IonBodyParamsRequestBuilder progressBar(ProgressBar progressBar) {
+        this.progressBar = new WeakReference<ProgressBar>(progressBar);
+        return this;
+    }
+
+    @Override
+    public IonBodyParamsRequestBuilder progressDialog(ProgressDialog progressDialog) {
+        this.progressDialog = new WeakReference<ProgressDialog>(progressDialog);
+        return this;
+    }
+
+    WeakReference<ProgressBar> progressBar;
+    WeakReference<ProgressDialog> progressDialog;
 
     ProgressCallback progress;
     @Override
