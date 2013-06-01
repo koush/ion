@@ -32,7 +32,7 @@ public class IonBitmapCache {
     public IonBitmapCache(Ion ion) {
         Context context = ion.getContext();
         this.ion = ion;
-        mDeadCache = new LruBitmapCache(getHeapSize(context));
+        mDeadCache = new LruBitmapCache(getHeapSize(context) / 8);
         mMetrics = new DisplayMetrics();
         ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
                 .getDefaultDisplay().getMetrics(mMetrics);

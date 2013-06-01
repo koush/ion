@@ -2,6 +2,7 @@ package com.koushikdutta.ion.sample;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -27,6 +28,9 @@ public class ProgressBarDownload extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Enable global Ion logging
+        Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
 
         setContentView(R.layout.progress);
 
@@ -77,9 +81,13 @@ public class ProgressBarDownload extends Activity {
     }
 
     void resetDownload() {
+        // cancel any pending download
         downloading.cancel();
         downloading = null;
+
+        // reset the ui
         download.setText("Download");
+        downloadCount.setText(null);
         downloadCount.setText(null);
         progressBar.setProgress(0);
     }
