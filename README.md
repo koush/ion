@@ -79,6 +79,12 @@ Ion.with(context).load("http://example.com/post")
 ```java
 Ion.with(context).load("http://example.com/really-big-file.zip")
 .progressBar(progressBar)
+// can also use a custom callback
+.progress(new ProgressCallback() {@Override
+   public void onProgress(int downloaded, int total) {
+       System.out.println("" + downloaded + " / " + total);
+   }
+})
 .write(new File("/sdcard/cm-11.zip")
 .setCallback(new FutureCallback<File>() {
    @Override
@@ -222,8 +228,8 @@ Ion.with(context).load("http://example.com/thing.json")
 Log entries will look like this:
 
 ```
-D/HttpTests(23153): (0 ms) http://example.com/thing.json: Executing request.
-D/HttpTests(23153): (106 ms) http://example.com/thing.json: Connecting socket
-D/HttpTests(23153): (2985 ms) http://example.com/thing.json: Response is not cacheable
-D/HttpTests(23153): (3003 ms) http://example.com/thing.json: Connection successful
+D/MyLogs(23153): (0 ms) http://example.com/thing.json: Executing request.
+D/MyLogs(23153): (106 ms) http://example.com/thing.json: Connecting socket
+D/MyLogs(23153): (2985 ms) http://example.com/thing.json: Response is not cacheable
+D/MyLogs(23153): (3003 ms) http://example.com/thing.json: Connection successful
 ```
