@@ -3,7 +3,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.4'
+      classpath 'com.android.tools.build:gradle:0.4.+'
     }
 }
 apply plugin: 'android-library'
@@ -32,3 +32,4 @@ android {
     }
 }
 
+apply from: 'https://raw.github.com/koush/mvn-repo/master/maven.gradle'
