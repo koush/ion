@@ -159,6 +159,7 @@ Future<Bitmap> bitmap = Ion.with(context)
     .load("http://example.com/image.png")
     .intoImageView(imageView);
 
+```
 
 #### Cancelling Requests
 
