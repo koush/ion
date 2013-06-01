@@ -7,7 +7,7 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder.ProgressCallback;
+import com.koushikdutta.ion.ProgressCallback;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;

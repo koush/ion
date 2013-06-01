@@ -10,7 +10,7 @@ import android.widget.Toast;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
+import com.koushikdutta.ion.ProgressCallback;
 
 import java.io.File;
 
@@ -52,7 +52,7 @@ public class ProgressBarDownload extends Activity {
                     // callbacks on progress can happen on the UI thread
                     // via progressHandler. This is useful if you need to update a TextView.
                     // Updates to TextViews MUST happen on the UI thread.
-                    .progressHandler(new IonBodyParamsRequestBuilder.ProgressCallback() {
+                    .progressHandler(new ProgressCallback() {
                         @Override
                         public void onProgress(int downloaded, int total) {
                             downloadCount.setText("" + downloaded + " / " + total);

@@ -4,6 +4,8 @@ import android.app.ProgressDialog;
 import android.os.Handler;
 import android.widget.ProgressBar;
 
+import com.koushikdutta.ion.ProgressCallback;
+
 import org.json.JSONObject;
 
 /**
@@ -17,13 +19,6 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @return
      */
     public IonBodyParamsRequestBuilder setLogging(String tag, int level);
-
-    /**
-     * Callback that is invoked on download progress
-     */
-    public interface ProgressCallback {
-        void onProgress(int downloaded, int total);
-    }
 
     /**
      * Specify a callback that is invoked on download progress. This will not be invoked
