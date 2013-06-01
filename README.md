@@ -41,7 +41,7 @@ The included documented [ion-sample](https://github.com/koush/ion/tree/master/io
 #### More Examples
 
 Looking for more? Check out the examples below that demonstrate some other common scenarios. You can also take a look
-at 30+ ion unit tests in the [ion-test](https://github.com/koush/ion/tree/master/ion-test).
+at 30+ ion unit tests in the [ion-test](https://github.com/koush/ion/tree/master/ion-test/src/com/koushikdutta/ion/test).
 
 #### Get JSON
 
