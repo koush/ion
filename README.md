@@ -24,7 +24,7 @@
    * Gzip/Deflate Compression
    * Connection reuse
    * Cookies
- * Request level logging and profiling
+ * Request level [logging and profiling](https://github.com/koush/ion#logging)
  * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
  * Supports file:/, http(s):/, and content:/ URIs
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
@@ -192,7 +192,7 @@ public void getTweets() throws Exception {
 }
 ```
 
-### Logging
+#### Logging
 
 Wondering why your app is slow? Ion lets you do both global and request level logging.
 
