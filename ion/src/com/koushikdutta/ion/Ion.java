@@ -9,6 +9,8 @@ import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
+import com.koushikdutta.ion.builder.IonFutureRequestBuilder;
 import com.koushikdutta.ion.builder.IonLoadRequestBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
@@ -25,13 +27,36 @@ import java.util.WeakHashMap;
  * Created by koush on 5/21/13.
  */
 public class Ion {
-    /***
-     * Get the default Ion object instance and being building a request
+    /**
+     * Get the default Ion object instance and begin building a request
+     * with the given uri
      * @param context
+     * @param uri
      * @return
      */
-    public static IonLoadRequestBuilder with(Context context) {
-        return getDefault(context).build(context);
+    public static IonBodyParamsRequestBuilder with(Context context, String uri) {
+        return getDefault(context).build(context, uri);
+    }
+
+    /**
+     * Get the default Ion object instance and begin building an operation
+     * on the given file
+     * @param context
+     * @param file
+     * @return
+     */
+    public static IonFutureRequestBuilder with(Context context, File file) {
+        return getDefault(context).build(context, file);
+    }
+
+    /**
+     * Begin building an operation on the given file
+     * @param context
+     * @param file
+     * @return
+     */
+    public IonFutureRequestBuilder build(Context context, File file) {
+        return new IonRequestBuilder(context, this).load(file);
     }
 
     /**
@@ -56,12 +81,13 @@ public class Ion {
     }
 
     /**
-     * Create a builder that can be used to build an network request
+     * Begin building a request with the given uri
      * @param context
+     * @param uri
      * @return
      */
-    public IonLoadRequestBuilder build(Context context) {
-        return new IonRequestBuilder(context, this);
+    public IonBodyParamsRequestBuilder build(Context context, String uri) {
+        return new IonRequestBuilder(context, this).load(uri);
     }
 
     /**

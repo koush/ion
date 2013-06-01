@@ -20,7 +20,8 @@ public class ContentTests extends AndroidTestCase {
             if (id != null)
                 break;
         }
-        Ion.with(getContext()).load(id).write(new FileOutputStream("/sdcard/test.png")).get();
+        Ion.with(getContext(), id)
+        .write(new FileOutputStream("/sdcard/test.png")).get();
         assertNotNull(id);
         assertNotNull(c);
     }
@@ -33,7 +34,8 @@ public class ContentTests extends AndroidTestCase {
             if (id != null)
                 break;
         }
-        Ion.with(getContext()).load(id).write(new File("/sdcard/test2.png")).get();
+        Ion.with(getContext(), id)
+        .write(new File("/sdcard/test2.png")).get();
         assertNotNull(id);
         assertNotNull(c);
     }

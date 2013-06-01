@@ -31,15 +31,13 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testString() throws Exception {
-        assertNotNull(Ion.with(getContext())
-                .load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        assertNotNull(Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
                 .asString().get());
     }
 
     public void testStringWithCallback() throws Exception {
         final Semaphore semaphore = new Semaphore(0);
-        Ion.with(getContext())
-                .load("http://www.clockworkmod.com/")
+        Ion.with(getContext(),"http://www.clockworkmod.com/")
                 // need to null out the handler since the semaphore blocks the main thread,
                 // and ion's default behavior is to post back onto the main thread or calling Handler.
                 .setHandler(null)
@@ -60,8 +58,7 @@ public class HttpTests extends AndroidTestCase {
         final Semaphore semaphore = new Semaphore(0);
         final Semaphore progressSemaphore = new Semaphore(0);
         final Md5 md5 = Md5.createInstance();
-        Ion.with(getContext())
-                .load("https://github.com/koush/AndroidAsync/raw/master/AndroidAsyncTest/testdata/6691924d7d24237d3b3679310157d640")
+        Ion.with(getContext(),"https://github.com/koush/AndroidAsync/raw/master/AndroidAsyncTest/testdata/6691924d7d24237d3b3679310157d640")
                 .setHandler(null)
                 .setTimeout(600000)
                 .progress(new ProgressCallback() {
@@ -88,8 +85,7 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testJSONObject() throws Exception {
-        JSONObject ret = Ion.with(getContext())
-                .load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        JSONObject ret = Ion.with(getContext(),"https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
                 .asJSONObject().get();
         assertEquals("bar", ret.getString("foo"));
     }
@@ -97,24 +93,21 @@ public class HttpTests extends AndroidTestCase {
     public void testPostJSONObject() throws Exception {
         JSONObject post = new JSONObject();
         post.put("ping", "pong");
-        JSONObject ret = Ion.with(getContext())
-                .load("https://koush.clockworkmod.com/test/echo")
+        JSONObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
                 .setJSONObjectBody(post)
                 .asJSONObject().get();
         assertEquals("pong", ret.getString("ping"));
     }
 
     public void testUrlEncodedFormBody() throws Exception {
-        JSONObject ret = Ion.with(getContext())
-                .load("https://koush.clockworkmod.com/test/echo")
+        JSONObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
                 .setBodyParameter("blit", "bip")
                 .asJSONObject().get();
         assertEquals("bip", ret.getString("blit"));
     }
 
     public void testMultipart() throws Exception {
-        JSONObject ret = Ion.with(getContext())
-                .load("https://koush.clockworkmod.com/test/echo")
+        JSONObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
                 .setMultipartParameter("goop", "noop")
                 .asJSONObject().get();
         assertEquals("noop", ret.getString("goop"));
@@ -124,7 +117,7 @@ public class HttpTests extends AndroidTestCase {
         Ion ion = Ion.getDefault(getContext());
         ion.getCookieMiddleware().getCookieStore().removeAll();
 
-        ion.build(getContext()).load("http://google.com")
+        ion.build(getContext(), "http://google.com")
                 .asString()
                 .get();
 
@@ -139,8 +132,7 @@ public class HttpTests extends AndroidTestCase {
         Ion.getDefault(getContext()).cancelAll();
         assertEquals(Ion.getDefault(getContext()).getPendingRequestCount(getContext()), 0);
 
-        Ion.with(getContext())
-                .load("http://koush.clockworkmod.com/test/hang")
+        Ion.with(getContext(),"http://koush.clockworkmod.com/test/hang")
                 .setHandler(null)
                 .asJSONObject();
 
@@ -169,8 +161,7 @@ public class HttpTests extends AndroidTestCase {
         array.put(dummy2);
 
         final Semaphore semaphore = new Semaphore(0);
-        Ion.with(getContext())
-                .load("https://koush.clockworkmod.com/test/echo")
+        Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
                 .setHandler(null)
                 .setJSONArrayBody(array)
                 .as(new TypeToken<List<Dummy>>(){})

@@ -12,7 +12,6 @@
  * Easy to use Fluent API designed for Android
    * Automatically cancels operations when the calling Activity finishes
    * Manages invocation back onto the UI thread
-   * ImageView loading, caching, and memory management (including ListView and convertView recycling)
    * All operations return a [Future](https://github.com/koush/ion#futures) and [can be cancelled](https://github.com/koush/ion#cancelling-requests)
  * HTTP POST/PUT:
    * text/plain
@@ -47,7 +46,7 @@ at 30+ ion unit tests in the [ion-test](https://github.com/koush/ion/tree/master
 #### Get JSON
 
 ```java
-Ion.with(context).load("http://example.com/thing.json")
+Ion.with(context, "http://example.com/thing.json")
 .asJSONObject()
 .setCallback(new FutureCallback<JSONObject>() {
    @Override
@@ -63,7 +62,7 @@ Ion.with(context).load("http://example.com/thing.json")
 JSONObject json = new JSONObject();
 json.putString("foo", "bar");
 
-Ion.with(context).load("http://example.com/post")
+Ion.with(context, "http://example.com/post")
 .setJSONObjectBody(json)
 .asJSONObject()
 .setCallback(new FutureCallback<JSONObject>() {
@@ -77,8 +76,7 @@ Ion.with(context).load("http://example.com/post")
 #### Post application/x-www-form-urlencoded and read a String
 
 ```java
-Ion.with(getContext())
-.load("https://koush.clockworkmod.com/test/echo")
+Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
 .setBodyParameter("goop", "noop")
 .setBodyParameter("foo", "bar")
 .asString()
@@ -88,8 +86,7 @@ Ion.with(getContext())
 #### Post multipart/form-data and read JSON
 
 ```java
-Ion.with(getContext())
-.load("https://koush.clockworkmod.com/test/echo")
+Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
 .setMultipartParameter("goop", "noop")
 .setMultipartFile("filename.zip", new File("/sdcard/filename.zip"))
 .asJSONObject()
@@ -99,7 +96,7 @@ Ion.with(getContext())
 #### Download a File with a progress bar
 
 ```java
-Ion.with(context).load("http://example.com/really-big-file.zip")
+Ion.with(context, "http://example.com/really-big-file.zip")
 .progressBar(progressBar)
 // can also use a custom callback
 .progress(new ProgressCallback() {@Override
@@ -120,7 +117,7 @@ Ion.with(context).load("http://example.com/really-big-file.zip")
 #### Setting Headers
 
 ```java
-Ion.with(context).load("http://example.com/test.txt")
+Ion.with(context, "http://example.com/test.txt")
 // set the header
 .setHeader("foo", "bar")
 .asString()
@@ -131,8 +128,7 @@ Ion.with(context).load("http://example.com/test.txt")
 
 ```java
 // This is the "long" way to do build an ImageView request... it allows you to set headers, etc.
-Ion.with(context)
-.load("http://example.com/image.png")
+Ion.with(context, "http://example.com/image.png")
 .withBitmap()
 .placeholder(R.drawable.placeholder_image)
 .error(R.drawable.error_image)
@@ -204,7 +200,7 @@ Though you should try to use callbacks for handling requests whenever possible, 
 All Futures have a Future<T>.get() method that waits for the result of the request, by blocking if necessary.
 
 ```java
-JSONObject json = Ion.with(context).load("http://example.com/thing.json").asJSONObject().get();
+JSONObject json = Ion.with(context, "http://example.com/thing.json").asJSONObject().get();
 ```
 
 
@@ -242,7 +238,7 @@ Ion.getDefault(getContext()).setLogging("MyLogs", Log.DEBUG);
 Or to enable it on just a single request:
 
 ```java
-Ion.with(context).load("http://example.com/thing.json")
+Ion.with(context, "http://example.com/thing.json")
 .setLogging("MyLogs", Log.DEBUG)
 .asJSONObject();
 ```
