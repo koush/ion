@@ -159,6 +159,14 @@ Future<Bitmap> bitmap = Ion.with(context)
     .load("http://example.com/image.png")
     .intoImageView(imageView);
 
+
+#### Cancelling Requests
+
+Futures can be cancelled by calling .cancel():
+
+```java
+bitmap.cancel();
+json.cancel();
 ```
 
 #### Blocking on Requests
