@@ -186,7 +186,7 @@ JSONObject json = Ion.with(context).load("http://example.com/thing.json").asJSON
 ```
 
 
-#### Seamlessly use your own Java classes with Gson
+#### Seamlessly use your own Java classes with [Gson](https://code.google.com/p/google-gson/)
 ```java
 public static class Tweet {
     public String id;
