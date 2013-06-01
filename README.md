@@ -167,20 +167,16 @@ public interface Future<T> extends Cancellable, java.util.concurrent.Future<T> {
     public Future<T> setCallback(FutureCallback<T> callback);
 }
 
-Future<String> string = Ion.with(context)
-    .load("http://example.com/string.txt")
+Future<String> string = Ion.with(context, "http://example.com/string.txt")
     .asString();
 
-Future<JSONObject> json = Ion.with(context)
-    .load("http://example.com/json.json")
+Future<JSONObject> json = Ion.with(context, "http://example.com/json.json")
     .asJSONObject();
 
-Future<File> file = Ion.with(context)
-    .load("http://example.com/file.zip")
+Future<File> file = Ion.with(context, "http://example.com/file.zip")
     .write(new File("/sdcard/file.zip"));
 
-Future<Bitmap> bitmap = Ion.with(context)
-    .load("http://example.com/image.png")
+Future<Bitmap> bitmap = Ion.with(context, "http://example.com/image.png")
     .intoImageView(imageView);
 
 ```
@@ -213,8 +209,7 @@ public static class Tweet {
 }
 
 public void getTweets() throws Exception {
-    Ion.with(context)
-    .load("http://example.com/api/tweets")
+    Ion.with(context, "http://example.com/api/tweets")
     .as(new TypeToken<List<Tweet>>(){});
     .setCallback(new FutureCallback<List<Tweet>>() {
        @Override
