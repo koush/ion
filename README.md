@@ -82,7 +82,7 @@ Ion.with(context).load("http://example.com/really-big-file.zip")
 .write(new File("/sdcard/cm-11.zip")
 .setCallback(new FutureCallback<File>() {
    @Override
-    public void onCompleted(Exception e, String File) {
+    public void onCompleted(Exception e, File file) {
         // download done...
         // do stuff with the File or error
     }
@@ -185,7 +185,7 @@ public void getTweets() throws Exception {
     .as(new TypeToken<List<Tweet>>(){});
     .setCallback(new FutureCallback<List<Tweet>>() {
        @Override
-        public void onCompleted(Exception e, String File) {
+        public void onCompleted(Exception e, List<Tweet> tweets) {
           // chirp chirp
         }
     });
