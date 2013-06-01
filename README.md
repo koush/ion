@@ -4,11 +4,11 @@
 
 #### Features
  * Asynchronously download:
-   * Images (into ImageViews or Bitmaps)
-   * JSON
+   * [Images](https://github.com/koush/ion#load-an-image-into-an-imageview) (into ImageViews or Bitmaps)
+   * [JSON](https://github.com/koush/ion#get-json)
    * Strings
-   * Files
-   * Java types using Gson
+   * [Files](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
+   * Java types using [Gson](https://github.com/koush/ion#seamlessly-use-your-own-java-classes-with-gson)
  * Easy to use Fluent API designed for Android
    * Automatically cancels operations when the calling Activity finishes
    * Manages invocation back onto the UI thread
@@ -16,7 +16,7 @@
    * All operations return a [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) and can be cancelled
  * HTTP POST/PUT:
    * text/plain
-   * application/json
+   * [application/json](https://github.com/koush/ion#seamlessly-use-your-own-java-classes-with-gson)
    * application/x-www-form-urlencoded
    * multipart/form-data
  * Transparent usage of HTTP features and optimizations:
@@ -25,7 +25,7 @@
    * Connection reuse
    * Cookies
  * Request level logging and profiling
- * Download progress callbacks
+ * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
  * Supports file:/, http(s):/, and content:/ URIs
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
 
@@ -171,7 +171,7 @@ JSONObject json = Ion.with(context).load("http://example.com/thing.json").asJSON
 ```
 
 
-### Seamlessly use your own Java classes with Gson
+#### Seamlessly use your own Java classes with Gson
 ```java
 public static class Tweet {
     public String id;
