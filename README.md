@@ -17,8 +17,8 @@
  * HTTP POST/PUT:
    * text/plain
    * [application/json](https://github.com/koush/ion#post-json-and-read-json)
-   * application/x-www-form-urlencoded
-   * multipart/form-data
+   * [application/x-www-form-urlencoded](https://github.com/koush/ion#post-applicationx-www-form-urlencoded-and-read-a-string)
+   * [multipart/form-data](https://github.com/koush/ion#post-multipartform-data-and-read-json)
  * Transparent usage of HTTP features and optimizations:
    * Caching
    * Gzip/Deflate Compression
