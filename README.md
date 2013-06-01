@@ -13,7 +13,7 @@
    * Automatically cancels operations when the calling Activity finishes
    * Manages invocation back onto the UI thread
    * ImageView loading, caching, and memory management (including ListView and convertView recycling)
-   * All operations return a [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) and can be cancelled
+   * All operations return a [Future](https://github.com/koush/ion#futures) and can be cancelled
  * HTTP POST/PUT:
    * text/plain
    * [application/json](https://github.com/koush/ion#seamlessly-use-your-own-java-classes-with-gson)
@@ -190,4 +190,31 @@ public void getTweets() throws Exception {
         }
     });
 }
+```
+
+### Logging
+
+Wondering why your app is slow? Ion lets you do both global and request level logging.
+
+To enable it globally:
+
+```java
+Ion.getDefault(getContext()).setLogging("MyLogs", Log.DEBUG);
+```
+
+Or to enable it on just a single request:
+
+```java
+Ion.with(context).load("http://example.com/thing.json")
+.setLogging("MyLogs", Log.DEBUG)
+.asJSONObject();
+```
+
+Log entries will look like this:
+
+```
+D/HttpTests(23153): (0 ms) http://example.com/thing.json: Executing request.
+D/HttpTests(23153): (106 ms) http://example.com/thing.json: Connecting socket
+D/HttpTests(23153): (2985 ms) http://example.com/thing.json: Response is not cacheable
+D/HttpTests(23153): (3003 ms) http://example.com/thing.json: Connection successful
 ```
