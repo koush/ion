@@ -16,7 +16,7 @@
    * All operations return a [Future](https://github.com/koush/ion#futures) and [can be cancelled](https://github.com/koush/ion#cancelling-requests)
  * HTTP POST/PUT:
    * text/plain
-   * [application/json](https://github.com/koush/ion#seamlessly-use-your-own-java-classes-with-gson)
+   * [application/json](https://github.com/koush/ion#post-json-and-read-json)
    * application/x-www-form-urlencoded
    * multipart/form-data
  * Transparent usage of HTTP features and optimizations:
@@ -72,6 +72,28 @@ Ion.with(context).load("http://example.com/post")
         // do stuff with the result or error
     }
 });
+```
+
+#### Post application/x-www-form-urlencoded and read a String
+
+```java
+Ion.with(getContext())
+.load("https://koush.clockworkmod.com/test/echo")
+.setBodyParameter("goop", "noop")
+.setBodyParameter("foo", "bar")
+.asString()
+.setCallback(...)
+```
+
+#### Post multipart/form-data and read JSON
+
+```java
+Ion.with(getContext())
+.load("https://koush.clockworkmod.com/test/echo")
+.setMultipartParameter("goop", "noop")
+.setMultipartFile("filename.zip", new File("/sdcard/filename.zip"))
+.asJSONObject()
+.setCallback(...)
 ```
 
 #### Download a File with a progress bar
