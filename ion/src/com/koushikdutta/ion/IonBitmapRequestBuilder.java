@@ -372,15 +372,22 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
     private void setPlaceholder(ImageView imageView) {
         if (imageView == null)
             return;
-        doAnimation(imageView, loadAnimation);
         setImageView(imageView, placeholderDrawable);
+        doAnimation(imageView, loadAnimation);
     }
 
     private void setErrorImage(ImageView imageView) {
         if (imageView == null)
             return;
-        doAnimation(imageView, inAnimation);
-        setImageView(imageView, errorDrawable != null ? errorDrawable : placeholderDrawable);
+        boolean usingPlaceholder = false;
+        Drawable drawable = errorDrawable;
+        if (drawable == null) {
+            drawable = placeholderDrawable;
+            usingPlaceholder = true;
+        }
+        setImageView(imageView, drawable);
+        if (!usingPlaceholder)
+            doAnimation(imageView, inAnimation);
     }
 
     Animation inAnimation;

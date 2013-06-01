@@ -30,7 +30,7 @@ public class Twitter extends Activity {
         // Enable global Ion logging
         Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
 
-        // create a tweet adapter
+        // create a tweet adapter for our list view
         tweetAdapter = new ArrayAdapter<JSONObject>(this, 0) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {

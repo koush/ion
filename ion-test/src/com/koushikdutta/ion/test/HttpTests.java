@@ -1,4 +1,4 @@
-package com.example.ion.test;
+package com.koushikdutta.ion.test;
 
 import android.test.AndroidTestCase;
 import android.util.Log;
