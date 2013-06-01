@@ -13,7 +13,7 @@
    * Automatically cancels operations when the calling Activity finishes
    * Manages invocation back onto the UI thread
    * ImageView loading, caching, and memory management (including ListView and convertView recycling)
-   * All operations return a [Future](https://github.com/koush/ion#futures) and can be cancelled
+   * All operations return a [Future](https://github.com/koush/ion#futures) and [can be cancelled](https://github.com/koush/ion#cancelling-requests)
  * HTTP POST/PUT:
    * text/plain
    * [application/json](https://github.com/koush/ion#seamlessly-use-your-own-java-classes-with-gson)
@@ -128,8 +128,8 @@ The Ion Image load API has the following features:
  * Bitmap transformations via the .transform(Transform)
  * Animate loading and loaded ImageView states
 
-
 #### Futures
+
 _All_ operations return a custom [Future](http://developer.android.com/reference/java/util/concurrent/Future.html) that allows
 you to specify a callback that runs on completion.
 
