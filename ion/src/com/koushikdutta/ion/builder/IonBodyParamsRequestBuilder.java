@@ -6,6 +6,7 @@ import android.widget.ProgressBar;
 
 import com.koushikdutta.ion.ProgressCallback;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -89,6 +90,15 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @return
      */
     public IonFutureRequestBuilder setJSONObjectBody(JSONObject jsonObject);
+
+    /**
+     * Specify a JSONArray to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param jsonArray JSONObject to send with the request
+     * @return
+     */
+    public IonFutureRequestBuilder setJSONArrayBody(JSONArray jsonArray);
+
     /**
      * Specify a String to send to the HTTP server. If no HTTP method was explicitly
      * provided in the load call, the default HTTP method, POST, is used.

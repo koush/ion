@@ -2,14 +2,21 @@ buildscript {
     repositories {
         mavenCentral()
     }
+
     dependencies {
       classpath 'com.android.tools.build:gradle:0.4.+'
     }
 }
+
 apply plugin: 'android-library'
+
+repositories {
+    mavenCentral()
+}
 
 dependencies {
     compile project(':AndroidAsync')
+    compile 'com.google.code.gson:gson:2.2.4'
 }
 
 android {
@@ -32,4 +39,4 @@ android {
     }
 }
 
-apply from: 'https://raw.github.com/koush/mvn-repo/master/maven.gradle'
+//apply from: 'https://raw.github.com/koush/mvn-repo/master/maven.gradle'

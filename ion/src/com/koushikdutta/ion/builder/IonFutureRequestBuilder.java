@@ -1,5 +1,6 @@
 package com.koushikdutta.ion.builder;
 
+import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.future.Future;
 
 import org.json.JSONArray;
@@ -59,4 +60,19 @@ public interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, 
      * @return
      */
     public Future<File> write(File file);
+
+    /**
+     * Deserialize the JSON request into a Java object of the given class using Gson.
+     * @param <T>
+     * @return
+     */
+    public <T> Future<T> as(Class<T> clazz);
+
+    /**
+     * Deserialize the JSON request into a Java object of the given class using Gson.
+     * @param token
+     * @param <T>
+     * @return
+     */
+    public <T> Future<T> as(TypeToken<T> token);
 }

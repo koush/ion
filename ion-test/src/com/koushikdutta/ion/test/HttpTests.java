@@ -3,16 +3,20 @@ package com.koushikdutta.ion.test;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
+import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -148,5 +152,35 @@ public class HttpTests extends AndroidTestCase {
 
         Thread.sleep(500);
         Ion.getDefault(getContext()).getHttpClient().getServer().dump();
+    }
+
+    public static class Dummy {
+        public String foo;
+    }
+
+    public void testGson() throws Exception {
+        JSONObject dummy1 = new JSONObject();
+        dummy1.put("foo", "bar");
+        JSONObject dummy2 = new JSONObject();
+        dummy2.put("pong", "ping");
+
+        JSONArray array = new JSONArray();
+        array.put(dummy1);
+        array.put(dummy2);
+
+        final Semaphore semaphore = new Semaphore(0);
+        Ion.with(getContext())
+                .load("https://koush.clockworkmod.com/test/echo")
+                .setHandler(null)
+                .setJSONArrayBody(array)
+                .as(new TypeToken<List<Dummy>>(){})
+                .setCallback(new FutureCallback<List<Dummy>>() {
+                    @Override
+                    public void onCompleted(Exception e, List<Dummy> result) {
+                        assertEquals("bar", result.get(0).foo);
+                        semaphore.release();
+                    }
+                });
+        assertTrue(semaphore.tryAcquire(50000, TimeUnit.MILLISECONDS));
     }
 }

@@ -10,6 +10,7 @@ import android.os.Handler;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
+import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.DataSink;
@@ -26,6 +27,7 @@ import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.AsyncHttpRequestBody;
+import com.koushikdutta.async.http.JSONArrayBody;
 import com.koushikdutta.async.http.JSONObjectBody;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.MultipartFormDataBody;
@@ -48,6 +50,7 @@ import com.koushikdutta.ion.builder.IonUrlEncodedBodyRequestBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -121,6 +124,12 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     public IonFutureRequestBuilder setJSONObjectBody(JSONObject jsonObject) {
         setHeader("Content-Type", "application/json");
         return setBody(new JSONObjectBody(jsonObject));
+    }
+
+    @Override
+    public IonFutureRequestBuilder setJSONArrayBody(JSONArray jsonArray) {
+        setHeader("Content-Type", "application/json");
+        return setBody(new JSONArrayBody(jsonArray));
     }
 
     @Override
@@ -453,5 +462,15 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     public IonBodyParamsRequestBuilder setLogging(String tag, int level) {
         request.setLogging(tag, level);
         return this;
+    }
+
+    @Override
+    public <T> Future<T> as(Class<T> clazz) {
+        return execute(new GsonParser<T>(ion.gson, clazz));
+    }
+
+    @Override
+    public <T> Future<T> as(TypeToken<T> token) {
+        return execute(new GsonParser<T>(ion.gson, token));
     }
 }

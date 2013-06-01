@@ -23,10 +23,11 @@
    * Gzip/Deflate Compression
    * Connection reuse
    * Cookies
- * Supports file:/, http:/, and content:/ URIs
- * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
+ * Serialization to Java types using Gson
  * Request level logging and profiling
  * Download progress callbacks
+ * Supports file:/, http(s):/, and content:/ URIs
+ * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
 
 #### Samples
 
@@ -167,4 +168,26 @@ All Futures have a Future<T>.get() method that waits for the result of the reque
 
 ```java
 JSONObject json = Ion.with(context).load("http://example.com/thing.json").asJSONObject().get();
+```
+
+
+### Seamlessly use own Java classes with Gson
+```java
+public static class Tweet {
+    public String id;
+    public String text;
+    public String photo;
+}
+
+public void getTweets() throws Exception {
+    Ion.with(context)
+    .load("http://example.com/api/tweets")
+    .as(new TypeToken<List<Tweet>>(){});
+    .setCallback(new FutureCallback<List<Tweet>>() {
+       @Override
+        public void onCompleted(Exception e, String File) {
+          // chirp chirp
+        }
+    });
+}
 ```

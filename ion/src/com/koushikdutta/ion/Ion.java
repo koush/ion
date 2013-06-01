@@ -3,6 +3,8 @@ package com.koushikdutta.ion;
 import android.content.Context;
 import android.util.Log;
 import android.widget.ImageView;
+
+import com.google.gson.Gson;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.http.AsyncHttpClient;
@@ -153,9 +155,6 @@ public class Ion {
         httpClient.getServer().dump();
     }
 
-    static class FutureSet extends WeakHashMap<Future, Boolean> {
-    }
-
     /**
      * Get the application Context object in use by this Ion instance
      * @return
@@ -164,20 +163,15 @@ public class Ion {
         return context;
     }
 
-    /**
-     * Return the bitmap cache used by this Ion instance
-     * @return
-     */
-    public IonBitmapCache getBitmapCache() {
-        return bitmapCache;
-    }
-
-    // maintain a list of futures that are in being processed, allow for bulk cancellation
-    WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
+    AsyncHttpClient httpClient;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
-    AsyncHttpClient httpClient;
-    IonBitmapCache bitmapCache;
+
+    static class FutureSet extends WeakHashMap<Future, Boolean> {
+    }
+    // maintain a list of futures that are in being processed, allow for bulk cancellation
+    WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
+
     Context context;
     private Ion(Context context) {
         httpClient = new AsyncHttpClient(new AsyncServer());
@@ -199,12 +193,28 @@ public class Ion {
         .addLoader(new FileLoader());
     }
 
+    /**
+     * Get the Cookie middleware that is attached to the AsyncHttpClient instance.
+     * @return
+     */
     public CookieMiddleware getCookieMiddleware() {
         return cookieMiddleware;
     }
 
+    /**
+     * Get the AsyncHttpClient object in use by this Ion instance
+     * @return
+     */
     public AsyncHttpClient getHttpClient() {
         return httpClient;
+    }
+
+    /**
+     * Get the AsyncServer reactor in use by this Ion instance
+     * @return
+     */
+    public AsyncServer getServer() {
+        return httpClient.getServer();
     }
 
     public class Config {
@@ -228,6 +238,11 @@ public class Ion {
 
     String LOGTAG;
     int logLevel;
+    /**
+     * Set the log level for all requests made by Ion.
+     * @param logtag
+     * @param logLevel
+     */
     public void setLogging(String logtag, int logLevel) {
         LOGTAG = logtag;
         this.logLevel = logLevel;
@@ -252,6 +267,26 @@ public class Ion {
     // by a callback; ie, it was not cancelled.
     WeakReferenceHashTable<String, IonBitmapRequestBuilder.ByteArrayToBitmapFuture> pendingDownloads = new WeakReferenceHashTable<String, IonBitmapRequestBuilder.ByteArrayToBitmapFuture>();
     WeakReferenceHashTable<String, IonBitmapRequestBuilder.BitmapToBitmap> pendingTransforms = new WeakReferenceHashTable<String, IonBitmapRequestBuilder.BitmapToBitmap>();
+
+    IonBitmapCache bitmapCache;
+    /**
+     * Return the bitmap cache used by this Ion instance
+     * @return
+     */
+    public IonBitmapCache getBitmapCache() {
+        return bitmapCache;
+    }
+
+    Gson gson = new Gson();
+    /**
+     * Get the Gson object in use by this Ion instance.
+     * This can be used to customize serialization and deserialization
+     * from java objects.
+     * @return
+     */
+    public Gson getGson() {
+        return gson;
+    }
 
     private static Ion instance;
 }
