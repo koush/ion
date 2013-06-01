@@ -8,6 +8,7 @@
    * JSON
    * Strings
    * Files
+   * Java types using Gson
  * Easy to use Fluent API designed for Android
    * Automatically cancels operations when the calling Activity finishes
    * Manages invocation back onto the UI thread
@@ -23,7 +24,6 @@
    * Gzip/Deflate Compression
    * Connection reuse
    * Cookies
- * Serialization to Java types using Gson
  * Request level logging and profiling
  * Download progress callbacks
  * Supports file:/, http(s):/, and content:/ URIs
