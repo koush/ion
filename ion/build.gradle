@@ -9,7 +9,7 @@ buildscript {
 apply plugin: 'android-library'
 
 dependencies {
-  compile project(':AndroidAsync')
+    compile project(':AndroidAsync')
 }
 
 android {
