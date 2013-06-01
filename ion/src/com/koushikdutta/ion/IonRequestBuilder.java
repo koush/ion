@@ -211,6 +211,12 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         }
 
         @Override
+        protected void error(Exception e) {
+            // don't call superclass which calls setComplete... get onto handler thread.
+            postExecute(this, e, null);
+        }
+
+        @Override
         protected void transform(LoaderEmitter emitter) throws Exception {
             this.emitter = emitter.getDataEmitter();
 
