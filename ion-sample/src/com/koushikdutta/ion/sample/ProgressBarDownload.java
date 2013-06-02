@@ -86,7 +86,7 @@ public class ProgressBarDownload extends Activity {
 
         // reset the ui
         download.setText("Download");
-        downloadCount.setText("");
+        downloadCount.setText(null);
         progressBar.setProgress(0);
     }
 }
