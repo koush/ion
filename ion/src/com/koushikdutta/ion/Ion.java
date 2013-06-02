@@ -118,6 +118,10 @@ public class Ion {
         }
     }
 
+    void removeFutureInFlight(Future future, Object group) {
+
+    }
+
     void addFutureInFlight(Future future, Object group) {
         if (group == null || future == null || future.isDone() || future.isCancelled())
             return;
@@ -210,6 +214,9 @@ public class Ion {
             IonLog.w("unable to set up response cache", e);
         }
         httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context));
+
+        httpClient.getSocketMiddleware().setConnectAllAddresses(true);
+        httpClient.getSSLSocketMiddleware().setConnectAllAddresses(true);
 
         bitmapCache = new IonBitmapCache(this);
 

@@ -132,14 +132,24 @@ public class HttpTests extends AndroidTestCase {
         Ion.getDefault(getContext()).cancelAll();
         assertEquals(Ion.getDefault(getContext()).getPendingRequestCount(getContext()), 0);
 
+        Object cancelGroup = new Object();
         Ion.with(getContext(),"http://koush.clockworkmod.com/test/hang")
                 .setHandler(null)
+                .group(cancelGroup)
                 .asJSONObject();
 
+        // There's no decent way to test this yet...
+        // Connecting should result in 2 keys (since clockworkmod.com has two ips).
+        // One will connect and be used to serve the response.
+        // The other will connect and be recycled.
+        // Cancelling the group will result in the one serving the connection
+        // to be severed. The other one will remain alive.
+
+        // may need to increase this timeout? ugh horrible.
         Thread.sleep(500);
         Ion.getDefault(getContext()).getHttpClient().getServer().dump();
 
-        Ion.getDefault(getContext()).cancelAll();
+        Ion.getDefault(getContext()).cancelAll(cancelGroup);
         assertEquals(Ion.getDefault(getContext()).getPendingRequestCount(getContext()), 0);
 
         Thread.sleep(500);

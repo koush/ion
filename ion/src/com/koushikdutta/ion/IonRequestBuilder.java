@@ -56,6 +56,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -211,12 +212,32 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     private class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> {
         public EmitterTransform() {
             ion.addFutureInFlight(this, context.get());
+            if (groups == null)
+                return;
+            for (WeakReference<Object> ref: groups) {
+                Object group = ref.get();
+                if (group != null)
+                    ion.addFutureInFlight(this, group);
+            }
         }
+
         DataEmitter emitter;
         @Override
         protected void cancelCleanup() {
             if (emitter != null)
                 emitter.close();
+        }
+
+        @Override
+        protected void cleanup() {
+            super.cleanup();
+            if (groups == null)
+                return;
+            for (WeakReference<Object> ref: groups) {
+                Object group = ref.get();
+                if (group != null)
+                    ion.cancelAll(group);
+            }
         }
 
         @Override
@@ -472,5 +493,14 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     @Override
     public <T> Future<T> as(TypeToken<T> token) {
         return execute(new GsonParser<T>(ion.gson, token));
+    }
+
+    ArrayList<WeakReference<Object>> groups;
+    @Override
+    public IonFutureRequestBuilder group(Object groupKey) {
+        if (groups == null)
+            groups = new ArrayList<WeakReference<Object>>();
+        groups.add(new WeakReference<Object>(groupKey));
+        return this;
     }
 }

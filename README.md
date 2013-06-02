@@ -23,9 +23,10 @@
    * Gzip/Deflate Compression
    * Connection reuse
    * Cookies
- * Request level [logging and profiling](https://github.com/koush/ion#logging)
+ * Powerful cancellation semantics that allow grouping cancellation of requests
  * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
  * Supports file:/, http(s):/, and content:/ URIs
+ * Request level [logging and profiling](https://github.com/koush/ion#logging)
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
 
 #### Samples
@@ -245,4 +246,38 @@ D/MyLogs(23153): (0 ms) http://example.com/thing.json: Executing request.
 D/MyLogs(23153): (106 ms) http://example.com/thing.json: Connecting socket
 D/MyLogs(23153): (2985 ms) http://example.com/thing.json: Response is not cacheable
 D/MyLogs(23153): (3003 ms) http://example.com/thing.json: Connection successful
+```
+
+#### Request Groups
+
+By default, Ion automatically places all requests into a group with all the other requests
+created by that Activity or Service. Using the cancelAll(Activity) call, all requests
+still pending can be easily cancelled:
+
+```java
+Future<JSONObject> json1 = Ion.with(activity, "http://example.com/test.json").asJSONObject();
+Future<JSONObject> json2 = Ion.with(activity, "http://example.com/test2.json").asJSONObject();
+
+// later... in activity.onStop
+@Override
+protected void onStop() {
+    super.onStop();
+    Ion.getDefault(activity).cancelAll(activity);
+}
+```
+
+Ion also lets you tag your requests into groups to allow for easy cancellation of requests in that group later:
+
+```java
+Object jsonGroup = new Object();
+Object imageGroup = new Object();
+
+Future<JSONObject> json1 = Ion.with(activity, "http://example.com/test.json").group(jsonGroup)asJSONObject();
+Future<JSONObject> json2 = Ion.with(activity, "http://example.com/test2.json").group(jsonGroup).asJSONObject();
+
+Future<JSONObject> image1 = Ion.with(activity, "http://example.com/test.ong").group(imageGroup).intoImageView(imageView1);
+Future<JSONObject> image2 = Ion.with(activity, "http://example.com/test2.png").group(imageGroup).intoImageView(imageView2);
+
+// later... to cancel only image downloads:
+Ion.getDefault(activity).cancelAll(imageGroup);
 ```

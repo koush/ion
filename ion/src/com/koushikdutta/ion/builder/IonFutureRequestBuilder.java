@@ -75,4 +75,12 @@ public interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, 
      * @return
      */
     public <T> Future<T> as(TypeToken<T> token);
+
+    /**
+     * Add this request to a group specified by groupKey. This key can be used in a later call to
+     * Ion.cancelAll(groupKey) to cancel all the requests in the same group.
+     * @param groupKey
+     * @return
+     */
+    public IonFutureRequestBuilder group(Object groupKey);
 }
