@@ -12,6 +12,7 @@ import android.widget.Button;
 public class Samples extends Activity {
 
     Button twitter;
+    Button twitterGson;
     Button fileDownload;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +25,14 @@ public class Samples extends Activity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(Samples.this, Twitter.class));
+            }
+        });
+
+        twitterGson = (Button)findViewById(R.id.twitter_gson);
+        twitterGson.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, TwitterGson.class));
             }
         });
 

@@ -16,6 +16,9 @@
                 android:name=".Twitter"
                 android:label="Twitter Client Sample"/>
         <activity
+                android:name=".TwitterGson"
+                android:label="Twitter Gson Client Sample"/>
+        <activity
                 android:name=".ProgressBarDownload"
                 android:label="Progress Bar Download"/>
         <activity

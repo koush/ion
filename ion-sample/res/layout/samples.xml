@@ -10,6 +10,10 @@
             android:layout_height="wrap_content"
             android:text="Twitter Client Sample"
             />
+    <Button android:id="@+id/twitter_gson" android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:text="Twitter Gson Client Sample"
+            />
     <Button android:id="@+id/download" android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:text="Progress Bar Download"
