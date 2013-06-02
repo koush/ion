@@ -27,7 +27,7 @@
  * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
  * Supports file:/, http(s):/, and content:/ URIs
  * Request level [logging and profiling](https://github.com/koush/ion#logging)
- * Support for proxy servers like [Charles Proxy](http://www.charlesproxy.com/) to do request analysis
+ * [Support for proxy servers](https://github.com/koush/ion#proxy-servers-like-charles-proxy) like [Charles Proxy](http://www.charlesproxy.com/) to do request analysis
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
 
 #### Samples
@@ -302,7 +302,7 @@ Ion.getDefault(activity).cancelAll(imageGroup);
 
 #### Proxy Servers (like Charles Proxy)
 
-Proxy server settings can be done for all Ion requests, or on a per request basis:
+Proxy server settings can be enabled all Ion requests, or on a per request basis:
 
 ```java
 // proxy all requests
