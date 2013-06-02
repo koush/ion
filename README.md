@@ -272,11 +272,25 @@ Ion also lets you tag your requests into groups to allow for easy cancellation o
 Object jsonGroup = new Object();
 Object imageGroup = new Object();
 
-Future<JSONObject> json1 = Ion.with(activity, "http://example.com/test.json").group(jsonGroup)asJSONObject();
-Future<JSONObject> json2 = Ion.with(activity, "http://example.com/test2.json").group(jsonGroup).asJSONObject();
+Future<JSONObject> json1 = Ion.with(activity, "http://example.com/test.json")
+// tag in a custom group
+.group(jsonGroup)
+.asJSONObject();
 
-Future<JSONObject> image1 = Ion.with(activity, "http://example.com/test.ong").group(imageGroup).intoImageView(imageView1);
-Future<JSONObject> image2 = Ion.with(activity, "http://example.com/test2.png").group(imageGroup).intoImageView(imageView2);
+Future<JSONObject> json2 = Ion.with(activity, "http://example.com/test2.json")
+// use the same custom group as the other json request
+.group(jsonGroup)
+.asJSONObject();
+
+Future<JSONObject> image1 = Ion.with(activity, "http://example.com/test.ong")
+// for this image request, use a different group for images
+.group(imageGroup)
+.intoImageView(imageView1);
+
+Future<JSONObject> image2 = Ion.with(activity, "http://example.com/test2.png")
+// same imageGroup as before
+.group(imageGroup)
+.intoImageView(imageView2);
 
 // later... to cancel only image downloads:
 Ion.getDefault(activity).cancelAll(imageGroup);
