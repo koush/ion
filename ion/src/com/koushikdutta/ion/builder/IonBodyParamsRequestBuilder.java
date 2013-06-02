@@ -21,6 +21,13 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
     public IonBodyParamsRequestBuilder setLogging(String tag, int level);
 
     /**
+     * Route the request through the given proxy server.
+     * @param host
+     * @param port
+     */
+    public IonBodyParamsRequestBuilder proxy(String host, int port);
+
+    /**
      * Specify a callback that is invoked on download progress. This will not be invoked
      * on the UI thread.
      * @param callback

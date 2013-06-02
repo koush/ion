@@ -6,9 +6,17 @@ import android.util.Log;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.Multimap;
+import com.koushikdutta.async.http.server.AsyncHttpServer;
+import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
+import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
+import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
 
@@ -184,4 +192,42 @@ public class HttpTests extends AndroidTestCase {
                 });
         assertTrue(semaphore.tryAcquire(50000, TimeUnit.MILLISECONDS));
     }
-}
+
+    boolean wasProxied;
+    public void testProxy() throws Exception {
+        wasProxied = false;
+        final AsyncServer proxyServer = new AsyncServer();
+        try {
+            AsyncHttpServer httpServer = new AsyncHttpServer();
+            httpServer.get(".*", new HttpServerRequestCallback() {
+                @Override
+                public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
+                    Log.i("Proxy", "Proxying request");
+                    wasProxied = true;
+                    AsyncHttpClient proxying = new AsyncHttpClient(proxyServer);
+
+                    String url = request.getPath();
+                    proxying.get(url, new AsyncHttpClient.StringCallback() {
+                        @Override
+                        public void onCompleted(Exception e, AsyncHttpResponse source, String result) {
+                            response.send(result);
+                        }
+                    });
+                }
+            });
+
+            httpServer.listen(proxyServer, 5555);
+
+            Future<String> ret = Ion.with(getContext(), "http://www.clockworkmod.com")
+            .proxy("localhost", 5555)
+            .asString();
+
+            String data;
+            assertNotNull(data = ret.get(10000, TimeUnit.MILLISECONDS));
+            assertTrue(data.contains("ClockworkMod"));
+            assertTrue(wasProxied);
+        }
+        finally {
+            proxyServer.stop();
+        }
+    }}

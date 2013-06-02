@@ -12,9 +12,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.future.Future;
@@ -24,6 +21,7 @@ import com.koushikdutta.ion.Ion;
 import java.util.List;
 
 public class TwitterGson extends Activity {
+    // Tweet and User are the classes that Gson will deserialize the JSON into
     static class Tweet {
         @SerializedName("retweeted_status")
         Tweet retweetedStatus;
@@ -129,7 +127,8 @@ public class TwitterGson extends Activity {
         // This request loads a URL as JsonArray and invokes
         // a callback on completion.
         loading = Ion.with(this, url)
-            .as(new TypeToken<List<Tweet>>() {})
+            .as(new TypeToken<List<Tweet>>() {
+            })
             .setCallback(new FutureCallback<List<Tweet>>() {
                 @Override
                 public void onCompleted(Exception e, List<Tweet> result) {

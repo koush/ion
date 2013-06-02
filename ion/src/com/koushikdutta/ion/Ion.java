@@ -118,6 +118,40 @@ public class Ion {
         }
     }
 
+    /**
+     * Route all http requests through the given proxy.
+     * @param host
+     * @param port
+     */
+    public void proxy(String host, int port) {
+        httpClient.getSocketMiddleware().enableProxy(host, port);
+    }
+
+    /**
+     * Route all https requests through the given proxy.
+     * Note that https proxying requires that the Android device has the appropriate
+     * root certificate installed to function properly.
+     * @param host
+     * @param port
+     */
+    public void proxySecure(String host, int port) {
+        httpClient.getSSLSocketMiddleware().enableProxy(host, port);
+    }
+
+    /**
+     * Disable routing of http requests through a previous provided proxy
+     */
+    public void disableProxy() {
+        httpClient.getSocketMiddleware().disableProxy();
+    }
+
+    /**
+     * Disable routing of https requests through a previous provided proxy
+     */
+    public void disableSecureProxy() {
+        httpClient.getSocketMiddleware().disableProxy();
+    }
+
     void removeFutureInFlight(Future future, Object group) {
 
     }

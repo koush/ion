@@ -502,4 +502,10 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         groups.add(new WeakReference<Object>(groupKey));
         return this;
     }
+
+    @Override
+    public IonBodyParamsRequestBuilder proxy(String host, int port) {
+        request.enableProxy(host, port);
+        return this;
+    }
 }

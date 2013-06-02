@@ -27,6 +27,7 @@
  * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
  * Supports file:/, http(s):/, and content:/ URIs
  * Request level [logging and profiling](https://github.com/koush/ion#logging)
+ * Support for proxy servers like [Charles Proxy](http://www.charlesproxy.com/) to do request analysis
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
 
 #### Samples
@@ -298,3 +299,21 @@ Future<JsonObject> image2 = Ion.with(activity, "http://example.com/test2.png")
 // later... to cancel only image downloads:
 Ion.getDefault(activity).cancelAll(imageGroup);
 ```
+
+#### Proxy Servers (like Charles Proxy)
+
+Proxy server settings can be done for all Ion requests, or on a per request basis:
+
+```java
+// proxy all requests
+Ion.getDefault(context).proxy("mycomputer", 8888);
+
+// or... to proxy specific requests
+Ion.with(context, "http://example.com/proxied.html")
+.proxy("mycomputer", 8888)
+.getString();
+```
+
+Using Charles Proxy on your desktop computer in conjunction with request proxying will prove invaluable for debugging!
+
+![](ion-sample/charles.png)
