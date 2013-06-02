@@ -286,7 +286,7 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
                         request.getHandler().post(new Runnable() {
                             @Override
                             public void run() {
-                                if (isCancelled())
+                                if (isCancelled() || isDone())
                                     return;
                                 progressHandler.onProgress(totalBytesRead, total);
                             }
