@@ -98,14 +98,17 @@ Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
 
 ```java
 Ion.with(context, "http://example.com/really-big-file.zip")
+// have a ProgressBar get updated automatically with the percent
 .progressBar(progressBar)
+// and a ProgressDialog
+.progressDialog(progressDialog)
 // can also use a custom callback
 .progress(new ProgressCallback() {@Override
    public void onProgress(int downloaded, int total) {
        System.out.println("" + downloaded + " / " + total);
    }
 })
-.write(new File("/sdcard/cm-11.zip")
+.write(new File("/sdcard/really-big-file.zip")
 .setCallback(new FutureCallback<File>() {
    @Override
     public void onCompleted(Exception e, File file) {
