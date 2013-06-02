@@ -2,6 +2,18 @@
 
 ![](ion-sample/ion-sample.png)
 
+### Download
+
+Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.ion&a=ion&v=LATEST) or grab via Maven:
+
+```xml
+<dependency>
+   <groupId>com.koushikdutta.ion</groupId>
+   <artifactId>ion</artifactId>
+   <version>(insert latest version)</version>
+</dependency>
+```
+
 #### Features
  * Asynchronously download:
    * [Images](https://github.com/koush/ion#load-an-image-into-an-imageview) (into ImageViews or Bitmaps)
@@ -30,18 +42,6 @@
  * Request level [logging and profiling](https://github.com/koush/ion#logging)
  * [Support for proxy servers](https://github.com/koush/ion#proxy-servers-like-charles-proxy) like [Charles Proxy](http://www.charlesproxy.com/) to do request analysis
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
-
-### Download
-
-Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.ion&a=ion&v=LATEST) or grab via Maven:
-
-```xml
-<dependency>
-   <groupId>com.koushikdutta.ion</groupId>
-   <artifactId>ion</artifactId>
-   <version>(insert latest version)</version>
-</dependency>
-```
 
 #### Samples
 
