@@ -23,7 +23,7 @@
    * Gzip/Deflate Compression
    * Connection reuse
    * Cookies
- * Powerful cancellation semantics that allow grouping cancellation of requests
+ * [Grouping and cancellation of requests](https://github.com/koush/ion#request-groups)
  * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
  * Supports file:/, http(s):/, and content:/ URIs
  * Request level [logging and profiling](https://github.com/koush/ion#logging)
