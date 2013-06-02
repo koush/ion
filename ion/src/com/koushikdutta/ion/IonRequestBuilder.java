@@ -10,6 +10,8 @@ import android.os.Handler;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.DataEmitter;
@@ -27,15 +29,11 @@ import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.AsyncHttpRequestBody;
-import com.koushikdutta.async.http.JSONArrayBody;
-import com.koushikdutta.async.http.JSONObjectBody;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.MultipartFormDataBody;
 import com.koushikdutta.async.http.StringBody;
 import com.koushikdutta.async.http.UrlEncodedFormBody;
 import com.koushikdutta.async.parser.AsyncParser;
-import com.koushikdutta.async.parser.JSONArrayParser;
-import com.koushikdutta.async.parser.JSONObjectParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
 import com.koushikdutta.ion.Loader.LoaderEmitter;
@@ -46,11 +44,10 @@ import com.koushikdutta.ion.builder.IonLoadRequestBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.builder.IonUrlEncodedBodyRequestBuilder;
+import com.koushikdutta.ion.gson.GsonBody;
+import com.koushikdutta.ion.gson.GsonParser;
+import com.koushikdutta.ion.gson.GsonSerializer;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -122,15 +119,15 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     }
 
     @Override
-    public IonFutureRequestBuilder setJSONObjectBody(JSONObject jsonObject) {
+    public IonFutureRequestBuilder setJsonObjectBody(JsonObject jsonObject) {
         setHeader("Content-Type", "application/json");
-        return setBody(new JSONObjectBody(jsonObject));
+        return setBody(new GsonBody<JsonObject>(jsonObject));
     }
 
     @Override
-    public IonFutureRequestBuilder setJSONArrayBody(JSONArray jsonArray) {
+    public IonFutureRequestBuilder setJsonArrayBody(JsonArray jsonArray) {
         setHeader("Content-Type", "application/json");
-        return setBody(new JSONArrayBody(jsonArray));
+        return setBody(new GsonBody<JsonArray>(jsonArray));
     }
 
     @Override
@@ -381,13 +378,13 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     }
 
     @Override
-    public Future<JSONObject> asJSONObject() {
-        return execute(new JSONObjectParser());
+    public Future<JsonObject> asJsonObject() {
+        return execute(new GsonParser<JsonObject>());
     }
 
     @Override
-    public Future<JSONArray> asJSONArray() {
-        return execute(new JSONArrayParser());
+    public Future<JsonArray> asJsonArray() {
+        return execute(new GsonParser<JsonArray>());
     }
 
     @Override
@@ -487,12 +484,12 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
 
     @Override
     public <T> Future<T> as(Class<T> clazz) {
-        return execute(new GsonParser<T>(ion.gson, clazz));
+        return execute(new GsonSerializer<T>(ion.gson, clazz));
     }
 
     @Override
     public <T> Future<T> as(TypeToken<T> token) {
-        return execute(new GsonParser<T>(ion.gson, token));
+        return execute(new GsonSerializer<T>(ion.gson, token));
     }
 
     ArrayList<WeakReference<Object>> groups;

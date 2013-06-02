@@ -1,4 +1,4 @@
-package com.koushikdutta.ion;
+package com.koushikdutta.ion.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -19,14 +19,14 @@ import java.lang.reflect.Type;
 /**
  * Created by koush on 6/1/13.
  */
-public class GsonParser<T> implements AsyncParser<T> {
+public class GsonSerializer<T> implements AsyncParser<T> {
     Gson gson;
     Type type;
-    public GsonParser(Gson gson, Class<T> clazz) {
+    public GsonSerializer(Gson gson, Class<T> clazz) {
         this.gson = gson;
         type = clazz;
     }
-    public GsonParser(Gson gson, TypeToken<T> token) {
+    public GsonSerializer(Gson gson, TypeToken<T> token) {
         this.gson = gson;
         type = token.getType();
     }

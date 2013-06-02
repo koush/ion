@@ -3,15 +3,14 @@ package com.koushikdutta.ion.test;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.net.HttpCookie;
@@ -84,33 +83,33 @@ public class HttpTests extends AndroidTestCase {
         assertTrue(progressSemaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
     }
 
-    public void testJSONObject() throws Exception {
-        JSONObject ret = Ion.with(getContext(),"https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
-                .asJSONObject().get();
-        assertEquals("bar", ret.getString("foo"));
+    public void testJsonObject() throws Exception {
+        JsonObject ret = Ion.with(getContext(),"https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+                .asJsonObject().get();
+        assertEquals("bar", ret.get("foo").getAsString());
     }
 
-    public void testPostJSONObject() throws Exception {
-        JSONObject post = new JSONObject();
-        post.put("ping", "pong");
-        JSONObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
-                .setJSONObjectBody(post)
-                .asJSONObject().get();
-        assertEquals("pong", ret.getString("ping"));
+    public void testPostJsonObject() throws Exception {
+        JsonObject post = new JsonObject();
+        post.addProperty("ping", "pong");
+        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+                .setJsonObjectBody(post)
+                .asJsonObject().get();
+        assertEquals("pong", ret.get("ping").getAsString());
     }
 
     public void testUrlEncodedFormBody() throws Exception {
-        JSONObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
                 .setBodyParameter("blit", "bip")
-                .asJSONObject().get();
-        assertEquals("bip", ret.getString("blit"));
+                .asJsonObject().get();
+        assertEquals("bip", ret.get("blit").getAsString());
     }
 
     public void testMultipart() throws Exception {
-        JSONObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
                 .setMultipartParameter("goop", "noop")
-                .asJSONObject().get();
-        assertEquals("noop", ret.getString("goop"));
+                .asJsonObject().get();
+        assertEquals("noop", ret.get("goop").getAsString());
     }
 
     public void testCookie() throws Exception {
@@ -136,7 +135,7 @@ public class HttpTests extends AndroidTestCase {
         Ion.with(getContext(),"http://koush.clockworkmod.com/test/hang")
                 .setHandler(null)
                 .group(cancelGroup)
-                .asJSONObject();
+                .asJsonObject();
 
         // There's no decent way to test this yet...
         // Connecting should result in 2 keys (since clockworkmod.com has two ips).
@@ -161,20 +160,21 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testGson() throws Exception {
-        JSONObject dummy1 = new JSONObject();
-        dummy1.put("foo", "bar");
-        JSONObject dummy2 = new JSONObject();
-        dummy2.put("pong", "ping");
+        JsonObject dummy1 = new JsonObject();
+        dummy1.addProperty("foo", "bar");
+        JsonObject dummy2 = new JsonObject();
+        dummy2.addProperty("pong", "ping");
 
-        JSONArray array = new JSONArray();
-        array.put(dummy1);
-        array.put(dummy2);
+        JsonArray array = new JsonArray();
+        array.add(dummy1);
+        array.add(dummy2);
 
         final Semaphore semaphore = new Semaphore(0);
         Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
                 .setHandler(null)
-                .setJSONArrayBody(array)
-                .as(new TypeToken<List<Dummy>>(){})
+                .setJsonArrayBody(array)
+                .as(new TypeToken<List<Dummy>>() {
+                })
                 .setCallback(new FutureCallback<List<Dummy>>() {
                     @Override
                     public void onCompleted(Exception e, List<Dummy> result) {

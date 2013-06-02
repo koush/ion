@@ -4,10 +4,9 @@ import android.app.ProgressDialog;
 import android.os.Handler;
 import android.widget.ProgressBar;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.koushikdutta.ion.ProgressCallback;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 /**
 * Created by koush on 5/30/13.
@@ -84,20 +83,20 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
     public IonBodyParamsRequestBuilder setTimeout(int timeoutMilliseconds);
 
     /**
-     * Specify a JSONObject to send to the HTTP server. If no HTTP method was explicitly
+     * Specify a JsonObject to send to the HTTP server. If no HTTP method was explicitly
      * provided in the load call, the default HTTP method, POST, is used.
-     * @param jsonObject JSONObject to send with the request
+     * @param jsonObject JsonObject to send with the request
      * @return
      */
-    public IonFutureRequestBuilder setJSONObjectBody(JSONObject jsonObject);
+    public IonFutureRequestBuilder setJsonObjectBody(JsonObject jsonObject);
 
     /**
-     * Specify a JSONArray to send to the HTTP server. If no HTTP method was explicitly
+     * Specify a JsonArray to send to the HTTP server. If no HTTP method was explicitly
      * provided in the load call, the default HTTP method, POST, is used.
-     * @param jsonArray JSONObject to send with the request
+     * @param jsonArray JsonObject to send with the request
      * @return
      */
-    public IonFutureRequestBuilder setJSONArrayBody(JSONArray jsonArray);
+    public IonFutureRequestBuilder setJsonArrayBody(JsonArray jsonArray);
 
     /**
      * Specify a String to send to the HTTP server. If no HTTP method was explicitly

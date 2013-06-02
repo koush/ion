@@ -48,8 +48,8 @@ at 30+ ion unit tests in the [ion-test](https://github.com/koush/ion/tree/master
 
 ```java
 Ion.with(context, "http://example.com/thing.json")
-.asJSONObject()
-.setCallback(new FutureCallback<JSONObject>() {
+.asJsonObject()
+.setCallback(new FutureCallback<JsonObject>() {
    @Override
     public void onCompleted(Exception e, String result) {
         // do stuff with the result or error
@@ -60,13 +60,13 @@ Ion.with(context, "http://example.com/thing.json")
 #### Post JSON and read JSON
 
 ```java
-JSONObject json = new JSONObject();
-json.putString("foo", "bar");
+JsonObject json = new JsonObject();
+json.addProperty("foo", "bar");
 
 Ion.with(context, "http://example.com/post")
-.setJSONObjectBody(json)
-.asJSONObject()
-.setCallback(new FutureCallback<JSONObject>() {
+.setJsonObjectBody(json)
+.asJsonObject()
+.setCallback(new FutureCallback<JsonObject>() {
    @Override
     public void onCompleted(Exception e, String result) {
         // do stuff with the result or error
@@ -90,7 +90,7 @@ Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
 Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
 .setMultipartParameter("goop", "noop")
 .setMultipartFile("filename.zip", new File("/sdcard/filename.zip"))
-.asJSONObject()
+.asJsonObject()
 .setCallback(...)
 ```
 
@@ -171,8 +171,8 @@ public interface Future<T> extends Cancellable, java.util.concurrent.Future<T> {
 Future<String> string = Ion.with(context, "http://example.com/string.txt")
     .asString();
 
-Future<JSONObject> json = Ion.with(context, "http://example.com/json.json")
-    .asJSONObject();
+Future<JsonObject> json = Ion.with(context, "http://example.com/json.json")
+    .asJsonObject();
 
 Future<File> file = Ion.with(context, "http://example.com/file.zip")
     .write(new File("/sdcard/file.zip"));
@@ -197,7 +197,7 @@ Though you should try to use callbacks for handling requests whenever possible, 
 All Futures have a Future<T>.get() method that waits for the result of the request, by blocking if necessary.
 
 ```java
-JSONObject json = Ion.with(context, "http://example.com/thing.json").asJSONObject().get();
+JsonObject json = Ion.with(context, "http://example.com/thing.json").asJsonObject().get();
 ```
 
 
@@ -236,7 +236,7 @@ Or to enable it on just a single request:
 ```java
 Ion.with(context, "http://example.com/thing.json")
 .setLogging("MyLogs", Log.DEBUG)
-.asJSONObject();
+.asJsonObject();
 ```
 
 Log entries will look like this:
@@ -255,8 +255,8 @@ created by that Activity or Service. Using the cancelAll(Activity) call, all req
 still pending can be easily cancelled:
 
 ```java
-Future<JSONObject> json1 = Ion.with(activity, "http://example.com/test.json").asJSONObject();
-Future<JSONObject> json2 = Ion.with(activity, "http://example.com/test2.json").asJSONObject();
+Future<JsonObject> json1 = Ion.with(activity, "http://example.com/test.json").asJsonObject();
+Future<JsonObject> json2 = Ion.with(activity, "http://example.com/test2.json").asJsonObject();
 
 // later... in activity.onStop
 @Override
@@ -272,22 +272,22 @@ Ion also lets you tag your requests into groups to allow for easy cancellation o
 Object jsonGroup = new Object();
 Object imageGroup = new Object();
 
-Future<JSONObject> json1 = Ion.with(activity, "http://example.com/test.json")
+Future<JsonObject> json1 = Ion.with(activity, "http://example.com/test.json")
 // tag in a custom group
 .group(jsonGroup)
-.asJSONObject();
+.asJsonObject();
 
-Future<JSONObject> json2 = Ion.with(activity, "http://example.com/test2.json")
+Future<JsonObject> json2 = Ion.with(activity, "http://example.com/test2.json")
 // use the same custom group as the other json request
 .group(jsonGroup)
-.asJSONObject();
+.asJsonObject();
 
-Future<JSONObject> image1 = Ion.with(activity, "http://example.com/test.ong")
+Future<JsonObject> image1 = Ion.with(activity, "http://example.com/test.png")
 // for this image request, use a different group for images
 .group(imageGroup)
 .intoImageView(imageView1);
 
-Future<JSONObject> image2 = Ion.with(activity, "http://example.com/test2.png")
+Future<JsonObject> image2 = Ion.with(activity, "http://example.com/test2.png")
 // same imageGroup as before
 .group(imageGroup)
 .intoImageView(imageView2);

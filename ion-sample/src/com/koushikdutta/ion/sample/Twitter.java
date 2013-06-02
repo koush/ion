@@ -12,16 +12,15 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 public class Twitter extends Activity {
     // adapter that holds tweets, obviously :)
-    ArrayAdapter<JSONObject> tweetAdapter;
+    ArrayAdapter<JsonObject> tweetAdapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -31,7 +30,7 @@ public class Twitter extends Activity {
         Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
 
         // create a tweet adapter for our list view
-        tweetAdapter = new ArrayAdapter<JSONObject>(this, 0) {
+        tweetAdapter = new ArrayAdapter<JsonObject>(this, 0) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 if (convertView == null)
@@ -42,14 +41,14 @@ public class Twitter extends Activity {
                     load();
 
                 // grab the tweet (or retweet)
-                JSONObject tweet = getItem(position);
-                JSONObject retweet = tweet.optJSONObject("retweeted_status");
+                JsonObject tweet = getItem(position);
+                JsonObject retweet = tweet.getAsJsonObject("retweeted_status");
                 if (retweet != null)
                     tweet = retweet;
 
                 // grab the user info... name, profile picture, tweet text
-                JSONObject user = tweet.optJSONObject("user");
-                String twitterId = user.optString("screen_name", null);
+                JsonObject user = tweet.getAsJsonObject("user");
+                String twitterId = user.get("screen_name").getAsString();
 
                 // set the profile photo using Ion
                 String imageUrl = String.format("https://api.twitter.com/1/users/profile_image?screen_name=%s&size=bigger", twitterId);
@@ -73,7 +72,7 @@ public class Twitter extends Activity {
                 handle.setText(twitterId);
 
                 TextView text = (TextView)convertView.findViewById(R.id.tweet);
-                text.setText(tweet.optString("text", null));
+                text.setText(tweet.get("text").getAsString());
                 return convertView;
             }
         };
@@ -92,7 +91,7 @@ public class Twitter extends Activity {
     // in progress that will have a "Future" result.
     // You can attach callbacks (setCallback) for when the result is ready,
     // or cancel() it if you no longer need the result.
-    Future<JSONArray> loading;
+    Future<JsonArray> loading;
 
     private void load() {
         // don't attempt to load more if a load is already in progress
@@ -103,8 +102,8 @@ public class Twitter extends Activity {
         String url = "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name=koush&count=20";
         if (tweetAdapter.getCount() > 0) {
             // load from the "last" id
-            JSONObject last = tweetAdapter.getItem(tweetAdapter.getCount() - 1);
-            url += "&max_id=" + last.optString("id_str");
+            JsonObject last = tweetAdapter.getItem(tweetAdapter.getCount() - 1);
+            url += "&max_id=" + last.get("id_str").getAsString();
         }
 
         // Request tweets from Twitter using Ion.
@@ -112,21 +111,21 @@ public class Twitter extends Activity {
         // This API lets you chain calls together to build
         // complex requests.
 
-        // This request loads a URL as JSONArray and invokes
+        // This request loads a URL as JsonArray and invokes
         // a callback on completion.
         loading = Ion.with(this, url)
-            .asJSONArray()
-            .setCallback(new FutureCallback<JSONArray>() {
+            .asJsonArray()
+            .setCallback(new FutureCallback<JsonArray>() {
                 @Override
-                public void onCompleted(Exception e, JSONArray result) {
+                public void onCompleted(Exception e, JsonArray result) {
                     // this is called back onto the ui thread, no Activity.runOnUiThread or Handler.post necessary.
                     if (e != null) {
                         Toast.makeText(Twitter.this, "Error loading tweets", Toast.LENGTH_LONG).show();
                         return;
                     }
                     // add the tweets
-                    for (int i = 0; i < result.length(); i++) {
-                        tweetAdapter.add(result.optJSONObject(i));
+                    for (int i = 0; i < result.size(); i++) {
+                        tweetAdapter.add(result.get(i).getAsJsonObject());
                     }
                 }
             });

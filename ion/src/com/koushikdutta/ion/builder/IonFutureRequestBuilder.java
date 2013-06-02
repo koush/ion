@@ -1,10 +1,9 @@
 package com.koushikdutta.ion.builder;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.future.Future;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -20,16 +19,16 @@ public interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, 
     public Future<String> asString();
 
     /**
-     * Execute the request and get the result as a JSONObject
+     * Execute the request and get the result as a (Gson) JsonArray
      * @return
      */
-    public Future<JSONObject> asJSONObject();
+    public Future<JsonArray> asJsonArray();
 
     /**
-     * Execute the request and get the result as a JSONArray
+     * Execute the request and get the result as a (Gson) JsonObject
      * @return
      */
-    public Future<JSONArray> asJSONArray();
+    public Future<JsonObject> asJsonObject();
 
     /**
      * Use the request as a Bitmap which can then be modified and/or applied to an ImageView.
