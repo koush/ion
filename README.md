@@ -21,7 +21,8 @@
  * Transparent usage of HTTP features and optimizations:
    * Caching
    * Gzip/Deflate Compression
-   * Connection reuse
+   * Connection pooling/reuse via HTTP Connection: keep-alive
+   * Uses the best/stablest connection from a server if it has multiple IP addresses
    * Cookies
  * [Grouping and cancellation of requests](https://github.com/koush/ion#request-groups)
  * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
