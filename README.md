@@ -4,13 +4,13 @@
 
 ### Download
 
-Download [the latest JAR](http://search.maven.org/remotecontent?filepath=com/koushikdutta/ion/ion/1.0.4/ion-1.0.4.jar) or grab via Maven:
+Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.ion&a=ion&v=LATEST) or grab via Maven:
 
 ```xml
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
-   <version>(insert latest version)</version>
+   <version>1.0.6</version>
 </dependency>
 ```
 
