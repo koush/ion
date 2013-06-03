@@ -217,8 +217,8 @@ All Futures have a Future<T>.get() method that waits for the result of the reque
 JsonObject json = Ion.with(context, "http://example.com/thing.json").asJsonObject().get();
 ```
 
-
 #### Seamlessly use your own Java classes with [Gson](https://code.google.com/p/google-gson/)
+
 ```java
 public static class Tweet {
     public String id;
