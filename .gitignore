@@ -5,3 +5,7 @@ gen
 .gradle
 build
 .DS_Store
+gradle
+gradlew
+gradlew.bat
+
