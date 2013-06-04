@@ -22,7 +22,6 @@
     <orderEntry type="jdk" jdkName="Android 4.2.2 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="ion-dev" />
-    <orderEntry type="library" name="com.squareup.picasso:picasso:1.0.2" level="project" />
   </component>
 </module>
 
