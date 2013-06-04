@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
+import android.os.Looper;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
@@ -63,6 +64,7 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     AsyncHttpRequest request;
     Ion ion;
     WeakReference<Context> context;
+    Handler handler = Looper.myLooper() == null ? null : new Handler();
 
     public IonRequestBuilder(Context context, Ion ion) {
         this.ion = ion;
@@ -76,6 +78,7 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
 
     private IonBodyParamsRequestBuilder loadInternal(String method, String url) {
         request = new AsyncHttpRequest(URI.create(url), method);
+        request.setHandler(null);
         setLogging(ion.LOGTAG, ion.logLevel);
         return this;
     }
@@ -107,7 +110,7 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
 
     @Override
     public IonBodyParamsRequestBuilder setHandler(Handler handler) {
-        request.setHandler(handler);
+        this.handler = handler;
         return this;
     }
 
@@ -184,10 +187,10 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
             }
         };
 
-        if (request.getHandler() == null)
+        if (handler == null)
             ion.httpClient.getServer().post(runner);
         else
-            AsyncServer.post(request.getHandler(), runner);
+            AsyncServer.post(handler, runner);
     }
 
     private <T> void getLoaderEmitter(TransformFuture<T, LoaderEmitter> ret) {
@@ -260,6 +263,7 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
             tracker.setDataTracker(new DataTracker() {
                 @Override
                 public void onData(final int totalBytesRead) {
+                    assert Thread.currentThread() != Looper.getMainLooper().getThread();
                     // if the requesting context dies during the transfer... cancel
                     if (!checkContext()) {
                         cancel();
@@ -283,7 +287,7 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
                         progress.onProgress(totalBytesRead, total);
 
                     if (progressHandler != null) {
-                        request.getHandler().post(new Runnable() {
+                        AsyncServer.post(handler, new Runnable() {
                             @Override
                             public void run() {
                                 if (isCancelled() || isDone())

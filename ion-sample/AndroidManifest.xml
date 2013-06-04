@@ -5,10 +5,12 @@
           android:versionName="1.0">
 
     <uses-sdk
-            android:minSdkVersion="9"
+            android:minSdkVersion="11"
             android:targetSdkVersion="17"/>
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
+            android:debuggable="true"
+            android:hardwareAccelerated="true"
             android:label="@string/app_name"
             android:icon="@drawable/ic_launcher"
             android:theme="@style/Theme">
@@ -21,6 +23,9 @@
         <activity
                 android:name=".ProgressBarDownload"
                 android:label="Progress Bar Download"/>
+        <activity
+                android:name=".GoogleImageSearch"
+                android:label="Google Image Search"/>
         <activity
                 android:name=".Samples"
                 android:label="ion samples">

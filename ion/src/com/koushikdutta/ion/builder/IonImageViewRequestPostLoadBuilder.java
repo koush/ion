@@ -25,7 +25,11 @@ public interface IonImageViewRequestPostLoadBuilder extends IonImageViewRequestB
     /** {@inheritDoc} */
     public IonImageViewRequestPostLoadBuilder animateIn(Animation in);
     /** {@inheritDoc} */
+    public IonImageViewRequestPostLoadBuilder animateIn(int animationResource);
+    /** {@inheritDoc} */
     public IonImageViewRequestPostLoadBuilder animateLoad(Animation load);
+    /** {@inheritDoc} */
+    public IonImageViewRequestBuilder animateLoad(int animationResource);
 
     /**
      * Load a uri for the ImageView.

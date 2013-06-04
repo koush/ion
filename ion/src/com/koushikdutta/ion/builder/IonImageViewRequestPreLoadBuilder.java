@@ -21,7 +21,11 @@ public interface IonImageViewRequestPreLoadBuilder extends IonImageViewRequestBu
     /** {@inheritDoc} */
     public IonImageViewRequestPreLoadBuilder error(int resourceId);
     /** {@inheritDoc} */
-    public IonImageViewRequestPreLoadBuilder animateIn(Animation in);
+    public IonImageViewRequestPostLoadBuilder animateIn(Animation in);
     /** {@inheritDoc} */
-    public IonImageViewRequestPreLoadBuilder animateLoad(Animation load);
+    public IonImageViewRequestPostLoadBuilder animateIn(int animationResource);
+    /** {@inheritDoc} */
+    public IonImageViewRequestPostLoadBuilder animateLoad(Animation load);
+    /** {@inheritDoc} */
+    public IonImageViewRequestBuilder animateLoad(int animationResource);
 }

@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
@@ -14,6 +15,7 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.parser.ByteBufferListParser;
+import com.koushikdutta.ion.builder.IonImageViewRequestBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.builder.IonImageViewRequestPostLoadBuilder;
@@ -102,8 +104,6 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
         @Override
         public void onCompleted(Exception e, ByteBufferList result) {
-            assert Thread.currentThread() == Looper.getMainLooper().getThread();
-
             if (e != null) {
                 AsyncServer.post(handler, new Setter(e, null));
                 return;
@@ -187,8 +187,6 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
         @Override
         public void onCompleted(Exception e, Bitmap result) {
-            assert Thread.currentThread() == Looper.getMainLooper().getThread();
-
             if (e != null) {
                 AsyncServer.post(handler, new Setter(e, null));
                 return;
@@ -242,13 +240,11 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
             ion.pendingViews.put(imageView, transformKey);
         setPlaceholder(imageView);
 
-        final Handler handler = new Handler();
-
         // find/create the future for this download.
         String urlKey = builder.request.getUri().toString();
         ByteArrayToBitmapFuture pendingDownload = ion.pendingDownloads.get(urlKey);
         if (pendingDownload == null || pendingDownload.isCancelled()) {
-            pendingDownload = new ByteArrayToBitmapFuture(ion, handler, urlKey, executorService);
+            pendingDownload = new ByteArrayToBitmapFuture(ion, builder.handler, urlKey, executorService);
             ion.pendingDownloads.put(urlKey, pendingDownload);
             // allow the bitmap load to cancel the downloader
             pendingDownload.setMutateFuture(builder.execute(new ByteBufferListParser()));
@@ -257,7 +253,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         // find/create the future for the bitmap transform
         BitmapToBitmap pendingTransform = ion.pendingTransforms.get(transformKey);
         if (pendingTransform == null || pendingTransform.isCancelled()) {
-            pendingTransform = new BitmapToBitmap(ion, handler, transformKey, transforms, executorService);
+            pendingTransform = new BitmapToBitmap(ion, builder.handler, transformKey, transforms, executorService);
             ion.pendingTransforms.put(transformKey, pendingTransform);
             // allow the bitmap transform to cancel the bitmap load
             pendingDownload.addChildFuture(pendingTransform.createMutateFuture());
@@ -428,5 +424,15 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         public String getKey() {
             return null;
         }
+    }
+
+    @Override
+    public IonImageViewRequestBuilder animateLoad(int animationResource) {
+        return animateLoad(AnimationUtils.loadAnimation(builder.context.get(), animationResource));
+    }
+
+    @Override
+    public IonImageViewRequestPostLoadBuilder animateIn(int animationResource) {
+        return animateIn(AnimationUtils.loadAnimation(builder.context.get(), animationResource));
     }
 }

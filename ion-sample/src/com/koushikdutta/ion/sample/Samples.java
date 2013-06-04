@@ -10,17 +10,13 @@ import android.widget.Button;
  * Created by koush on 5/31/13.
  */
 public class Samples extends Activity {
-
-    Button twitter;
-    Button twitterGson;
-    Button fileDownload;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.samples);
 
-        twitter = (Button)findViewById(R.id.twitter);
+        Button twitter = (Button)findViewById(R.id.twitter);
         twitter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -28,7 +24,7 @@ public class Samples extends Activity {
             }
         });
 
-        twitterGson = (Button)findViewById(R.id.twitter_gson);
+        Button twitterGson = (Button)findViewById(R.id.twitter_gson);
         twitterGson.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -36,11 +32,19 @@ public class Samples extends Activity {
             }
         });
 
-        fileDownload = (Button)findViewById(R.id.download);
+        Button fileDownload = (Button)findViewById(R.id.download);
         fileDownload.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(Samples.this, ProgressBarDownload.class));
+            }
+        });
+
+        Button googleImageSearch = (Button)findViewById(R.id.google_image_search);
+        googleImageSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, GoogleImageSearch.class));
             }
         });
     }

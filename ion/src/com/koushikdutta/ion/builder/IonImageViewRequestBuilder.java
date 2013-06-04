@@ -61,10 +61,28 @@ public interface IonImageViewRequestBuilder extends IonBitmapImageViewFutureRequ
     public IonImageViewRequestBuilder animateIn(Animation in);
 
     /**
+     * If an ImageView is loaded successfully from a remote source or file storage,
+     * animate it in using the given Animation resource. The default animation is to fade
+     * in.
+     * @param animationResource Animation resource to apply to the ImageView after the request has loaded
+     *           and the Bitmap has been retrieved.
+     * @return
+     */
+    public IonImageViewRequestBuilder animateIn(int animationResource);
+
+    /**
      * If the ImageView needs to load from a remote source or file storage,
      * the given Animation will be used while it is loading.
      * @param load Animation to apply to the imageView while the request is loading.
      * @return
      */
     public IonImageViewRequestBuilder animateLoad(Animation load);
+
+    /**
+     * If the ImageView needs to load from a remote source or file storage,
+     * the given Animation resource will be used while it is loading.
+     * @param animationResource Animation resource to apply to the imageView while the request is loading.
+     * @return
+     */
+    public IonImageViewRequestBuilder animateLoad(int animationResource);
 }

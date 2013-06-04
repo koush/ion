@@ -19,6 +19,7 @@ public class HttpLoader implements Loader {
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
         if (!request.getUri().getScheme().startsWith("http"))
             return null;
+        assert request.getHandler() == null;
         return (Future< DataEmitter >)(Future)ion.getHttpClient().execute(request, new HttpConnectCallback() {
             @Override
             public void onConnectCompleted(Exception ex, AsyncHttpResponse response) {

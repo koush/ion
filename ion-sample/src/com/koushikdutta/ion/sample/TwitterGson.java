@@ -68,11 +68,11 @@ public class TwitterGson extends Activity {
 
                 ImageView imageView = (ImageView)convertView.findViewById(R.id.image);
 
-                // Use Ion's builder set the image on an ImageView from a URL
+                // Use Ion's builder set the google_image on an ImageView from a URL
 
                 // start with the ImageView
                 Ion.with(imageView)
-                    // use a placeholder image if it needs to load from the network
+                    // use a placeholder google_image if it needs to load from the network
                     .placeholder(R.drawable.twitter)
                     // use a fade in animation when it finishes loading
                     .animateIn(AnimationUtils.loadAnimation(getContext(), R.anim.fadein))

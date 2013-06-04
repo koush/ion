@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
@@ -48,6 +49,7 @@ public class IonBitmapCache {
 
     boolean useBitmapScaling = true;
     Bitmap loadBitmapFromStream(InputStream in) throws IOException {
+        assert Thread.currentThread() != Looper.getMainLooper().getThread();
         final int tw = mMetrics.widthPixels;
         final int th = mMetrics.heightPixels;
         final int targetWidth = tw <= 0 ? Integer.MAX_VALUE : tw;
