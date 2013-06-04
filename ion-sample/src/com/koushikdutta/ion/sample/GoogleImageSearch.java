@@ -25,7 +25,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -36,6 +35,10 @@ public class GoogleImageSearch extends Activity {
     private ListView mListView;
     private MyAdapter mAdapter;
 
+    // boilerplate to hold a grid of images (GridView does not work properly)
+    // Create an adapter wrapper around another adapter
+    // that creates a row of items and returns that to the ListView
+    // as a single item
     private class Row extends ArrayList {
     }
 
@@ -99,11 +102,10 @@ public class GoogleImageSearch extends Activity {
 
             return convertView;
         }
-
     }
 
+    // Adapter to populate and imageview from an url contained in the array adapter
     private class MyAdapter extends ArrayAdapter<String> {
-
         public MyAdapter(Context context) {
             super(context, 0);
         }
@@ -113,33 +115,25 @@ public class GoogleImageSearch extends Activity {
             if (convertView == null)
                 convertView = getLayoutInflater().inflate(R.layout.google_image, null);
 
+            // find the image view
             final ImageView iv = (ImageView) convertView.findViewById(R.id.image);
+
+            // select the image view
             Ion.with(iv)
+            // fade in on load
             .animateIn(R.anim.fadein)
+            // load the url
             .load(getItem(position));
-//            Picasso.with(GoogleImageSearch.this)
-//                    .load(getItem(position))
-//                    .into(iv);
 
             return convertView;
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuItem clear = menu.add("Clear Cache");
-        clear.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                return true;
-            }
-        });
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    final ArrayList<String> tmpResults = new ArrayList<String>();
+    // query 40 results and show them
     void loadMore() {
-        Ion.with(GoogleImageSearch.this, String.format("https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=%s&start=%d&imgsz=medium", Uri.encode(searchText.getText().toString()), tmpResults.size()))
+        // query googles image search api
+        Ion.with(GoogleImageSearch.this, String.format("https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=%s&start=%d&imgsz=medium", Uri.encode(searchText.getText().toString()), mAdapter.getCount()))
+        // get the results as json
         .asJsonObject()
         .setCallback(new FutureCallback<JsonObject>() {
             @Override
@@ -147,16 +141,18 @@ public class GoogleImageSearch extends Activity {
                 try {
                     if (e != null)
                         throw e;
+                    // find the results and populate
                     JsonArray results = result.getAsJsonObject("responseData").getAsJsonArray("results");
                     for (int i = 0; i < results.size(); i++) {
-                        tmpResults.add(results.get(i).getAsJsonObject().get("url").getAsString());
+                        mAdapter.add(results.get(i).getAsJsonObject().get("url").getAsString());
                     }
-                    if (tmpResults.size() < 40)
+
+                    // see if we need to load more to get 40, otherwise populate the adapter
+                    if (mAdapter.getCount() < 40)
                         loadMore();
-                    else
-                        mAdapter.addAll(tmpResults);
                 }
                 catch (Exception ex) {
+                    // toast any error we encounter (google image search has an API throttling limit that sometimes gets hit)
                     Toast.makeText(GoogleImageSearch.this, ex.toString(), Toast.LENGTH_LONG).show();
                 }
 
@@ -192,7 +188,6 @@ public class GoogleImageSearch extends Activity {
             @Override
             public void onClick(View v) {
                 mAdapter.clear();
-                tmpResults.clear();
                 loadMore();
             }
         });

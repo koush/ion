@@ -24,6 +24,7 @@
     </LinearLayout>
 
     <ListView
+        android:listSelector="@android:color/transparent"
         android:id="@+id/results"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" />
