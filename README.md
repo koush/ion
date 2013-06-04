@@ -10,7 +10,7 @@ Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
-   <version>1.0.6</version>
+   <version>1.0.7</version>
 </dependency>
 ```
 
