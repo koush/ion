@@ -68,7 +68,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         return this;
     }
 
-    static class ByteArrayToBitmapFuture extends MutateFuture<Bitmap, ByteBufferList> {
+    class ByteArrayToBitmapFuture extends MutateFuture<Bitmap, ByteBufferList> {
         ExecutorService executorService;
         Handler handler;
         Ion ion;
@@ -109,6 +109,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
                 return;
             }
 
+            builder.request.logd("Image file size: " + result.remaining());
             final ByteArrayInputStream bin = new ByteArrayInputStream(result.getAllByteArray());
 
             executorService.execute(new Runnable() {
@@ -128,7 +129,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         }
     }
 
-    static class BitmapToBitmap extends MutateFuture<IonBitmapCache.ZombieDrawable, Bitmap> {
+    class BitmapToBitmap extends MutateFuture<IonBitmapCache.ZombieDrawable, Bitmap> {
         ExecutorService executorService;
         Handler handler;
         Ion ion;
@@ -174,6 +175,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
                     try {
                         Bitmap tmpBitmap = result;
                         for (Transform transform : transforms) {
+                            builder.request.logd("applying transform: " + transform.getKey());
                             tmpBitmap = transform.transform(tmpBitmap);
                         }
                         AsyncServer.post(handler, new Setter(null, tmpBitmap));
