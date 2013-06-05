@@ -42,6 +42,7 @@ Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/
  * Request level [logging and profiling](https://github.com/koush/ion#logging)
  * [Support for proxy servers](https://github.com/koush/ion#proxy-servers-like-charles-proxy) like [Charles Proxy](http://www.charlesproxy.com/) to do request analysis
  * Based on [NIO](http://en.wikipedia.org/wiki/New_I/O) and [AndroidAsync](https://github.com/koush/AndroidAsync)
+ * Ability to use [self signed SSL certificates](https://github.com/koush/ion/issues/3)
 
 #### Samples
 
