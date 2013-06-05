@@ -19,15 +19,7 @@ class WeakReferenceHashTable<K,V> {
     }
 
     public int size() {
-        int size = 0;
-        for (K k: mTable.keySet()) {
-            WeakReference<V> v = mTable.get(k);
-            if (v != null && v.get() != null) {
-//                System.out.println(k);
-                size++;
-            }
-        }
-        return size;
+        return mTable.size();
     }
 
     public V put(K key, V value) {

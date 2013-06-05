@@ -10,6 +10,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.WindowManager;
 
 import java.io.IOException;
@@ -39,6 +40,13 @@ public class IonBitmapCache {
                 .getDefaultDisplay().getMetrics(mMetrics);
         final AssetManager mgr = context.getAssets();
         mResources = new Resources(mgr, mMetrics, context.getResources().getConfiguration());
+    }
+
+    void dump() {
+        Log.i("IonBitmapCache", "Dead cache size: " + mDeadCache.size());
+        Log.i("IonBitmapCache", "Live cache size: " + mLiveCache.size());
+        Log.i("IonBitmapCache", "All cache size: " + mAllCache.size());
+        Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
     ZombieDrawable put(String key, Bitmap bitmap) {

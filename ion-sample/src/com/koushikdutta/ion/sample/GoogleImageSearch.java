@@ -6,11 +6,13 @@ import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -26,7 +28,10 @@ import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
+import java.io.DataInputStream;
+import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
  * Created by koush on 6/4/13.
@@ -178,19 +183,20 @@ public class GoogleImageSearch extends Activity {
 
         final Button search = (Button) findViewById(R.id.search);
         searchText = (EditText) findViewById(R.id.search_text);
-
-        mListView = (ListView) findViewById(R.id.results);
-        mAdapter = new MyAdapter(this);
-        MyGridAdapter a = new MyGridAdapter(mAdapter);
-        mListView.setAdapter(a);
-
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mAdapter.clear();
                 loadMore();
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(searchText.getWindowToken(), 0);
             }
         });
 
+
+        mListView = (ListView) findViewById(R.id.results);
+        mAdapter = new MyAdapter(this);
+        MyGridAdapter a = new MyGridAdapter(mAdapter);
+        mListView.setAdapter(a);
     }
 }

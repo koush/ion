@@ -69,13 +69,11 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
     }
 
     class ByteArrayToBitmapFuture extends MutateFuture<Bitmap, ByteBufferList> {
-        ExecutorService executorService;
         Handler handler;
         Ion ion;
         String urlKey;
 
-        public ByteArrayToBitmapFuture(Ion ion, Handler handler, String urlKey, ExecutorService executorService) {
-            this.executorService = executorService;
+        public ByteArrayToBitmapFuture(Ion ion, Handler handler, String urlKey) {
             this.handler = handler;
             this.urlKey = urlKey;
             this.ion = ion;
@@ -111,8 +109,9 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
             builder.request.logd("Image file size: " + result.remaining());
             final ByteArrayInputStream bin = new ByteArrayInputStream(result.getAllByteArray());
+            result.clear();
 
-            executorService.execute(new Runnable() {
+            ion.executorService.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -130,14 +129,12 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
     }
 
     class BitmapToBitmap extends MutateFuture<IonBitmapCache.ZombieDrawable, Bitmap> {
-        ExecutorService executorService;
         Handler handler;
         Ion ion;
         String transformKey;
         ArrayList<Transform> transforms;
 
-        public BitmapToBitmap(Ion ion, Handler handler, String transformKey, ArrayList<Transform> transforms, ExecutorService executorService) {
-            this.executorService = executorService;
+        public BitmapToBitmap(Ion ion, Handler handler, String transformKey, ArrayList<Transform> transforms) {
             this.handler = handler;
             this.transformKey = transformKey;
             this.transforms = transforms;
@@ -169,7 +166,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         }
 
         public void transform(final Bitmap result) {
-            executorService.execute(new Runnable() {
+            ion.executorService.execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -211,10 +208,6 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         if (imageView != null)
             ion.pendingViews.remove(imageView);
 
-//        ResponseCacheMiddleware cache = ion.responseCache;
-//        IonLog.i("cache hits: " + cache.getCacheHitCount());
-//        IonLog.i("cond cache hits: " + cache.getConditionalCacheHitCount());
-
         // determine the key for this bitmap after all transformations
         String tmpKey = builder.request.getUri().toString();
         if (transforms != null) {
@@ -246,7 +239,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         String urlKey = builder.request.getUri().toString();
         ByteArrayToBitmapFuture pendingDownload = ion.pendingDownloads.get(urlKey);
         if (pendingDownload == null || pendingDownload.isCancelled()) {
-            pendingDownload = new ByteArrayToBitmapFuture(ion, builder.handler, urlKey, executorService);
+            pendingDownload = new ByteArrayToBitmapFuture(ion, builder.handler, urlKey);
             ion.pendingDownloads.put(urlKey, pendingDownload);
             // allow the bitmap load to cancel the downloader
             pendingDownload.setMutateFuture(builder.execute(new ByteBufferListParser()));
@@ -255,7 +248,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         // find/create the future for the bitmap transform
         BitmapToBitmap pendingTransform = ion.pendingTransforms.get(transformKey);
         if (pendingTransform == null || pendingTransform.isCancelled()) {
-            pendingTransform = new BitmapToBitmap(ion, builder.handler, transformKey, transforms, executorService);
+            pendingTransform = new BitmapToBitmap(ion, builder.handler, transformKey, transforms);
             ion.pendingTransforms.put(transformKey, pendingTransform);
             // allow the bitmap transform to cancel the bitmap load
             pendingDownload.addChildFuture(pendingTransform.createMutateFuture());
@@ -305,8 +298,6 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
         return ret;
     }
-
-    ExecutorService executorService = Executors.newFixedThreadPool(3);
 
     @Override
     public Future<Bitmap> asBitmap() {

@@ -22,6 +22,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Created by koush on 5/21/13.
@@ -209,14 +211,14 @@ public class Ion {
     }
 
     public void dump() {
+        bitmapCache.dump();
+        Log.i(LOGTAG, "Pending downloads: " + pendingDownloads.size());
+        Log.i(LOGTAG, "Pending transforms: " + pendingTransforms.size());
+        Log.i(LOGTAG, "Pending views: " + pendingViews.size());
         Log.i(LOGTAG, "Groups: " + inFlight.size());
         for (FutureSet futures: inFlight.values()) {
             Log.i(LOGTAG, "Group size: " + futures.size());
-            for (Future future: futures.keySet()) {
-                Log.i(LOGTAG, "" + (future.isDone() || future.isCancelled()));
-            }
         }
-        httpClient.getServer().dump();
     }
 
     /**
@@ -323,6 +325,7 @@ public class Ion {
     // map an ImageView to the url being downloaded for it.
     // but don't hold references to the ImageView...
     WeakHashMap<ImageView, String> pendingViews = new WeakHashMap<ImageView, String>();
+    ExecutorService executorService = Executors.newFixedThreadPool(3);
 
     // track the downloads and transforms that are pending.
     // but don't maintain a reference.
