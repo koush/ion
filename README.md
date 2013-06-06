@@ -27,10 +27,9 @@ Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/
    * All operations return a [Future](https://github.com/koush/ion#futures) and [can be cancelled](https://github.com/koush/ion#cancelling-requests)
  * HTTP POST/PUT:
    * text/plain
-   * [application/json](https://github.com/koush/ion#post-json-and-read-json)
+   * [application/json](https://github.com/koush/ion#post-json-and-read-json) (both JsonObject and POJO)
    * [application/x-www-form-urlencoded](https://github.com/koush/ion#post-applicationx-www-form-urlencoded-and-read-a-string)
    * [multipart/form-data](https://github.com/koush/ion#post-multipartform-data-and-read-json)
-   * POJO via Gson (application/json)
  * Transparent usage of HTTP features and optimizations:
    * Caching
    * Gzip/Deflate Compression
