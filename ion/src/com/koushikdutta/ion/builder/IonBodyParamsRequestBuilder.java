@@ -130,4 +130,12 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @return
      */
     public IonFutureRequestBuilder setStringBody(String string);
+
+    /**
+     * Provide Basic authentication credentials to be sent with the request.
+     * @param username
+     * @param password
+     * @return
+     */
+    public IonBodyParamsRequestBuilder basicAuthentication(String username, String password);
 }

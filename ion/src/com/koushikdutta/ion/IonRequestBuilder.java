@@ -8,6 +8,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Base64;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
@@ -523,5 +524,11 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     @Override
     public <T> IonFutureRequestBuilder setJsonObjectBody(T object) {
         setBody(new PojoBody<T>(ion.getGson(), object, null));
-        return this;    }
+        return this;
+    }
+
+    @Override
+    public IonBodyParamsRequestBuilder basicAuthentication(String username, String password) {
+        return setHeader("Authorization", Base64.encodeToString(String.format("%s:%s", username, password).getBytes(), Base64.DEFAULT));
+    }
 }
