@@ -48,6 +48,7 @@ import com.koushikdutta.ion.builder.IonUrlEncodedBodyRequestBuilder;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
+import com.koushikdutta.ion.gson.PojoBody;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -124,13 +125,13 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     @Override
     public IonFutureRequestBuilder setJsonObjectBody(JsonObject jsonObject) {
         setHeader("Content-Type", "application/json");
-        return setBody(new GsonBody<JsonObject>(jsonObject));
+        return setBody(new GsonBody<JsonObject>(ion.getGson(), jsonObject));
     }
 
     @Override
     public IonFutureRequestBuilder setJsonArrayBody(JsonArray jsonArray) {
         setHeader("Content-Type", "application/json");
-        return setBody(new GsonBody<JsonArray>(jsonArray));
+        return setBody(new GsonBody<JsonArray>(ion.getGson(), jsonArray));
     }
 
     @Override
@@ -512,4 +513,15 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         request.enableProxy(host, port);
         return this;
     }
+
+    @Override
+    public <T> IonFutureRequestBuilder setJsonObjectBody(T object, TypeToken<T> token) {
+        setBody(new PojoBody<T>(ion.getGson(), object, token));
+        return this;
+    }
+
+    @Override
+    public <T> IonFutureRequestBuilder setJsonObjectBody(T object) {
+        setBody(new PojoBody<T>(ion.getGson(), object, null));
+        return this;    }
 }

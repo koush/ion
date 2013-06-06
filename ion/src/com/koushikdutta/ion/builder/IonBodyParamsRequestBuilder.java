@@ -6,6 +6,7 @@ import android.widget.ProgressBar;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.ion.ProgressCallback;
 
 /**
@@ -96,6 +97,23 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @return
      */
     public IonFutureRequestBuilder setJsonObjectBody(JsonObject jsonObject);
+
+    /**
+     * Specify a JsonObject to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param object Object to serialize with Json and send with the request
+     * @param token Type token to assist with generic type serialization
+     * @return
+     */
+    public <T> IonFutureRequestBuilder setJsonObjectBody(T object, TypeToken<T> token);
+
+    /**
+     * Specify a JsonObject to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param object Object to serialize with Json and send with the request
+     * @return
+     */
+    public <T> IonFutureRequestBuilder setJsonObjectBody(T object);
 
     /**
      * Specify a JsonArray to send to the HTTP server. If no HTTP method was explicitly

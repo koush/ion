@@ -1,24 +1,26 @@
 package com.koushikdutta.ion.gson;
 
-import com.google.gson.JsonArray;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.koushikdutta.async.DataEmitter;
+import com.koushikdutta.async.DataSink;
 import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.AsyncHttpRequestBody;
-import com.koushikdutta.async.http.AsyncHttpResponse;
+import com.koushikdutta.ion.Ion;
+
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStreamWriter;
 
 public class GsonBody<T extends JsonElement> implements AsyncHttpRequestBody<T> {
-    public GsonBody() {
-    }
-
     byte[] mBodyBytes;
     T json;
-    public GsonBody(T json) {
-        this();
+    Gson gson;
+    public GsonBody(Gson gson, T json) {
         this.json = json;
+        this.gson = gson;
     }
 
     @Override
@@ -33,7 +35,13 @@ public class GsonBody<T extends JsonElement> implements AsyncHttpRequestBody<T> 
     }
 
     @Override
-    public void write(AsyncHttpRequest request, AsyncHttpResponse sink) {
+    public void write(AsyncHttpRequest request, DataSink sink) {
+        if (mBodyBytes == null) {
+            ByteArrayOutputStream bout = new ByteArrayOutputStream();
+            OutputStreamWriter out = new OutputStreamWriter(bout);
+            gson.toJson(json, out);
+            mBodyBytes = bout.toByteArray();
+        }
         Util.writeAll(sink, mBodyBytes, null);
     }
 
@@ -49,7 +57,8 @@ public class GsonBody<T extends JsonElement> implements AsyncHttpRequestBody<T> 
 
     @Override
     public int length() {
-        mBodyBytes = json.toString().getBytes();
+        if (mBodyBytes == null)
+            mBodyBytes = json.toString().getBytes();
         return mBodyBytes.length;
     }
 
