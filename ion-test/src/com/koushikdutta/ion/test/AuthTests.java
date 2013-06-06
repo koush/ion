@@ -13,9 +13,22 @@ import com.koushikdutta.ion.Ion;
  * Created by koush on 6/6/13.
  */
 public class AuthTests extends AndroidTestCase {
-    public void testBasicAuth() throws Exception {
-        AsyncHttpServer httpServer = new AsyncHttpServer();
+    AsyncHttpServer httpServer;
+
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        httpServer = new AsyncHttpServer();
         httpServer.listen(5555);
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        httpServer.stop();
+    }
+
+    public void testBasicAuth() throws Exception {
 
         httpServer.get("/", new HttpServerRequestCallback() {
             @Override
@@ -40,6 +53,7 @@ public class AuthTests extends AndroidTestCase {
 
 
         JsonObject result = Ion.with(getContext(), "http://localhost:5555")
+        .setTimeout(500)
         .basicAuthentication("foo", "bar")
         .asJsonObject()
         .get();
