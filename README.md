@@ -2,23 +2,10 @@
 
 ![](ion-sample/ion-sample.png)
 
-##### Jar
-Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.ion&a=ion&v=LATEST)
-
-##### Maven
-```xml
-<dependency>
-   <groupId>com.koushikdutta.ion</groupId>
-   <artifactId>ion</artifactId>
-   <version>1.0.8</version>
-</dependency>
-```
-
-##### Local Checkout (with [AndroidAsync](https://github.com/koush/AndroidAsync) dependency)
-```
-git clone git://github.com/koush/AndroidAsync.git
-git clone git://github.com/koush/ion.git
-```
+#### Download
+ * [Jar](https://github.com/koush/ion#get-ion)
+ * [Maven](https://github.com/koush/ion#get-ion)
+ * [Git](https://github.com/koush/ion#get-ion)
 
 #### Features
  * Asynchronously download:
@@ -338,3 +325,24 @@ Ion.with(context, "http://example.com/proxied.html")
 Using Charles Proxy on your desktop computer in conjunction with request proxying will prove invaluable for debugging!
 
 ![](ion-sample/charles.png)
+
+#### Get Ion
+
+##### Jars
+ * [AndroidAsync Dependency](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.async&a=androidasync&v=LATEST)
+ * [ion](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.ion&a=ion&v=LATEST)
+
+##### Maven
+```xml
+<dependency>
+   <groupId>com.koushikdutta.ion</groupId>
+   <artifactId>ion</artifactId>
+   <version>1.0.8</version>
+</dependency>
+```
+
+##### Local Checkout (with [AndroidAsync](https://github.com/koush/AndroidAsync) dependency)
+```
+git clone git://github.com/koush/AndroidAsync.git
+git clone git://github.com/koush/ion.git
+```
