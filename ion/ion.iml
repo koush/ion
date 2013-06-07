@@ -25,21 +25,14 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar:///Volumes/Data/src/ion/ion/libs/gson-2.2.4.jar!/" />
+          <root url="file://$MODULE_DIR$/libs" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
+        <jarDirectory url="file://$MODULE_DIR$/libs" recursive="false" />
       </library>
     </orderEntry>
-    <orderEntry type="module-library" exported="">
-      <library>
-        <CLASSES>
-          <root url="jar:///Volumes/Data/src/ion/ion/libs/androidasync-1.0.6.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="module" module-name="AndroidAsync" exported="" />
   </component>
 </module>
 

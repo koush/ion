@@ -2,16 +2,22 @@
 
 ![](ion-sample/ion-sample.png)
 
-### Download
+##### Jar
+Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.ion&a=ion&v=LATEST)
 
-Download [the latest JAR](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.ion&a=ion&v=LATEST) or grab via Maven:
-
+##### Maven
 ```xml
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
    <version>1.0.8</version>
 </dependency>
+```
+
+##### Local Checkout (with [AndroidAsync](https://github.com/koush/AndroidAsync) dependency)
+```
+git clone git://github.com/koush/AndroidAsync.git
+git clone git://github.com/koush/ion.git
 ```
 
 #### Features

@@ -75,6 +75,8 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
 
     @Override
     public IonBodyParamsRequestBuilder load(String url) {
+        if (url == null)
+            return this;
         return loadInternal(AsyncHttpGet.METHOD, url);
     }
 

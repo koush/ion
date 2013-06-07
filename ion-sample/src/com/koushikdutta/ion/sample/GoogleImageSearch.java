@@ -1,15 +1,14 @@
 package com.koushikdutta.ion.sample;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Context;
 import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.text.TextUtils;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -27,11 +26,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.HashSet;
 
 /**
  * Created by koush on 6/4/13.

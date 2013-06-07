@@ -1,6 +1,14 @@
 package com.koushikdutta.ion;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -11,19 +19,11 @@ import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
 import com.koushikdutta.ion.builder.IonFutureRequestBuilder;
-import com.koushikdutta.ion.builder.IonLoadRequestBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.WeakHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Created by koush on 5/21/13.
@@ -238,6 +238,10 @@ public class Ion {
     // maintain a list of futures that are in being processed, allow for bulk cancellation
     WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
 
+    private void addCookieMiddleware() {
+        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context));
+    }
+
     Context context;
     private Ion(Context context) {
         httpClient = new AsyncHttpClient(new AsyncServer());
@@ -249,7 +253,10 @@ public class Ion {
         catch (Exception e) {
             IonLog.w("unable to set up response cache", e);
         }
-        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context));
+
+        // TODO: Support pre GB?
+        if (Build.VERSION.SDK_INT >= 9)
+            addCookieMiddleware();
 
         httpClient.getSocketMiddleware().setConnectAllAddresses(true);
         httpClient.getSSLSocketMiddleware().setConnectAllAddresses(true);

@@ -1,5 +1,9 @@
 package com.koushikdutta.ion;
 
+import java.io.ByteArrayInputStream;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -9,24 +13,19 @@ import android.text.TextUtils;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.parser.ByteBufferListParser;
+import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.IonImageViewRequestBuilder;
-import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
-import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.builder.IonImageViewRequestPostLoadBuilder;
 import com.koushikdutta.ion.builder.IonImageViewRequestPreLoadBuilder;
-import com.koushikdutta.ion.bitmap.Transform;
-
-import java.io.ByteArrayInputStream;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
+import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 
 /**
  * Created by koush on 5/23/13.
@@ -205,8 +204,18 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
     public Future<Bitmap> intoImageView(ImageView imageView) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
 
+        // the future to return to the caller
+        final SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
+
         if (imageView != null)
             ion.pendingViews.remove(imageView);
+        
+        // no url? just set a placeholder and bail
+        if (builder.request == null) {
+            setPlaceholder(imageView);
+            ret.setComplete((Bitmap)null);
+            return ret;
+        }
 
         // determine the key for this bitmap after all transformations
         String tmpKey = builder.request.getUri().toString();
@@ -216,9 +225,6 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
             }
         }
         final String transformKey = tmpKey;
-
-        // the future to return to the caller
-        final SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
 
         // see if this request can be fulfilled from the cache
         BitmapDrawable bd = builder.ion.bitmapCache.getDrawable(transformKey);
