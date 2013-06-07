@@ -75,12 +75,14 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
 
     @Override
     public IonBodyParamsRequestBuilder load(String url) {
-        if (url == null)
-            return this;
         return loadInternal(AsyncHttpGet.METHOD, url);
     }
 
     private IonBodyParamsRequestBuilder loadInternal(String method, String url) {
+        if (url == null) {
+            request = null;
+            return this;
+        }
         request = new AsyncHttpRequest(URI.create(url), method);
         request.setHandler(null);
         setLogging(ion.LOGTAG, ion.logLevel);
@@ -96,19 +98,22 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
 
     @Override
     public IonBodyParamsRequestBuilder setHeader(String name, String value) {
-        request.setHeader(name, value);
+        if (request != null)
+            request.setHeader(name, value);
         return this;
     }
 
     @Override
     public IonBodyParamsRequestBuilder addHeader(String name, String value) {
-        request.addHeader(name, value);
+        if (request != null)
+            request.addHeader(name, value);
         return this;
     }
 
     @Override
     public IonBodyParamsRequestBuilder setTimeout(int timeoutMilliseconds) {
-        request.setTimeout(timeoutMilliseconds);
+        if (request != null)
+            request.setTimeout(timeoutMilliseconds);
         return this;
     }
 
@@ -119,9 +124,11 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     }
 
     private <T> IonFutureRequestBuilder setBody(AsyncHttpRequestBody<T> body) {
-        request.setBody(body);
-        if (!methodWasSet)
-            request.setMethod(AsyncHttpPost.METHOD);
+        if (request != null) {
+            request.setBody(body);
+            if (!methodWasSet)
+                request.setMethod(AsyncHttpPost.METHOD);
+        }
         return this;
     }
 
@@ -488,7 +495,8 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
 
     @Override
     public IonBodyParamsRequestBuilder setLogging(String tag, int level) {
-        request.setLogging(tag, level);
+        if (request != null)
+            request.setLogging(tag, level);
         return this;
     }
 
@@ -513,7 +521,8 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
 
     @Override
     public IonBodyParamsRequestBuilder proxy(String host, int port) {
-        request.enableProxy(host, port);
+        if (request != null)
+            request.enableProxy(host, port);
         return this;
     }
 
