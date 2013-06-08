@@ -294,12 +294,12 @@ Future<JsonObject> json2 = Ion.with(activity, "http://example.com/test2.json")
 .group(jsonGroup)
 .asJsonObject();
 
-Future<JsonObject> image1 = Ion.with(activity, "http://example.com/test.png")
+Future<Bitmap> image1 = Ion.with(activity, "http://example.com/test.png")
 // for this image request, use a different group for images
 .group(imageGroup)
 .intoImageView(imageView1);
 
-Future<JsonObject> image2 = Ion.with(activity, "http://example.com/test2.png")
+Future<Bitmap> image2 = Ion.with(activity, "http://example.com/test2.png")
 // same imageGroup as before
 .group(imageGroup)
 .intoImageView(imageView2);
