@@ -29,7 +29,6 @@ public class AuthTests extends AndroidTestCase {
     }
 
     public void testBasicAuth() throws Exception {
-
         httpServer.get("/", new HttpServerRequestCallback() {
             @Override
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {

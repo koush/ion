@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.animation.Animation;
@@ -19,7 +18,6 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.IonImageViewRequestBuilder;
@@ -108,7 +106,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
                 return;
             }
 
-            builder.request.logd("Image file size: " + result.remaining());
+//            builder.request.logd("Image file size: " + result.remaining());
             final ByteArrayInputStream bin = new ByteArrayInputStream(result.getAllByteArray());
             result.clear();
 
@@ -147,7 +145,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
                     try {
                         Bitmap tmpBitmap = result;
                         for (Transform transform : transforms) {
-                            builder.request.logd("applying transform: " + transform.getKey());
+//                            builder.request.logd("applying transform: " + transform.getKey());
                             tmpBitmap = transform.transform(tmpBitmap);
                         }
                         report(null, tmpBitmap);
@@ -174,14 +172,14 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         if (imageView != null)
             ion.pendingViews.remove(imageView);
         
-        // no url? just set a placeholder and bail
-        if (builder.request == null) {
+        // no uri? just set a placeholder and bail
+        if (builder.uri == null) {
             setPlaceholder(imageView);
             ret.setComplete((Bitmap)null);
             return ret;
         }
 
-        final String urlKey = builder.request.getUri().toString();
+        final String urlKey = builder.uri;
 
         // determine the key for this bitmap after all transformations
         String tmpKey = urlKey;
@@ -195,8 +193,8 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         // see if this request can be fulfilled from the cache
         Bitmap bitmap = builder.ion.bitmapCache.get(transformKey);
         if (bitmap != null) {
-            setImageView(imageView, getBitmapDrawable(bitmap));
-            doAnimation(imageView, null);
+            setImageView(imageView, getBitmapDrawable(bitmap), 0);
+            doAnimation(imageView, null, 0);
             ret.setComplete(bitmap);
             return ret;
         }
@@ -212,7 +210,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
             builder.execute(new ByteBufferListParser()).setCallback(new ByteBufferListToBitmap(urlKey));
         }
 
-        // if the transform key and url key aren't the same, and the transform isn't already queue, queue it
+        // if the transform key and uri key aren't the same, and the transform isn't already queue, queue it
         if (!TextUtils.equals(urlKey, transformKey) && !ion.bitmapsPending.contains(transformKey)) {
             ion.bitmapsPending.add(urlKey, new BitmapToBitmap(transformKey));
         }
@@ -247,7 +245,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
                 BitmapDrawable result = getBitmapDrawable(source);
                 if (imageView != null) {
                     imageView.setImageDrawable(result);
-                    doAnimation(imageView, inAnimation);
+                    doAnimation(imageView, inAnimation, inAnimationResource);
                 }
                 ret.setComplete(result.getBitmap());
             }
@@ -275,13 +273,10 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         return this;
     }
 
+    int placeholderResource;
     @Override
     public IonBitmapRequestBuilder placeholder(int resourceId) {
-        if (resourceId == 0) {
-            placeholderDrawable = null;
-            return this;
-        }
-        placeholder(builder.context.get().getResources().getDrawable(resourceId));
+        placeholderResource = resourceId;
         return this;
     }
 
@@ -292,34 +287,32 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
     }
 
     Drawable errorDrawable;
-
     @Override
     public IonBitmapRequestBuilder error(Drawable drawable) {
         errorDrawable = drawable;
         return this;
     }
 
+    int errorResource;
     @Override
     public IonBitmapRequestBuilder error(int resourceId) {
-        if (resourceId == 0) {
-            errorDrawable = null;
-            return this;
-        }
-        error(builder.context.get().getResources().getDrawable(resourceId));
+        errorResource = resourceId;
         return this;
     }
 
-    private static void setImageView(ImageView imageView, Drawable drawable) {
+    private static void setImageView(ImageView imageView, Drawable drawable, int resource) {
         if (imageView == null)
             return;
+        if (resource != 0)
+            drawable = imageView.getContext().getResources().getDrawable(resource);
         imageView.setImageDrawable(drawable);
     }
 
     private void setPlaceholder(ImageView imageView) {
         if (imageView == null)
             return;
-        setImageView(imageView, placeholderDrawable);
-        doAnimation(imageView, loadAnimation);
+        setImageView(imageView, placeholderDrawable, placeholderResource);
+        doAnimation(imageView, loadAnimation, loadAnimationResource);
     }
 
     private void setErrorImage(ImageView imageView) {
@@ -327,13 +320,16 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
             return;
         boolean usingPlaceholder = false;
         Drawable drawable = errorDrawable;
-        if (drawable == null) {
+        int resource = errorResource;
+        // if we don't have a error drawable, keep the placeholder
+        if (drawable == null && resource == 0) {
             drawable = placeholderDrawable;
+            resource = placeholderResource;
             usingPlaceholder = true;
         }
-        setImageView(imageView, drawable);
+        setImageView(imageView, drawable, resource);
         if (!usingPlaceholder)
-            doAnimation(imageView, inAnimation);
+            doAnimation(imageView, inAnimation, inAnimationResource);
     }
 
     Animation inAnimation;
@@ -352,9 +348,11 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         return this;
     }
 
-    private void doAnimation(ImageView imageView, Animation animation) {
+    private void doAnimation(ImageView imageView, Animation animation, int animationResource) {
         if (imageView == null)
             return;
+        if (animation == null && animationResource != 0)
+            animation = AnimationUtils.loadAnimation(imageView.getContext(), animationResource);
         if (animation == null) {
             imageView.setAnimation(null);
             return;
@@ -363,13 +361,17 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         imageView.startAnimation(animation);
     }
 
+    int loadAnimationResource;
     @Override
     public IonImageViewRequestBuilder animateLoad(int animationResource) {
-        return animateLoad(AnimationUtils.loadAnimation(builder.context.get(), animationResource));
+        loadAnimationResource = animationResource;
+        return this;
     }
 
+    int inAnimationResource;
     @Override
     public IonImageViewRequestPostLoadBuilder animateIn(int animationResource) {
-        return animateIn(AnimationUtils.loadAnimation(builder.context.get(), animationResource));
+        inAnimationResource = animationResource;
+        return this;
     }
 }

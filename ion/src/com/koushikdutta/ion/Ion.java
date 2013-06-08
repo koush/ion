@@ -17,7 +17,6 @@ import com.google.gson.Gson;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
@@ -331,12 +330,12 @@ public class Ion {
         return config;
     }
 
-    // map an ImageView to the url being downloaded for it.
+    // map an ImageView to the uri being downloaded for it.
     // but don't hold references to the ImageView...
     WeakHashMap<ImageView, String> pendingViews = new WeakHashMap<ImageView, String>();
     ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-    Multimap<FutureCallback<Bitmap>> bitmapsPending = new Multimap<FutureCallback<Bitmap>>();
+    HashList<FutureCallback<Bitmap>> bitmapsPending = new HashList<FutureCallback<Bitmap>>();
 
     IonBitmapCache bitmapCache;
     /**

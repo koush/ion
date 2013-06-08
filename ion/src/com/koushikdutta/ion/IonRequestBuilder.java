@@ -35,6 +35,7 @@ import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.MultipartFormDataBody;
 import com.koushikdutta.async.http.StringBody;
 import com.koushikdutta.async.http.UrlEncodedFormBody;
+import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
@@ -63,10 +64,12 @@ import java.util.List;
  * Created by koush on 5/21/13.
  */
 class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBuilder {
-    AsyncHttpRequest request;
     Ion ion;
     WeakReference<Context> context;
-    Handler handler = Looper.myLooper() == null ? null : new Handler();
+    static Handler mainHandler = new Handler(Looper.getMainLooper());
+    Handler handler = mainHandler;
+    String method = AsyncHttpGet.METHOD;
+    String uri;
 
     public IonRequestBuilder(Context context, Ion ion) {
         this.ion = ion;
@@ -79,13 +82,8 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     }
 
     private IonBodyParamsRequestBuilder loadInternal(String method, String url) {
-        if (url == null) {
-            request = null;
-            return this;
-        }
-        request = new AsyncHttpRequest(URI.create(url), method);
-        request.setHandler(null);
-        setLogging(ion.LOGTAG, ion.logLevel);
+        this.method = method;
+        this.uri = url;
         return this;
     }
 
@@ -96,24 +94,29 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         return loadInternal(method, url);
     }
 
+    RawHeaders headers;
+    private RawHeaders getHeaders() {
+        if (headers == null)
+            headers = new RawHeaders();
+        return headers;
+    }
+
     @Override
     public IonBodyParamsRequestBuilder setHeader(String name, String value) {
-        if (request != null)
-            request.setHeader(name, value);
+        getHeaders().set(name, value);
         return this;
     }
 
     @Override
     public IonBodyParamsRequestBuilder addHeader(String name, String value) {
-        if (request != null)
-            request.addHeader(name, value);
+        getHeaders().add(name, value);
         return this;
     }
 
+    int timeoutMilliseconds;
     @Override
     public IonBodyParamsRequestBuilder setTimeout(int timeoutMilliseconds) {
-        if (request != null)
-            request.setTimeout(timeoutMilliseconds);
+        this.timeoutMilliseconds = AsyncHttpRequest.DEFAULT_TIMEOUT;
         return this;
     }
 
@@ -123,12 +126,11 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         return this;
     }
 
+    AsyncHttpRequestBody body;
     private <T> IonFutureRequestBuilder setBody(AsyncHttpRequestBody<T> body) {
-        if (request != null) {
-            request.setBody(body);
-            if (!methodWasSet)
-                request.setMethod(AsyncHttpPost.METHOD);
-        }
+        if (!methodWasSet)
+            method = AsyncHttpPost.METHOD;
+        this.body = body;
         return this;
     }
 
@@ -204,11 +206,24 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
             AsyncServer.post(handler, runner);
     }
 
-    private <T> void getLoaderEmitter(TransformFuture<T, LoaderEmitter> ret) {
-        if (request == null || request.getUri() == null || request.getUri().getScheme() == null) {
+    private <T> void getLoaderEmitter(EmitterTransform<T> ret) {
+        URI uri = URI.create(this.uri);
+        if (uri == null || uri.getScheme() == null) {
             ret.setComplete(new Exception("Invalid URI"));
             return;
         }
+
+        AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
+        request.setBody(body);
+        request.setLogging(ion.LOGTAG, ion.logLevel);
+        if (logTag != null)
+            request.setLogging(logTag, logLevel);
+        request.enableProxy(proxyHost, proxyPort);
+        request.setTimeout(timeoutMilliseconds);
+        request.setHandler(null);
+        request.logd("preparing request");
+
+        ret.request = request;
 
         for (Loader loader: ion.config.loaders) {
             Future<DataEmitter> emitter = loader.load(ion, request, ret);
@@ -220,7 +235,8 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         ret.setComplete(new Exception("Unknown uri scheme"));
     }
 
-    private class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> {
+    class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> {
+        AsyncHttpRequest request;
         public EmitterTransform() {
             ion.addFutureInFlight(this, context.get());
             if (groups == null)
@@ -341,12 +357,12 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         return this;
     }
 
-    <T> Future<T> execute(final DataSink sink, final boolean close, final T result) {
+    <T> EmitterTransform<T> execute(final DataSink sink, final boolean close, final T result) {
         return execute(sink, close, result, null);
     }
 
 
-    <T> Future<T> execute(final DataSink sink, final boolean close, final T result, final Runnable cancel) {
+    <T> EmitterTransform<T> execute(final DataSink sink, final boolean close, final T result, final Runnable cancel) {
         EmitterTransform<T> ret = new EmitterTransform<T>() {
             @Override
             protected void cancelCleanup() {
@@ -493,10 +509,12 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         return new IonBitmapRequestBuilder(this).asBitmap();
     }
 
+    String logTag;
+    int logLevel;
     @Override
     public IonBodyParamsRequestBuilder setLogging(String tag, int level) {
-        if (request != null)
-            request.setLogging(tag, level);
+        logTag = tag;
+        logLevel = level;
         return this;
     }
 
@@ -519,10 +537,12 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
         return this;
     }
 
+    String proxyHost;
+    int proxyPort;
     @Override
     public IonBodyParamsRequestBuilder proxy(String host, int port) {
-        if (request != null)
-            request.enableProxy(host, port);
+        proxyHost = host;
+        proxyPort = port;
         return this;
     }
 

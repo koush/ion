@@ -6,8 +6,8 @@ import java.util.Hashtable;
 /**
  * Created by koush on 5/27/13.
  */
-class Multimap<T> extends Hashtable<String, ArrayList<T>> {
-    public Multimap() {
+class HashList<T> extends Hashtable<String, ArrayList<T>> {
+    public HashList() {
     }
 
     public boolean contains(String key) {
