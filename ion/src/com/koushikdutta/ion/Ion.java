@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.util.Log;
 import android.widget.ImageView;
@@ -15,6 +16,8 @@ import android.widget.ImageView;
 import com.google.gson.Gson;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
@@ -212,8 +215,7 @@ public class Ion {
 
     public void dump() {
         bitmapCache.dump();
-        Log.i(LOGTAG, "Pending downloads: " + pendingDownloads.size());
-        Log.i(LOGTAG, "Pending transforms: " + pendingTransforms.size());
+        Log.i(LOGTAG, "Pending bitmaps: " + bitmapsPending.size());
         Log.i(LOGTAG, "Pending views: " + pendingViews.size());
         Log.i(LOGTAG, "Groups: " + inFlight.size());
         for (FutureSet futures: inFlight.values()) {
@@ -334,16 +336,7 @@ public class Ion {
     WeakHashMap<ImageView, String> pendingViews = new WeakHashMap<ImageView, String>();
     ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-    // track the downloads and transforms that are pending.
-    // but don't maintain a reference.
-    // The reference stays alive because the reference chain looks as follows:
-    // AsyncServer -> AsyncHttpClient -> IonRequestBuilder.execute future ->
-    // bitmap decode future -> transform future -> drawable future ->
-    // asBitmap/intoImageView future
-    // Thus, the reference to the future will exist, so long as it is reachable
-    // by a callback; ie, it was not cancelled.
-    WeakReferenceHashTable<String, IonBitmapRequestBuilder.ByteArrayToBitmapFuture> pendingDownloads = new WeakReferenceHashTable<String, IonBitmapRequestBuilder.ByteArrayToBitmapFuture>();
-    WeakReferenceHashTable<String, IonBitmapRequestBuilder.BitmapToBitmap> pendingTransforms = new WeakReferenceHashTable<String, IonBitmapRequestBuilder.BitmapToBitmap>();
+    Multimap<FutureCallback<Bitmap>> bitmapsPending = new Multimap<FutureCallback<Bitmap>>();
 
     IonBitmapCache bitmapCache;
     /**

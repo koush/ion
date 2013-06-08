@@ -1,6 +1,9 @@
 package com.koushikdutta.ion.sample;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,6 +20,7 @@ import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.bitmap.Transform;
 
 public class Twitter extends Activity {
     // adapter that holds tweets, obviously :)

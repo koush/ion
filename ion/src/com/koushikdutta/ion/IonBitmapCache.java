@@ -21,38 +21,35 @@ import java.util.HashSet;
  * Created by koush on 5/23/13.
  */
 public class IonBitmapCache {
-    private static DrawableCache<ZombieDrawable> mLiveCache = new DrawableCache<ZombieDrawable>();
-    private static LruBitmapCache mDeadCache;
-    // this cache is simply to maintain a reference to the bitmap
-    // so that when the zombie drawable is garbage collected, the bitmap doesn't
-    // automatically get collected with it.
-    private static HashSet<Bitmap> mAllCache = new HashSet<Bitmap>();
-    static Resources mResources;
-    static DisplayMetrics mMetrics;
-
+    Resources mResources;
+    DisplayMetrics mMetrics;
+    LruBitmapCache mCache;
     Ion ion;
+
     public IonBitmapCache(Ion ion) {
         Context context = ion.getContext();
         this.ion = ion;
-        mDeadCache = new LruBitmapCache(getHeapSize(context) / 8);
         mMetrics = new DisplayMetrics();
         ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
                 .getDefaultDisplay().getMetrics(mMetrics);
         final AssetManager mgr = context.getAssets();
         mResources = new Resources(mgr, mMetrics, context.getResources().getConfiguration());
+        mCache = new LruBitmapCache(getHeapSize(context) / 8);
+    }
+
+    public void put(String key, Bitmap bitmap) {
+        assert Thread.currentThread() == Looper.getMainLooper().getThread();
+        mCache.put(key, bitmap);
+    }
+
+    public Bitmap get(String key) {
+        assert Thread.currentThread() == Looper.getMainLooper().getThread();
+        return mCache.get(key);
     }
 
     void dump() {
-        Log.i("IonBitmapCache", "Dead cache size: " + mDeadCache.size());
-        Log.i("IonBitmapCache", "Live cache size: " + mLiveCache.size());
-        Log.i("IonBitmapCache", "All cache size: " + mAllCache.size());
+        Log.i("IonBitmapCache", "bitmap cache: " + mCache.size());
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
-    }
-
-    ZombieDrawable put(String key, Bitmap bitmap) {
-        if (bitmap == null)
-            return null;
-        return new ZombieDrawable(key, bitmap);
     }
 
     boolean useBitmapScaling = true;
@@ -91,77 +88,7 @@ public class IonBitmapCache {
         }
     }
 
-    public BitmapDrawable getDrawable(String key) {
-        if (TextUtils.isEmpty(key))
-            return null;
-
-        ZombieDrawable live = mLiveCache.get(key);
-        if (live != null)
-            return live.cloneAndIncrementRefCounter();
-
-        Bitmap bitmap = mDeadCache.remove(key);
-        if (bitmap == null)
-            return null;
-
-        return new ZombieDrawable(key, bitmap);
-    }
-
-
     private static int getHeapSize(final Context context) {
         return ((ActivityManager)context.getSystemService(Context.ACTIVITY_SERVICE)).getMemoryClass() * 1024 * 1024;
-    }
-
-    private static class Brains {
-        int mRefCounter;
-        boolean mHeadshot;
-        long loadTime = System.currentTimeMillis();
-    }
-    /***
-     * ZombieDrawable refcounts Bitmaps by hooking the finalizer.
-     *
-     */
-    class ZombieDrawable extends BitmapDrawable {
-        public ZombieDrawable(final String key, final Bitmap bitmap) {
-            this(key, bitmap, new Brains());
-        }
-
-        Brains mBrains;
-        private ZombieDrawable(final String key, final Bitmap bitmap, Brains brains) {
-            super(mResources, bitmap);
-            this.key = key;
-            mBrains = brains;
-
-            mAllCache.add(bitmap);
-            mDeadCache.remove(key);
-            mLiveCache.put(key, this);
-
-            mBrains.mRefCounter++;
-        }
-
-        public ZombieDrawable cloneAndIncrementRefCounter() {
-            return new ZombieDrawable(key, getBitmap(), mBrains);
-        }
-
-        String key;
-
-        @Override
-        protected void finalize() throws Throwable {
-            super.finalize();
-
-            mBrains.mRefCounter--;
-            if (mBrains.mRefCounter == 0) {
-                if (!mBrains.mHeadshot)
-                    mDeadCache.put(key, getBitmap());
-                mAllCache.remove(getBitmap());
-                mLiveCache.remove(key);
-            }
-        }
-
-        // kill this zombie, forever.
-        public void headshot() {
-            mBrains.mHeadshot = true;
-            mLiveCache.remove(key);
-            mAllCache.remove(getBitmap());
-        }
     }
 }
