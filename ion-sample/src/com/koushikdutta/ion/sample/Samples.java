@@ -47,5 +47,13 @@ public class Samples extends Activity {
                 startActivity(new Intent(Samples.this, GoogleImageSearch.class));
             }
         });
+
+        Button imageViewSample = (Button)findViewById(R.id.image_view);
+        imageViewSample.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, ImageViewSample.class));
+            }
+        });
     }
 }

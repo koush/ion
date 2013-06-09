@@ -25,12 +25,13 @@ import com.koushikdutta.ion.builder.IonImageViewRequestBuilder;
 import com.koushikdutta.ion.builder.IonImageViewRequestPostLoadBuilder;
 import com.koushikdutta.ion.builder.IonImageViewRequestPreLoadBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
+import com.koushikdutta.ion.builder.IonMutableBitmapRequestPreLoadBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 
 /**
  * Created by koush on 5/23/13.
  */
-class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMutableBitmapRequestPostLoadBuilder, IonImageViewRequestPreLoadBuilder, IonImageViewRequestPostLoadBuilder {
+class IonBitmapRequestBuilder implements IonMutableBitmapRequestPreLoadBuilder, IonMutableBitmapRequestPostLoadBuilder, IonImageViewRequestPreLoadBuilder, IonImageViewRequestPostLoadBuilder {
     IonRequestBuilder builder;
     Ion ion;
 
@@ -203,11 +204,28 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         }
     };
 
-    IonDrawable getIonDrawable(ImageView imageView) {
+    void setIonDrawable(ImageView imageView, Bitmap bitmap) {
         Drawable current = imageView.getDrawable();
-        if (current == null || !(current instanceof IonDrawable))
-            return new IonDrawable(imageView.getResources(), null);
-        return (IonDrawable)current;
+
+        // invalidate self doesn't seem to trigger the dimension check to be called by imageview.
+        // are drawable dimensions supposed to be immutable?
+        imageView.setImageDrawable(null);
+
+        IonDrawable ret;
+        if (current == null || !(current instanceof IonDrawable)) {
+            ret = new IonDrawable(imageView.getResources(), null);
+        }
+        else {
+            ret = (IonDrawable)current;
+            ret.setDensity(imageView.getResources().getDisplayMetrics().densityDpi);
+        }
+
+        ret.setBitmap(bitmap);
+        ret.setScaleMode(scaleMode);
+        if (scaleMode == ScaleMode.CenterCrop)
+            ret.setIntrinsicDimensions(imageView.getMeasuredWidth(), imageView.getMeasuredHeight());
+
+        imageView.setImageDrawable(ret);
     }
 
     SimpleFuture<ImageView> imageViewFuture;
@@ -235,7 +253,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         Bitmap bitmap = execute();
         // note what this imageview is attached to
         if (bitmap != null) {
-            imageView.setImageDrawable(getIonDrawable(imageView).setBitmap(bitmap));
+            setIonDrawable(imageView, bitmap);
             doAnimation(imageView, null, 0);
             imageViewFuture.setComplete(imageView);
             return imageViewFuture;
@@ -278,7 +296,7 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
                     return;
                 }
 
-                imageView.setImageDrawable(getIonDrawable(imageView).setBitmap(source));
+                setIonDrawable(imageView, source);
                 doAnimation(imageView, inAnimation, inAnimationResource);
                 imageViewFuture.setComplete(imageView);
             }
@@ -417,15 +435,34 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
 
     int loadAnimationResource;
     @Override
-    public IonImageViewRequestBuilder animateLoad(int animationResource) {
+    public IonBitmapRequestBuilder animateLoad(int animationResource) {
         loadAnimationResource = animationResource;
         return this;
     }
 
     int inAnimationResource;
     @Override
-    public IonImageViewRequestPostLoadBuilder animateIn(int animationResource) {
+    public IonBitmapRequestBuilder animateIn(int animationResource) {
         inAnimationResource = animationResource;
+        return this;
+    }
+
+    static enum ScaleMode {
+        CenterCrop,
+        CenterInside
+    }
+
+    ScaleMode scaleMode;
+
+    @Override
+    public IonBitmapRequestBuilder centerCrop() {
+        scaleMode = ScaleMode.CenterCrop;
+        return this;
+    }
+
+    @Override
+    public IonBitmapRequestBuilder centerInside() {
+        scaleMode = ScaleMode.CenterInside;
         return this;
     }
 
@@ -442,5 +479,6 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         inAnimationResource = 0;
         loadAnimation = null;
         loadAnimationResource = 0;
+        scaleMode = ScaleMode.CenterInside;
     }
 }

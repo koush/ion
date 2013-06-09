@@ -44,7 +44,7 @@ import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
 import com.koushikdutta.ion.builder.IonFormMultipartBodyRequestBuilder;
 import com.koushikdutta.ion.builder.IonFutureRequestBuilder;
 import com.koushikdutta.ion.builder.IonLoadRequestBuilder;
-import com.koushikdutta.ion.builder.IonMutableBitmapRequestBuilder;
+import com.koushikdutta.ion.builder.IonMutableBitmapRequestPreLoadBuilder;
 import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
 import com.koushikdutta.ion.builder.IonUrlEncodedBodyRequestBuilder;
 import com.koushikdutta.ion.gson.GsonBody;
@@ -485,7 +485,7 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     }
 
     @Override
-    public IonMutableBitmapRequestBuilder withBitmap() {
+    public IonMutableBitmapRequestPreLoadBuilder withBitmap() {
         return new IonBitmapRequestBuilder(this);
     }
 

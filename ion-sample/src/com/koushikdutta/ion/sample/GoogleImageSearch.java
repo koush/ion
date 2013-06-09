@@ -1,10 +1,7 @@
 package com.koushikdutta.ion.sample;
 
-import java.util.ArrayList;
-
 import android.app.Activity;
 import android.content.Context;
-import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -12,13 +9,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -35,79 +29,6 @@ public class GoogleImageSearch extends Activity {
     private ListView mListView;
     private MyAdapter mAdapter;
 
-    // boilerplate to hold a grid of images (GridView does not work properly)
-    // Create an adapter wrapper around another adapter
-    // that creates a row of items and returns that to the ListView
-    // as a single item
-    private class Row extends ArrayList {
-    }
-
-    private class MyGridAdapter extends BaseAdapter {
-        public MyGridAdapter(Adapter adapter) {
-            mAdapter = adapter;
-            mAdapter.registerDataSetObserver(new DataSetObserver() {
-                @Override
-                public void onChanged() {
-                    super.onChanged();
-                    notifyDataSetChanged();
-                }
-
-                @Override
-                public void onInvalidated() {
-                    super.onInvalidated();
-                    notifyDataSetInvalidated();
-                }
-            });
-        }
-
-        Adapter mAdapter;
-
-        final int rowSize = 4;
-
-        @Override
-        public int getCount() {
-            return (int) Math.ceil((double) mAdapter.getCount() / (double)rowSize);
-        }
-
-        @Override
-        public Row getItem(int position) {
-            Row row = new Row();
-            for (int i = position * rowSize; i < rowSize; i++) {
-                if (mAdapter.getCount() < i)
-                    row.add(mAdapter.getItem(i));
-                else
-                    row.add(null);
-            }
-            return row;
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            // see if we need to load more to get 40, otherwise populate the adapter
-            if (position > getCount() - 4)
-                loadMore();
-
-            convertView = getLayoutInflater().inflate(R.layout.google_image_row, null);
-            LinearLayout row = (LinearLayout) convertView;
-            LinearLayout l = (LinearLayout) row.getChildAt(0);
-            for (int child = 0; child < rowSize; child++) {
-                int i = position * rowSize + child;
-                LinearLayout c = (LinearLayout) l.getChildAt(child);
-                c.removeAllViews();
-                if (i < mAdapter.getCount()) {
-                    c.addView(mAdapter.getView(i, null, null));
-                }
-            }
-
-            return convertView;
-        }
-    }
-
     // Adapter to populate and imageview from an url contained in the array adapter
     private class MyAdapter extends ArrayAdapter<String> {
         public MyAdapter(Context context) {
@@ -116,6 +37,10 @@ public class GoogleImageSearch extends Activity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            // see if we need to load more to get 40, otherwise populate the adapter
+            if (position > getCount() - 4)
+                loadMore();
+
             if (convertView == null)
                 convertView = getLayoutInflater().inflate(R.layout.google_image, null);
 
@@ -124,6 +49,7 @@ public class GoogleImageSearch extends Activity {
 
             // select the image view
             Ion.with(iv)
+            .centerCrop()
             // fade in on load
             .animateIn(R.anim.fadein)
             // load the url
@@ -194,7 +120,6 @@ public class GoogleImageSearch extends Activity {
 
         mListView = (ListView) findViewById(R.id.results);
         mAdapter = new MyAdapter(this);
-        MyGridAdapter a = new MyGridAdapter(mAdapter);
-        mListView.setAdapter(a);
+        mListView.setAdapter(mAdapter);
     }
 }

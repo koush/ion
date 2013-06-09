@@ -27,6 +27,9 @@
                 android:name=".GoogleImageSearch"
                 android:label="Google Image Search"/>
         <activity
+            android:name=".ImageViewSample"
+            android:label="ImageView Sample"/>
+        <activity
                 android:name=".Samples"
                 android:label="ion samples">
             <intent-filter>

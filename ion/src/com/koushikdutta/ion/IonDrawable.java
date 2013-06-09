@@ -8,15 +8,15 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.view.Gravity;
 
 /**
  * Created by koush on 6/8/13.
  */
 public class IonDrawable extends Drawable {
-    Paint paint;
-    Bitmap bitmap;
-    int density;
+    private Paint paint;
+    private Bitmap bitmap;
+    private int density;
+    private IonBitmapRequestBuilder.ScaleMode scaleMode;
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
@@ -43,7 +43,7 @@ public class IonDrawable extends Drawable {
         }
         else {
             width = bitmap.getScaledWidth(density);
-            height = bitmap.getScaledWidth(density);
+            height = bitmap.getScaledHeight(density);
         }
         invalidateSelf();
         return this;
@@ -71,13 +71,85 @@ public class IonDrawable extends Drawable {
         return height;
     }
 
-    Rect bounds = new Rect();
+    private void recompute() {
+
+    }
+
+    public IonDrawable setScaleMode(IonBitmapRequestBuilder.ScaleMode scaleMode) {
+        if (this.scaleMode == scaleMode)
+            return this;
+        this.scaleMode = scaleMode;
+
+        if (bitmap != null) {
+            width = bitmap.getScaledWidth(density);
+            height = bitmap.getScaledHeight(density);
+        }
+
+        invalidateSelf();
+        return this;
+    }
+
+    public IonDrawable setDensity(int density) {
+        if (this.density == density)
+            return this;
+        this.density = density;
+        invalidateSelf();
+        return this;
+    }
+
+    public IonDrawable setIntrinsicDimensions(int width, int height) {
+        assert scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterCrop;
+        if (this.width == width && this.height == height)
+            return this;
+
+        if (width == 0 && height == 0) {
+            // wtf?
+        }
+        else if (width == 0) {
+            float ratio = (float)this.width / (float)this.height;
+            this.width = (int)(ratio * height);
+            this.height = height;
+        }
+        else if (height == 0) {
+            float ratio = (float)this.height / (float)this.width;
+            this.width = width;
+            this.height = (int)(ratio * width);
+        }
+        else {
+            this.width = width;
+            this.height = height;
+        }
+
+        invalidateSelf();
+        return this;
+    }
+
+    Rect drawBounds = new Rect();
     @Override
     public void draw(Canvas canvas) {
         if (bitmap == null)
             return;
-        copyBounds(bounds);
-        canvas.drawBitmap(bitmap, null, bounds, paint);
+
+        Rect bounds = getBounds();
+
+        float xratio = (float)bounds.width() / (float)bitmap.getWidth();
+        float yratio = (float)bounds.height() / (float)bitmap.getHeight();
+
+        float ratio;
+        if (scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterCrop)
+            ratio = Math.max(xratio, yratio);
+        else
+            ratio = Math.min(xratio, yratio);
+
+
+        int newWidth = (int)(ratio * bitmap.getWidth());
+        int newHeight = (int)(ratio * bitmap.getHeight());
+        int startx = (bounds.width() - newWidth) >> 1;
+        int starty = (bounds.height() - newHeight) >> 1;
+
+        drawBounds.set(startx, starty, startx + newWidth, starty + newHeight);
+
+        canvas.drawBitmap(bitmap, null, drawBounds, paint);
     }
 
     @Override

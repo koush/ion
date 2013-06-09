@@ -18,6 +18,10 @@
             android:layout_height="wrap_content"
             android:text="Progress Bar Download"
             />
+    <Button android:id="@+id/image_view" android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:text="ImageView Sample"
+            />
     <Button android:id="@+id/google_image_search" android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:text="Google Image Search"

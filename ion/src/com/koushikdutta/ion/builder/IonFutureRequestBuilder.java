@@ -34,7 +34,7 @@ public interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, 
      * Use the request as a Bitmap which can then be modified and/or applied to an ImageView.
      * @return
      */
-    public IonMutableBitmapRequestBuilder withBitmap();
+    public IonMutableBitmapRequestPreLoadBuilder withBitmap();
 
     /**
      * Execute the request and write it to the given OutputStream.
