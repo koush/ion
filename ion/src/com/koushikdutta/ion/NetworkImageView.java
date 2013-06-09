@@ -16,7 +16,6 @@
 package com.koushikdutta.ion;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.ImageView;
@@ -47,7 +46,7 @@ public class NetworkImageView extends ImageView {
     private Ion mIon;
 
     /** Current Future<Bitmap. (either in-flight or finished) */
-    private WeakReference<Future<Bitmap>> mBitmap;
+    private WeakReference<Future<ImageView>> mFuture;
 
     public NetworkImageView(Context context) {
         this(context, null);
@@ -127,43 +126,43 @@ public class NetworkImageView extends ImageView {
             return;
         }
 
-        Future<Bitmap> bitmap;
-        if (mBitmap == null)
-            bitmap = null;
+        Future<ImageView> future;
+        if (mFuture == null)
+            future = null;
         else
-            bitmap = mBitmap.get();
+            future = mFuture.get();
 
         // if the URL to be loaded in this view is empty, cancel any old requests and clear the
         // currently loaded image.
         if (TextUtils.isEmpty(mUrl)) {
-            if (bitmap != null) {
-                bitmap.cancel();
-                mBitmap = null;
+            if (future != null) {
+                future.cancel();
+                mFuture = null;
             }
             setImageBitmap(null);
             return;
         }
 
         // if there was an old request in this view, check if it needs to be canceled.
-        if (bitmap != null && oldUrl != null) {
+        if (future != null && oldUrl != null) {
             if (oldUrl.equals(mUrl)) {
                 // if the request is from the same URL, return.
                 return;
             } else {
                 // if there is a pre-existing request, cancel it if it's fetching a different URL.
-                bitmap.cancel();
+                future.cancel();
                 setImageBitmap(null);
             }
         }
 
         // The pre-existing content of this view didn't match the current URL. Load the new image
         // from the network.
-        bitmap = mIon.build(this)
+        future = mIon.build(this)
             .placeholder(mDefaultImageId)
             .error(mErrorImageId)
             .load(mUrl);
 
-        mBitmap = new WeakReference<Future<Bitmap>>(bitmap);
+        mFuture = new WeakReference<Future<ImageView>>(future);
     }
 
     @Override
@@ -174,19 +173,19 @@ public class NetworkImageView extends ImageView {
 
     @Override
     protected void onDetachedFromWindow() {
-        Future<Bitmap> bitmap;
-        if (mBitmap == null)
-            bitmap = null;
+        Future<ImageView> future;
+        if (mFuture == null)
+            future = null;
         else
-            bitmap = mBitmap.get();
+            future = mFuture.get();
 
-        if (bitmap != null) {
+        if (future != null) {
             // If the view was bound to an image request, cancel it and clear
             // out the image from the view.
-            bitmap.cancel();
+            future.cancel();
             setImageBitmap(null);
             // also clear out the container so we can reload the image if necessary.
-            mBitmap = null;
+            mFuture = null;
         }
         super.onDetachedFromWindow();
     }

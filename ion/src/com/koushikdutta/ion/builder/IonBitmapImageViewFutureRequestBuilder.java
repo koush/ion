@@ -1,6 +1,5 @@
 package com.koushikdutta.ion.builder;
 
-import android.graphics.Bitmap;
 import android.widget.ImageView;
 
 import com.koushikdutta.async.future.Future;
@@ -15,5 +14,5 @@ public interface IonBitmapImageViewFutureRequestBuilder {
      * @param imageView ImageView to set once the request completes
      * @return
      */
-    public Future<Bitmap> intoImageView(ImageView imageView);
+    public Future<ImageView> intoImageView(ImageView imageView);
 }

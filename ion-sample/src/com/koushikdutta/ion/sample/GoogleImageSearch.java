@@ -24,6 +24,7 @@ import android.widget.Toast;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
@@ -87,6 +88,10 @@ public class GoogleImageSearch extends Activity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            // see if we need to load more to get 40, otherwise populate the adapter
+            if (position > getCount() - 4)
+                loadMore();
+
             convertView = getLayoutInflater().inflate(R.layout.google_image_row, null);
             LinearLayout row = (LinearLayout) convertView;
             LinearLayout l = (LinearLayout) row.getChildAt(0);
@@ -128,10 +133,13 @@ public class GoogleImageSearch extends Activity {
         }
     }
 
-    // query 40 results and show them
+    Future<JsonObject> loading;
     void loadMore() {
+        if (loading != null && !loading.isDone() && !loading.isCancelled())
+            return;
+
         // query googles image search api
-        Ion.with(GoogleImageSearch.this, String.format("https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=%s&start=%d&imgsz=medium", Uri.encode(searchText.getText().toString()), mAdapter.getCount()))
+        loading = Ion.with(GoogleImageSearch.this, String.format("https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=%s&start=%d&imgsz=medium", Uri.encode(searchText.getText().toString()), mAdapter.getCount()))
         // get the results as json
         .asJsonObject()
         .setCallback(new FutureCallback<JsonObject>() {
@@ -145,10 +153,6 @@ public class GoogleImageSearch extends Activity {
                     for (int i = 0; i < results.size(); i++) {
                         mAdapter.add(results.get(i).getAsJsonObject().get("url").getAsString());
                     }
-
-                    // see if we need to load more to get 40, otherwise populate the adapter
-                    if (mAdapter.getCount() < 40)
-                        loadMore();
                 }
                 catch (Exception ex) {
                     // toast any error we encounter (google image search has an API throttling limit that sometimes gets hit)

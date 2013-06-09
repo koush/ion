@@ -494,7 +494,7 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     }
 
     @Override
-    public Future<Bitmap> intoImageView(ImageView imageView) {
+    public Future<ImageView> intoImageView(ImageView imageView) {
         return new IonBitmapRequestBuilder(this).intoImageView(imageView);
     }
 
@@ -561,5 +561,28 @@ class IonRequestBuilder implements IonLoadRequestBuilder, IonBodyParamsRequestBu
     @Override
     public IonBodyParamsRequestBuilder basicAuthentication(String username, String password) {
         return setHeader("Authorization", Base64.encodeToString(String.format("%s:%s", username, password).getBytes(), Base64.DEFAULT));
+    }
+
+    void reset() {
+        ion = null;
+        context = null;
+        method = AsyncHttpGet.METHOD;
+        methodWasSet = false;
+        uri = null;
+        handler = mainHandler;
+        headers = null;
+        timeoutMilliseconds = AsyncHttpRequest.DEFAULT_TIMEOUT;
+        body = null;
+        progress = null;
+        progressBar = null;
+        progressDialog = null;
+        progressHandler = null;
+        bodyParameters = null;
+        multipartBody = null;
+        logTag = null;
+        logLevel = 0;
+        groups = null;
+        proxyHost = null;
+        proxyPort = 0;
     }
 }

@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -81,7 +82,16 @@ public class Ion {
      */
     public static IonMutableBitmapRequestPostLoadBuilder with(ImageView imageView) {
         Ion ion = getDefault(imageView.getContext());
-        return new IonRequestBuilder(imageView.getContext(), ion).withImageView(imageView);
+        Object tag = imageView.getTag();
+        if (!(tag instanceof IonBitmapRequestBuilder))
+            return new IonRequestBuilder(imageView.getContext(), ion).withImageView(imageView);
+        IonBitmapRequestBuilder bitmapBuilder = (IonBitmapRequestBuilder)tag;
+        bitmapBuilder.builder.reset();
+        bitmapBuilder.reset();
+        bitmapBuilder.builder.context = new WeakReference<Context>(imageView.getContext());
+        bitmapBuilder.builder.ion = ion;
+        bitmapBuilder.ion = ion;
+        return bitmapBuilder.withImageView(imageView);
     }
 
     /**
@@ -215,7 +225,6 @@ public class Ion {
     public void dump() {
         bitmapCache.dump();
         Log.i(LOGTAG, "Pending bitmaps: " + bitmapsPending.size());
-        Log.i(LOGTAG, "Pending views: " + pendingViews.size());
         Log.i(LOGTAG, "Groups: " + inFlight.size());
         for (FutureSet futures: inFlight.values()) {
             Log.i(LOGTAG, "Group size: " + futures.size());
@@ -330,9 +339,6 @@ public class Ion {
         return config;
     }
 
-    // map an ImageView to the uri being downloaded for it.
-    // but don't hold references to the ImageView...
-    WeakHashMap<ImageView, String> pendingViews = new WeakHashMap<ImageView, String>();
     ExecutorService executorService = Executors.newFixedThreadPool(3);
 
     HashList<FutureCallback<Bitmap>> bitmapsPending = new HashList<FutureCallback<Bitmap>>();

@@ -3,6 +3,7 @@ package com.koushikdutta.ion.builder;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.animation.Animation;
+import android.widget.ImageView;
 
 import com.koushikdutta.async.future.Future;
 
@@ -36,7 +37,7 @@ public interface IonImageViewRequestPostLoadBuilder extends IonImageViewRequestB
      * @param uri Uri to load. This may be a http(s), file, or content uri.
      * @return
      */
-    public Future<Bitmap> load(String uri);
+    public Future<ImageView> load(String uri);
 
     /**
      * Load a uri for the ImageView using the given an HTTP method such as GET or POST.
@@ -44,5 +45,5 @@ public interface IonImageViewRequestPostLoadBuilder extends IonImageViewRequestB
      * @param uri Uri to load.
      * @return
      */
-    public Future<Bitmap> load(String method, String uri);
+    public Future<ImageView> load(String method, String uri);
 }

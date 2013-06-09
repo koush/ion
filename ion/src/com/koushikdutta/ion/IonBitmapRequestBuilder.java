@@ -18,6 +18,7 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
+import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.IonImageViewRequestBuilder;
@@ -34,13 +35,13 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
     Ion ion;
 
     @Override
-    public Future<Bitmap> load(String uri) {
+    public Future<ImageView> load(String uri) {
         builder.load(uri);
         return intoImageView(imageViewPostRef.get());
     }
 
     @Override
-    public Future<Bitmap> load(String method, String url) {
+    public Future<ImageView> load(String method, String url) {
         builder.load(method, url);
         return intoImageView(imageViewPostRef.get());
     }
@@ -158,105 +159,158 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
         }
     }
 
-    BitmapDrawable getBitmapDrawable(Bitmap bitmap) {
-        return new BitmapDrawable(builder.context.get().getResources(), bitmap);
-    }
-
-    @Override
-    public Future<Bitmap> intoImageView(ImageView imageView) {
+    String bitmapKey;
+    Bitmap execute() {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-
-        // the future to return to the caller
-        final SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
-
-        if (imageView != null)
-            ion.pendingViews.remove(imageView);
-        
-        // no uri? just set a placeholder and bail
-        if (builder.uri == null) {
-            setPlaceholder(imageView);
-            ret.setComplete((Bitmap)null);
-            return ret;
-        }
-
-        final String urlKey = builder.uri;
+        assert builder.uri != null;
 
         // determine the key for this bitmap after all transformations
-        String tmpKey = urlKey;
+        bitmapKey = builder.uri;
         if (transforms != null) {
             for (Transform transform : transforms) {
-                tmpKey += transform.getKey();
+                bitmapKey += transform.getKey();
             }
         }
-        final String transformKey = tmpKey;
 
         // see if this request can be fulfilled from the cache
-        Bitmap bitmap = builder.ion.bitmapCache.get(transformKey);
+        Bitmap bitmap = builder.ion.bitmapCache.get(bitmapKey);
         if (bitmap != null) {
-            setImageView(imageView, getBitmapDrawable(bitmap), 0);
-            doAnimation(imageView, null, 0);
-            ret.setComplete(bitmap);
-            return ret;
+            return bitmap;
         }
 
-        // need to either load/transform this, so set up the loading images, and mark this view
-        // as in progress.
-        if (imageView != null)
-            ion.pendingViews.put(imageView, transformKey);
-        setPlaceholder(imageView);
-
         // find/create the future for this download.
-        if (!ion.bitmapsPending.contains(urlKey)) {
-            builder.execute(new ByteBufferListParser()).setCallback(new ByteBufferListToBitmap(urlKey));
+        if (!ion.bitmapsPending.contains(builder.uri)) {
+            builder.execute(new ByteBufferListParser()).setCallback(new ByteBufferListToBitmap(builder.uri));
         }
 
         // if the transform key and uri key aren't the same, and the transform isn't already queue, queue it
-        if (!TextUtils.equals(urlKey, transformKey) && !ion.bitmapsPending.contains(transformKey)) {
-            ion.bitmapsPending.add(urlKey, new BitmapToBitmap(transformKey));
+        if (!TextUtils.equals(builder.uri, bitmapKey) && !ion.bitmapsPending.contains(bitmapKey)) {
+            ion.bitmapsPending.add(builder.uri, new BitmapToBitmap(bitmapKey));
         }
+
+        return null;
+    }
+
+    private static final SimpleFuture<ImageView> FUTURE_IMAGEVIEW_NULL_URI = new SimpleFuture<ImageView>() {
+        {
+            setComplete(new NullPointerException("uri"));
+        }
+    };
+
+    private static final SimpleFuture<Bitmap> FUTURE_BITMAP_NULL_URI = new SimpleFuture<Bitmap>() {
+        {
+            setComplete(new NullPointerException("uri"));
+        }
+    };
+
+    IonDrawable getIonDrawable(ImageView imageView) {
+        Drawable current = imageView.getDrawable();
+        if (current == null || !(current instanceof IonDrawable))
+            return new IonDrawable(imageView.getResources(), null);
+        return (IonDrawable)current;
+    }
+
+    SimpleFuture<ImageView> imageViewFuture;
+    @Override
+    public Future<ImageView> intoImageView(ImageView imageView) {
+        if (imageView == null)
+            throw new IllegalArgumentException("imageView");
+        assert Thread.currentThread() == Looper.getMainLooper().getThread();
+
+        imageView.setTag(this);
+
+        if (imageViewFuture == null)
+            imageViewFuture = new SimpleFuture<ImageView>();
+        else
+            imageViewFuture.reset();
+
+        // no uri? just set a placeholder and bail
+        if (builder.uri == null) {
+            setPlaceholder(imageView);
+            bitmapKey = null;
+            return FUTURE_IMAGEVIEW_NULL_URI;
+        }
+
+        // execute the request, see if we get a bitmap from cache.
+        Bitmap bitmap = execute();
+        // note what this imageview is attached to
+        if (bitmap != null) {
+            imageView.setImageDrawable(getIonDrawable(imageView).setBitmap(bitmap));
+            doAnimation(imageView, null, 0);
+            imageViewFuture.setComplete(imageView);
+            return imageViewFuture;
+        }
+        final String loadingBitmapKey = bitmapKey;
+
+        // set the placeholder since we're loading
+        setPlaceholder(imageView);
 
         // note whether an ImageView was present during invocation, as
         // only a weak reference is held from here on out.
-        final WeakReference<ImageView> iv = new WeakReference<ImageView>(imageView);
+        final WeakReference<ImageView> iv;
+        if (imageViewPostRef != null)
+            iv = imageViewPostRef;
+        else
+            iv = new WeakReference<ImageView>(imageView);
 
         // get a child future that can be used to set the ImageView once the drawable is ready
-        ion.bitmapsPending.add(transformKey, new FutureCallback<Bitmap>() {
+        ion.bitmapsPending.add(loadingBitmapKey, new FutureCallback<Bitmap>() {
             @Override
             public void onCompleted(final Exception e, Bitmap source) {
                 assert Thread.currentThread() == Looper.getMainLooper().getThread();
 
                 // see if the imageview is still alive and cares about this result
                 ImageView imageView = iv.get();
-                if (imageView != null) {
-                    // see if the ImageView is still waiting for the same transform key as before
-                    String waitingKey = ion.pendingViews.get(imageView);
-                    if (!TextUtils.equals(waitingKey, transformKey))
-                        imageView = null;
-                    else
-                        ion.pendingViews.remove(imageView);
-                }
+                if (imageView == null)
+                    return;
+
+                // grab the metadata associated with the imageview
+                if (imageView.getTag() != IonBitmapRequestBuilder.this)
+                    return;
+
+                // see if the ImageView is still waiting for the same transform key as before
+                if (!TextUtils.equals(loadingBitmapKey, IonBitmapRequestBuilder.this.bitmapKey))
+                    return;
 
                 if (e != null) {
                     setErrorImage(imageView);
-                    ret.setComplete(e);
+                    imageViewFuture.setComplete(e);
                     return;
                 }
 
-                BitmapDrawable result = getBitmapDrawable(source);
-                if (imageView != null) {
-                    imageView.setImageDrawable(result);
-                    doAnimation(imageView, inAnimation, inAnimationResource);
-                }
-                ret.setComplete(result.getBitmap());
+                imageView.setImageDrawable(getIonDrawable(imageView).setBitmap(source));
+                doAnimation(imageView, inAnimation, inAnimationResource);
+                imageViewFuture.setComplete(imageView);
             }
         });
 
-        return ret;
+        return imageViewFuture;
     }
 
     @Override
     public Future<Bitmap> asBitmap() {
-        return intoImageView(null);
+        // no uri? just set a placeholder and bail
+        if (builder.uri == null) {
+            return FUTURE_BITMAP_NULL_URI;
+        }
+
+        // see if we get something back synchronously
+        Bitmap bitmap = execute();
+        if (bitmap != null) {
+            SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
+            ret.setComplete(bitmap);
+            return ret;
+        }
+
+        // we're loading, so let's register for the result.
+        TransformFuture<Bitmap, Bitmap> ret = new TransformFuture<Bitmap, Bitmap>() {
+            @Override
+            protected void transform(Bitmap result) throws Exception {
+                setComplete(result);
+            }
+        };
+        ion.bitmapsPending.add(bitmapKey, ret);
+        return ret;
     }
 
     @Override
@@ -373,5 +427,20 @@ class IonBitmapRequestBuilder implements IonMutableBitmapRequestBuilder, IonMuta
     public IonImageViewRequestPostLoadBuilder animateIn(int animationResource) {
         inAnimationResource = animationResource;
         return this;
+    }
+
+    void reset() {
+        placeholderDrawable = null;
+        placeholderResource = 0;
+        errorDrawable = null;
+        errorResource = 0;
+        ion = null;
+        imageViewPostRef = null;
+        transforms = null;
+        bitmapKey = null;
+        inAnimation = null;
+        inAnimationResource = 0;
+        loadAnimation = null;
+        loadAnimationResource = 0;
     }
 }
