@@ -12,21 +12,21 @@ import com.koushikdutta.ion.ProgressCallback;
 /**
 * Created by koush on 5/30/13.
 */ // set parameters
-public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequestBuilder, IonUrlEncodedBodyRequestBuilder {
+public interface RequestBuilder<F, R extends RequestBuilder, M extends MultipartBodyBuilder, U extends UrlEncodedBuilder> extends MultipartBodyBuilder<M>, UrlEncodedBuilder<U> {
     /**
      * Enable logging for this request
      * @param tag LOGTAG to use
      * @param level Log level of messages to display
      * @return
      */
-    public IonBodyParamsRequestBuilder setLogging(String tag, int level);
+    public R setLogging(String tag, int level);
 
     /**
      * Route the request through the given proxy server.
      * @param host
      * @param port
      */
-    public IonBodyParamsRequestBuilder proxy(String host, int port);
+    public R proxy(String host, int port);
 
     /**
      * Specify a callback that is invoked on download progress. This will not be invoked
@@ -34,7 +34,7 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param callback
      * @return
      */
-    public IonBodyParamsRequestBuilder progress(ProgressCallback callback);
+    public R progress(ProgressCallback callback);
 
     /**
      * Specify a callback that is invoked on download progress. This will be invoked
@@ -42,21 +42,21 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param callback
      * @return
      */
-    public IonBodyParamsRequestBuilder progressHandler(ProgressCallback callback);
+    public R progressHandler(ProgressCallback callback);
 
     /**
      * Specify a ProgressBar to update during the request
      * @param progressBar
      * @return
      */
-    public IonBodyParamsRequestBuilder progressBar(ProgressBar progressBar);
+    public R progressBar(ProgressBar progressBar);
 
     /**
      * Specify a ProgressDialog to update during the request
      * @param progressDialog
      * @return
      */
-    public IonBodyParamsRequestBuilder progressDialog(ProgressDialog progressDialog);
+    public R progressDialog(ProgressDialog progressDialog);
 
     /**
      * Post the Future callback onto the given handler. Not specifying this explicitly
@@ -64,7 +64,7 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param handler Handler to use or null
      * @return
      */
-    public IonBodyParamsRequestBuilder setHandler(Handler handler);
+    public R setHandler(Handler handler);
 
     /**
      * Set a HTTP header
@@ -72,7 +72,7 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param value Header value
      * @return
      */
-    public IonBodyParamsRequestBuilder setHeader(String name, String value);
+    public R setHeader(String name, String value);
 
     /**
      * Add an HTTP header
@@ -80,7 +80,7 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param value Header value
      * @return
      */
-    public IonBodyParamsRequestBuilder addHeader(String name, String value);
+    public R addHeader(String name, String value);
 
     /**
      * Specify the timeout in milliseconds before the request will cancel.
@@ -88,7 +88,15 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param timeoutMilliseconds Timeout in milliseconds
      * @return
      */
-    public IonBodyParamsRequestBuilder setTimeout(int timeoutMilliseconds);
+    public R setTimeout(int timeoutMilliseconds);
+
+    /**
+     * Provide Basic authentication credentials to be sent with the request.
+     * @param username
+     * @param password
+     * @return
+     */
+    public R basicAuthentication(String username, String password);
 
     /**
      * Specify a JsonObject to send to the HTTP server. If no HTTP method was explicitly
@@ -96,7 +104,7 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param jsonObject JsonObject to send with the request
      * @return
      */
-    public IonFutureRequestBuilder setJsonObjectBody(JsonObject jsonObject);
+    public F setJsonObjectBody(JsonObject jsonObject);
 
     /**
      * Specify a JsonObject to send to the HTTP server. If no HTTP method was explicitly
@@ -105,7 +113,7 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param token Type token to assist with generic type serialization
      * @return
      */
-    public <T> IonFutureRequestBuilder setJsonObjectBody(T object, TypeToken<T> token);
+    public <T> F setJsonObjectBody(T object, TypeToken<T> token);
 
     /**
      * Specify a JsonObject to send to the HTTP server. If no HTTP method was explicitly
@@ -113,7 +121,7 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param object Object to serialize with Json and send with the request
      * @return
      */
-    public <T> IonFutureRequestBuilder setJsonObjectBody(T object);
+    public <T> F setJsonObjectBody(T object);
 
     /**
      * Specify a JsonArray to send to the HTTP server. If no HTTP method was explicitly
@@ -121,7 +129,7 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param jsonArray JsonObject to send with the request
      * @return
      */
-    public IonFutureRequestBuilder setJsonArrayBody(JsonArray jsonArray);
+    public F setJsonArrayBody(JsonArray jsonArray);
 
     /**
      * Specify a String to send to the HTTP server. If no HTTP method was explicitly
@@ -129,13 +137,5 @@ public interface IonBodyParamsRequestBuilder extends IonFormMultipartBodyRequest
      * @param string String to send with the request
      * @return
      */
-    public IonFutureRequestBuilder setStringBody(String string);
-
-    /**
-     * Provide Basic authentication credentials to be sent with the request.
-     * @param username
-     * @param password
-     * @return
-     */
-    public IonBodyParamsRequestBuilder basicAuthentication(String username, String password);
+    public F setStringBody(String string);
 }

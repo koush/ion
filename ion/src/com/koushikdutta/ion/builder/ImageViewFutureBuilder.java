@@ -7,7 +7,7 @@ import com.koushikdutta.async.future.Future;
 /**
 * Created by koush on 5/30/13.
 */
-public interface IonBitmapImageViewFutureRequestBuilder {
+public interface ImageViewFutureBuilder {
     /**
      * Perform the request and get the result as a Bitmap, which will then be loaded
      * into the given ImageView

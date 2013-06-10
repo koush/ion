@@ -15,15 +15,12 @@ import android.graphics.drawable.Drawable;
 public class IonDrawable extends Drawable {
     private Paint paint;
     private Bitmap bitmap;
-    private int density;
     private IonBitmapRequestBuilder.ScaleMode scaleMode;
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
-    public IonDrawable(Resources resources, Bitmap bitmap) {
+    public IonDrawable() {
         paint = new Paint(DEFAULT_PAINT_FLAGS);
-        density = resources.getDisplayMetrics().densityDpi;
-        setBitmap(bitmap);
     }
 
     public Bitmap getBitmap() {
@@ -32,19 +29,13 @@ public class IonDrawable extends Drawable {
 
     int width;
     int height;
-    public IonDrawable setBitmap(Bitmap bitmap) {
-        if (bitmap == this.bitmap)
+    public IonDrawable setBitmap(Bitmap bitmap, int width, int height) {
+        if (bitmap == this.bitmap && this.width == width && this.height == height)
             return this;
 
         this.bitmap = bitmap;
-        if (bitmap == null) {
-            width = -1;
-            height = -1;
-        }
-        else {
-            width = bitmap.getScaledWidth(density);
-            height = bitmap.getScaledHeight(density);
-        }
+        this.width = width;
+        this.height = height;
         invalidateSelf();
         return this;
     }
@@ -63,63 +54,18 @@ public class IonDrawable extends Drawable {
 
     @Override
     public int getIntrinsicWidth() {
-        return width;
+        return -1;
     }
 
     @Override
     public int getIntrinsicHeight() {
-        return height;
-    }
-
-    private void recompute() {
-
+        return -1;
     }
 
     public IonDrawable setScaleMode(IonBitmapRequestBuilder.ScaleMode scaleMode) {
         if (this.scaleMode == scaleMode)
             return this;
         this.scaleMode = scaleMode;
-
-        if (bitmap != null) {
-            width = bitmap.getScaledWidth(density);
-            height = bitmap.getScaledHeight(density);
-        }
-
-        invalidateSelf();
-        return this;
-    }
-
-    public IonDrawable setDensity(int density) {
-        if (this.density == density)
-            return this;
-        this.density = density;
-        invalidateSelf();
-        return this;
-    }
-
-    public IonDrawable setIntrinsicDimensions(int width, int height) {
-        assert scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterCrop;
-        if (this.width == width && this.height == height)
-            return this;
-
-        if (width == 0 && height == 0) {
-            // wtf?
-        }
-        else if (width == 0) {
-            float ratio = (float)this.width / (float)this.height;
-            this.width = (int)(ratio * height);
-            this.height = height;
-        }
-        else if (height == 0) {
-            float ratio = (float)this.height / (float)this.width;
-            this.width = width;
-            this.height = (int)(ratio * width);
-        }
-        else {
-            this.width = width;
-            this.height = height;
-        }
-
         invalidateSelf();
         return this;
     }
@@ -130,26 +76,60 @@ public class IonDrawable extends Drawable {
         if (bitmap == null)
             return;
 
-        Rect bounds = getBounds();
+        if (scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterCrop) {
+            Rect bounds = getBounds();
 
-        float xratio = (float)bounds.width() / (float)bitmap.getWidth();
-        float yratio = (float)bounds.height() / (float)bitmap.getHeight();
+            float ratio = (float)bounds.width() / (float)bounds.height();
 
-        float ratio;
-        if (scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterCrop)
-            ratio = Math.max(xratio, yratio);
-        else
-            ratio = Math.min(xratio, yratio);
+            int newWidth;
+            int newHeight;
+            if (ratio < 1) {
+                newWidth = bitmap.getWidth();
+                newHeight = (int)(newWidth / ratio);
+            }
+            else {
+                newHeight = bitmap.getHeight();
+                newWidth = (int)(newHeight * ratio);
+            }
 
+            if (newWidth > bitmap.getWidth()) {
+                ratio = (float)bitmap.getWidth() / (float)newWidth;
+                newWidth = bitmap.getWidth();
+                newHeight *= ratio;
+            }
 
-        int newWidth = (int)(ratio * bitmap.getWidth());
-        int newHeight = (int)(ratio * bitmap.getHeight());
-        int startx = (bounds.width() - newWidth) >> 1;
-        int starty = (bounds.height() - newHeight) >> 1;
+            if (newHeight > bitmap.getHeight()) {
+                ratio = (float)bitmap.getHeight() / (float)newHeight;
+                newHeight = bitmap.getHeight();
+                newWidth *= ratio;
+            }
 
-        drawBounds.set(startx, starty, startx + newWidth, starty + newHeight);
+            int clipx = (bitmap.getWidth() - newWidth) >> 1;
+            int clipy = (bitmap.getHeight() - newHeight) >> 1;
 
-        canvas.drawBitmap(bitmap, null, drawBounds, paint);
+            drawBounds.set(clipx, clipy, bitmap.getWidth() - clipx, bitmap.getHeight() - clipy);
+
+            canvas.drawBitmap(bitmap, drawBounds, bounds, paint);
+        }
+        else if (scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterInside) {
+            Rect bounds = getBounds();
+            float xratio = (float)bounds.width() / (float)bitmap.getWidth();
+            float yratio = (float)bounds.height() / (float)bitmap.getHeight();
+
+            float ratio = Math.min(xratio, yratio);
+
+            int newWidth = (int)(ratio * bitmap.getWidth());
+            int newHeight = (int)(ratio * bitmap.getHeight());
+
+            int clipx = (bounds.width() - newWidth) >> 1;
+            int clipy = (bounds.height() - newHeight) >> 1;
+
+            drawBounds.set(clipx, clipy, bounds.width() - clipx, bounds.height() - clipy);
+            canvas.drawBitmap(bitmap, null, drawBounds, paint);
+        }
+        else {
+            canvas.drawBitmap(bitmap, null, getBounds(), paint);
+        }
     }
 
     @Override

@@ -55,7 +55,7 @@ public class Twitter extends Activity {
                 String twitterId = user.get("screen_name").getAsString();
 
                 // set the profile photo using Ion
-                String imageUrl = String.format("https://api.twitter.com/1/users/profile_image?screen_name=%s&size=bigger", twitterId);
+                String imageUrl = user.get("profile_image_url").getAsString();
 
                 ImageView imageView = (ImageView)convertView.findViewById(R.id.image);
 
@@ -85,8 +85,8 @@ public class Twitter extends Activity {
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(tweetAdapter);
 
-        // do the first load
-        load();
+        // authenticate and do the first load
+        getCredentials();
     }
 
     // This "Future" tracks loading operations.
@@ -96,13 +96,32 @@ public class Twitter extends Activity {
     // or cancel() it if you no longer need the result.
     Future<JsonArray> loading;
 
+    String accessToken;
+    private void getCredentials() {
+        Ion.with(this, "https://api.twitter.com/oauth2/token")
+        .basicAuthentication("e4LrcHB55R3WamRYHpNfA", "MIABn1DU5db3Aj0xXzhthsf4aUKMAdoWJTMxJJcY")
+        .setBodyParameter("grant_type", "client_credentials")
+        .asJsonObject()
+        .setCallback(new FutureCallback<JsonObject>() {
+            @Override
+            public void onCompleted(Exception e, JsonObject result) {
+                if (e != null) {
+                    Toast.makeText(Twitter.this, "Error loading tweets", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                accessToken = result.get("access_token").getAsString();
+                load();
+            }
+        });
+    }
+
     private void load() {
         // don't attempt to load more if a load is already in progress
         if (loading != null && !loading.isDone() && !loading.isCancelled())
             return;
 
         // load the tweets
-        String url = "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name=koush&count=20";
+        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=koush&count=20";
         if (tweetAdapter.getCount() > 0) {
             // load from the "last" id
             JsonObject last = tweetAdapter.getItem(tweetAdapter.getCount() - 1);
@@ -117,20 +136,21 @@ public class Twitter extends Activity {
         // This request loads a URL as JsonArray and invokes
         // a callback on completion.
         loading = Ion.with(this, url)
-            .asJsonArray()
-            .setCallback(new FutureCallback<JsonArray>() {
-                @Override
-                public void onCompleted(Exception e, JsonArray result) {
-                    // this is called back onto the ui thread, no Activity.runOnUiThread or Handler.post necessary.
-                    if (e != null) {
-                        Toast.makeText(Twitter.this, "Error loading tweets", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    // add the tweets
-                    for (int i = 0; i < result.size(); i++) {
-                        tweetAdapter.add(result.get(i).getAsJsonObject());
-                    }
+        .setHeader("Authorization", "Bearer " + accessToken)
+        .asJsonArray()
+        .setCallback(new FutureCallback<JsonArray>() {
+            @Override
+            public void onCompleted(Exception e, JsonArray result) {
+                // this is called back onto the ui thread, no Activity.runOnUiThread or Handler.post necessary.
+                if (e != null) {
+                    Toast.makeText(Twitter.this, "Error loading tweets", Toast.LENGTH_LONG).show();
+                    return;
                 }
-            });
+                // add the tweets
+                for (int i = 0; i < result.size(); i++) {
+                    tweetAdapter.add(result.get(i).getAsJsonObject());
+                }
+            }
+        });
     }
 }

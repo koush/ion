@@ -11,7 +11,7 @@ import java.io.OutputStream;
 /**
 * Created by koush on 5/30/13.
 */ // get the result, transformed to how you want it
-public interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, IonBitmapImageViewFutureRequestBuilder {
+public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuilder {
     /**
      * Execute the request and get the result as a String
      * @return
@@ -34,7 +34,7 @@ public interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, 
      * Use the request as a Bitmap which can then be modified and/or applied to an ImageView.
      * @return
      */
-    public IonMutableBitmapRequestPreLoadBuilder withBitmap();
+    public BitmapBuilder withBitmap();
 
     /**
      * Execute the request and write it to the given OutputStream.
@@ -81,5 +81,5 @@ public interface IonFutureRequestBuilder extends IonBitmapFutureRequestBuilder, 
      * @param groupKey
      * @return
      */
-    public IonFutureRequestBuilder group(Object groupKey);
+    public FutureBuilder group(Object groupKey);
 }

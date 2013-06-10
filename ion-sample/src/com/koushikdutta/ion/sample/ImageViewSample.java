@@ -16,12 +16,14 @@ import com.koushikdutta.ion.Ion;
 public class ImageViewSample extends Activity {
     public void loadCenterCrop() {
         Ion.with(imageView)
+                .resize(512, 512)
                 .centerCrop()
                 .load("http://media.salon.com/2013/05/original.jpg");
     }
 
     public void loadCenterInside() {
         Ion.with(imageView)
+                .resize(512, 512)
                 .centerInside()
                 .load("http://media.salon.com/2013/05/original.jpg");
     }

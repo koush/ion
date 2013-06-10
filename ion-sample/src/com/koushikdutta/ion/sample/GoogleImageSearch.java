@@ -49,6 +49,7 @@ public class GoogleImageSearch extends Activity {
 
             // select the image view
             Ion.with(iv)
+            .resize(getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().widthPixels)
             .centerCrop()
             // fade in on load
             .animateIn(R.anim.fadein)
@@ -95,10 +96,10 @@ public class GoogleImageSearch extends Activity {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-        .detectAll()
-        .penaltyLog()
-        .build());
+//        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+//        .detectAll()
+//        .penaltyLog()
+//        .build());
         super.onCreate(savedInstanceState);
 
         Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);

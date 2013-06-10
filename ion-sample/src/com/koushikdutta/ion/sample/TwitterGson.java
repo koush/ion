@@ -12,6 +12,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.future.Future;
@@ -34,6 +35,8 @@ public class TwitterGson extends Activity {
     static class User {
         @SerializedName("screen_name")
         String screenName;
+        @SerializedName("profile_image_url")
+        String imageUrl;
     }
 
     // adapter that holds tweets, obviously :)
@@ -63,21 +66,18 @@ public class TwitterGson extends Activity {
                 if (retweet != null)
                     tweet = retweet;
 
-                // set the profile photo using Ion
-                String imageUrl = String.format("https://api.twitter.com/1/users/profile_image?screen_name=%s&size=bigger", tweet.user.screenName);
-
                 ImageView imageView = (ImageView)convertView.findViewById(R.id.image);
 
                 // Use Ion's builder set the google_image on an ImageView from a URL
 
                 // start with the ImageView
                 Ion.with(imageView)
-                    // use a placeholder google_image if it needs to load from the network
-                    .placeholder(R.drawable.twitter)
-                    // use a fade in animation when it finishes loading
-                    .animateIn(R.anim.fadein)
-                    // load the url
-                    .load(imageUrl);
+                // use a placeholder google_image if it needs to load from the network
+                .placeholder(R.drawable.twitter)
+                // use a fade in animation when it finishes loading
+                .animateIn(R.anim.fadein)
+                // load the url
+                .load(tweet.user.imageUrl);
 
 
                 // and finally, set the name and text
@@ -95,8 +95,8 @@ public class TwitterGson extends Activity {
         ListView listView = (ListView)findViewById(R.id.list);
         listView.setAdapter(tweetAdapter);
 
-        // do the first load
-        load();
+        // authenticate and do the first load
+        getCredentials();
     }
 
     // This "Future" tracks loading operations.
@@ -106,13 +106,33 @@ public class TwitterGson extends Activity {
     // or cancel() it if you no longer need the result.
     Future<List<Tweet>> loading;
 
+    // Lets grab the authentication
+    String accessToken;
+    private void getCredentials() {
+        Ion.with(this, "https://api.twitter.com/oauth2/token")
+        .basicAuthentication("e4LrcHB55R3WamRYHpNfA", "MIABn1DU5db3Aj0xXzhthsf4aUKMAdoWJTMxJJcY")
+        .setBodyParameter("grant_type", "client_credentials")
+        .asJsonObject()
+        .setCallback(new FutureCallback<JsonObject>() {
+            @Override
+            public void onCompleted(Exception e, JsonObject result) {
+                if (e != null) {
+                    Toast.makeText(TwitterGson.this, "Error loading tweets", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                accessToken = result.get("access_token").getAsString();
+                load();
+            }
+        });
+    }
+
     private void load() {
         // don't attempt to load more if a load is already in progress
         if (loading != null && !loading.isDone() && !loading.isCancelled())
             return;
 
         // load the tweets
-        String url = "https://api.twitter.com/1/statuses/user_timeline.json?include_entities=true&include_rts=true&screen_name=koush&count=20";
+        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=koush&count=20";
         if (tweetAdapter.getCount() > 0) {
             // load from the "last" id
             Tweet last = tweetAdapter.getItem(tweetAdapter.getCount() - 1);
@@ -127,21 +147,22 @@ public class TwitterGson extends Activity {
         // This request loads a URL as JsonArray and invokes
         // a callback on completion.
         loading = Ion.with(this, url)
-            .as(new TypeToken<List<Tweet>>() {
-            })
-            .setCallback(new FutureCallback<List<Tweet>>() {
-                @Override
-                public void onCompleted(Exception e, List<Tweet> result) {
-                    // this is called back onto the ui thread, no Activity.runOnUiThread or Handler.post necessary.
-                    if (e != null) {
-                        Toast.makeText(TwitterGson.this, "Error loading tweets", Toast.LENGTH_LONG).show();
-                        return;
-                    }
-                    // add the tweets
-                    for (int i = 0; i < result.size(); i++) {
-                        tweetAdapter.add(result.get(i));
-                    }
+        .setHeader("Authorization", "Bearer " + accessToken)
+        .as(new TypeToken<List<Tweet>>() {
+        })
+        .setCallback(new FutureCallback<List<Tweet>>() {
+            @Override
+            public void onCompleted(Exception e, List<Tweet> result) {
+                // this is called back onto the ui thread, no Activity.runOnUiThread or Handler.post necessary.
+                if (e != null) {
+                    Toast.makeText(TwitterGson.this, "Error loading tweets", Toast.LENGTH_LONG).show();
+                    return;
                 }
-            });
+                // add the tweets
+                for (int i = 0; i < result.size(); i++) {
+                    tweetAdapter.add(result.get(i));
+                }
+            }
+        });
     }
 }

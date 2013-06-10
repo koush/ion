@@ -34,7 +34,7 @@ public class AuthTests extends AndroidTestCase {
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
                 try {
                     JsonObject json = new JsonObject();
-                    String authorization = request.getHeaders().getHeaders().get("Authorization");
+                    String authorization = request.getHeaders().getHeaders().get("Authorization").replace("Basic ", "");
                     authorization = new String(Base64.decode(authorization, Base64.DEFAULT));
                     String[] parts = authorization.split(":");
                     assertTrue(parts.length == 2);

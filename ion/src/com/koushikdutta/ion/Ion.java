@@ -20,9 +20,10 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
-import com.koushikdutta.ion.builder.IonBodyParamsRequestBuilder;
-import com.koushikdutta.ion.builder.IonFutureRequestBuilder;
-import com.koushikdutta.ion.builder.IonMutableBitmapRequestPostLoadBuilder;
+import com.koushikdutta.ion.builder.Builders;
+import com.koushikdutta.ion.builder.FutureBuilder;
+import com.koushikdutta.ion.builder.ImageViewBuilder;
+import com.koushikdutta.ion.builder.RequestBuilder;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
@@ -39,7 +40,7 @@ public class Ion {
      * @param uri
      * @return
      */
-    public static IonBodyParamsRequestBuilder with(Context context, String uri) {
+    public static Builders.Any.B with(Context context, String uri) {
         return getDefault(context).build(context, uri);
     }
 
@@ -50,7 +51,7 @@ public class Ion {
      * @param file
      * @return
      */
-    public static IonFutureRequestBuilder with(Context context, File file) {
+    public static FutureBuilder with(Context context, File file) {
         return getDefault(context).build(context, file);
     }
 
@@ -60,7 +61,7 @@ public class Ion {
      * @param file
      * @return
      */
-    public IonFutureRequestBuilder build(Context context, File file) {
+    public FutureBuilder build(Context context, File file) {
         return new IonRequestBuilder(context, this).load(file);
     }
 
@@ -80,18 +81,9 @@ public class Ion {
      * @param imageView
      * @return
      */
-    public static IonMutableBitmapRequestPostLoadBuilder with(ImageView imageView) {
+    public static Builders.ImageView.F with(ImageView imageView) {
         Ion ion = getDefault(imageView.getContext());
-        Object tag = imageView.getTag();
-        if (!(tag instanceof IonBitmapRequestBuilder))
-            return new IonRequestBuilder(imageView.getContext(), ion).withImageView(imageView);
-        IonBitmapRequestBuilder bitmapBuilder = (IonBitmapRequestBuilder)tag;
-        bitmapBuilder.builder.reset();
-        bitmapBuilder.reset();
-        bitmapBuilder.builder.context = new WeakReference<Context>(imageView.getContext());
-        bitmapBuilder.builder.ion = ion;
-        bitmapBuilder.ion = ion;
-        return bitmapBuilder.withImageView(imageView);
+        return ion.build(imageView);
     }
 
     /**
@@ -100,7 +92,7 @@ public class Ion {
      * @param uri
      * @return
      */
-    public IonBodyParamsRequestBuilder build(Context context, String uri) {
+    public Builders.Any.B build(Context context, String uri) {
         return new IonRequestBuilder(context, this).load(uri);
     }
 
@@ -109,8 +101,17 @@ public class Ion {
      * @param imageView
      * @return
      */
-    public IonMutableBitmapRequestPostLoadBuilder build(ImageView imageView) {
-        return new IonRequestBuilder(imageView.getContext(), this).withImageView(imageView);
+    public Builders.ImageView.F build(ImageView imageView) {
+        Object tag = imageView.getTag();
+        if (!(tag instanceof IonBitmapRequestBuilder))
+            return new IonRequestBuilder(imageView.getContext(), this).withImageView(imageView);
+        IonBitmapRequestBuilder bitmapBuilder = (IonBitmapRequestBuilder)tag;
+        bitmapBuilder.builder.reset();
+        bitmapBuilder.reset();
+        bitmapBuilder.builder.context = new WeakReference<Context>(imageView.getContext());
+        bitmapBuilder.builder.ion = this;
+        bitmapBuilder.ion = this;
+        return bitmapBuilder.withImageView(imageView);
     }
 
     /**
@@ -338,8 +339,6 @@ public class Ion {
     public Config configure() {
         return config;
     }
-
-    ExecutorService executorService = Executors.newFixedThreadPool(3);
 
     HashList<FutureCallback<Bitmap>> bitmapsPending = new HashList<FutureCallback<Bitmap>>();
 
