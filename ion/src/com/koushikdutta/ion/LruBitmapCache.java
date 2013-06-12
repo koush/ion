@@ -15,6 +15,14 @@ class LruBitmapCache extends LruCache<String, Bitmap> {
 //        }
 //    }
 
+
+    @Override
+    protected void entryRemoved(boolean evicted, String key, Bitmap oldValue, Bitmap newValue) {
+        super.entryRemoved(evicted, key, oldValue, newValue);
+        System.out.println("entry removed: " + key);
+        Ion.instance.bitmapCache.dump();
+    }
+
     @Override
     protected int sizeOf(String key, Bitmap value) {
         return value.getRowBytes() * value.getHeight();

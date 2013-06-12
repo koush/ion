@@ -23,6 +23,7 @@ import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.ImageViewBuilder;
+import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.builder.RequestBuilder;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 import com.koushikdutta.ion.loader.ContentLoader;
@@ -42,6 +43,10 @@ public class Ion {
      */
     public static Builders.Any.B with(Context context, String uri) {
         return getDefault(context).build(context, uri);
+    }
+
+    public static LoadBuilder<Builders.Any.B> with(Context context) {
+        return getDefault(context).build(context);
     }
 
     /**
@@ -94,6 +99,10 @@ public class Ion {
      */
     public Builders.Any.B build(Context context, String uri) {
         return new IonRequestBuilder(context, this).load(uri);
+    }
+
+    public LoadBuilder<Builders.Any.B> build(Context context) {
+        return new IonRequestBuilder(context, this);
     }
 
     /**
@@ -362,5 +371,5 @@ public class Ion {
         return gson;
     }
 
-    private static Ion instance;
+    static Ion instance;
 }

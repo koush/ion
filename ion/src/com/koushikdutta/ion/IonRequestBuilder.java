@@ -62,7 +62,7 @@ import java.util.List;
 /**
  * Created by koush on 5/21/13.
  */
-class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.M, Builders.Any.U, LoadBuilder {
+class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.M, Builders.Any.U, LoadBuilder<Builders.Any.B> {
     Ion ion;
     WeakReference<Context> context;
     static Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -88,7 +88,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     boolean methodWasSet;
     @Override
-    public RequestBuilder load(String method, String url) {
+    public IonRequestBuilder load(String method, String url) {
         methodWasSet = true;
         return loadInternal(method, url);
     }

@@ -5,13 +5,13 @@ import java.io.File;
 /**
 * Created by koush on 5/30/13.
 */ // .load
-public interface LoadBuilder {
+public interface LoadBuilder<B> {
     /**
      * Load an uri.
      * @param uri Uri to load. This may be a http(s), file, or content uri.
      * @return
      */
-    public RequestBuilder load(String uri);
+    public B load(String uri);
 
     /**
      * Load an url using the given an HTTP method such as GET or POST.
@@ -19,12 +19,12 @@ public interface LoadBuilder {
      * @param url Url to load.
      * @return
      */
-    public RequestBuilder load(String method, String url);
+    public B load(String method, String url);
 
     /**
      * Load a file.
      * @param file File to load.
      * @return
      */
-    public FutureBuilder load(File file);
+    public B load(File file);
 }

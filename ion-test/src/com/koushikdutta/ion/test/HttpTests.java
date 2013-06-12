@@ -230,4 +230,11 @@ public class HttpTests extends AndroidTestCase {
         finally {
             proxyServer.stop();
         }
-    }}
+    }
+
+    public void testNullRef() throws Exception {
+        Ion.with(getContext(), "https://launchpad.net/")
+                .asString()
+                .get();
+    }
+}

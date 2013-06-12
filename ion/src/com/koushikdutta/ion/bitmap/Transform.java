@@ -7,5 +7,5 @@ import android.graphics.Bitmap;
  */
 public interface Transform {
     public Bitmap transform(Bitmap b);
-    public String getKey();
+    public String key();
 }

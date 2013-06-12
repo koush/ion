@@ -34,7 +34,7 @@ public class IonBitmapCache {
                 .getDefaultDisplay().getMetrics(mMetrics);
         final AssetManager mgr = context.getAssets();
         mResources = new Resources(mgr, mMetrics, context.getResources().getConfiguration());
-        mCache = new LruBitmapCache(getHeapSize(context) / 8);
+        mCache = new LruBitmapCache(getHeapSize(context) / 7);
     }
 
     public void put(String key, Bitmap bitmap) {

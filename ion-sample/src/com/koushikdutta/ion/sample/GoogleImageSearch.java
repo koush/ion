@@ -45,11 +45,12 @@ public class GoogleImageSearch extends Activity {
 
             // select the image view
             Ion.with(iv)
-            .resize(getResources().getDisplayMetrics().widthPixels / 2, getResources().getDisplayMetrics().widthPixels / 2)
+            .resize(256, 256)
             .centerCrop()
             // fade in on load
             .animateIn(R.anim.fadein)
             .placeholder(R.drawable.placeholder)
+            .error(R.drawable.error)
             // load the url
             .load(getItem(position));
 
@@ -112,8 +113,9 @@ public class GoogleImageSearch extends Activity {
             }
         });
 
+        int cols = getResources().getDisplayMetrics().widthPixels / 512;
         GridView view = (GridView) findViewById(R.id.results);
-        view.setNumColumns(getResources().getDisplayMetrics().widthPixels / 512);
+        view.setNumColumns(cols);
         mAdapter = new MyAdapter(this);
         view.setAdapter(mAdapter);
 

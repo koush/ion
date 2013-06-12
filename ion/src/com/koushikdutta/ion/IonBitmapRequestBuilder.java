@@ -1,6 +1,8 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
@@ -67,16 +69,23 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     class BitmapCallback {
         String key;
 
-        public BitmapCallback(String key) {
+        public BitmapCallback(String key, boolean put) {
             this.key = key;
+            this.put = put;
+        }
+
+        boolean put;
+        boolean put() {
+            return put;
         }
 
         void report(final Exception e, final Bitmap result) {
             AsyncServer.post(IonRequestBuilder.mainHandler, new Runnable() {
                 @Override
                 public void run() {
-                    if (result != null)
+                    if (result != null && put()) {
                         ion.bitmapCache.put(key, result);
+                    }
 
                     final ArrayList<FutureCallback<Bitmap>> callbacks = ion.bitmapsPending.remove(key);
                     if (e == null && result == null)
@@ -93,8 +102,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     }
 
     class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList> {
-        public LoadBitmap(String urlKey) {
-            super(urlKey);
+        public LoadBitmap(String urlKey, boolean put) {
+            super(urlKey, put);
         }
 
         @Override
@@ -126,7 +135,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     class BitmapToBitmap extends BitmapCallback implements FutureCallback<Bitmap> {
         public BitmapToBitmap(String transformKey) {
-            super(transformKey);
+            super(transformKey, true);
         }
 
         @Override
@@ -142,7 +151,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                     try {
                         Bitmap tmpBitmap = result;
                         for (Transform transform : transforms) {
-//                            builder.request.logd("applying transform: " + transform.getKey());
+//                            builder.request.logd("applying transform: " + transform.key());
                             tmpBitmap = transform.transform(tmpBitmap);
                         }
                         report(null, tmpBitmap);
@@ -160,11 +169,19 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
         assert builder.uri != null;
 
+        if (resizeHeight != 0 || resizeWidth != 0) {
+            transform(new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
+            resizeWidth = 0;
+            resizeHeight = 0;
+            scaleMode = null;
+        }
+
         // determine the key for this bitmap after all transformations
         bitmapKey = builder.uri;
-        if (transforms != null) {
+        boolean hasTransforms = transforms != null && transforms.size() > 0;
+        if (hasTransforms) {
             for (Transform transform : transforms) {
-                bitmapKey += transform.getKey();
+                bitmapKey += transform.key();
             }
         }
 
@@ -177,11 +194,11 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // find/create the future for this download.
         if (!ion.bitmapsPending.contains(builder.uri)) {
             builder.setHandler(null);
-            builder.execute(new ByteBufferListParser()).setCallback(new LoadBitmap(builder.uri));
+            builder.execute(new ByteBufferListParser()).setCallback(new LoadBitmap(builder.uri, !hasTransforms));
         }
 
         // if there's a transform, do it
-        if (transforms == null || transforms.size() == 0)
+        if (!hasTransforms)
             return null;
 
         ion.bitmapsPending.add(builder.uri, new BitmapToBitmap(bitmapKey));
@@ -201,13 +218,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
     };
 
-    void setIonDrawable(ImageView imageView, Bitmap bitmap) {
+    IonDrawable getOrCreateIonDrawable(ImageView imageView) {
         Drawable current = imageView.getDrawable();
-
-        // invalidate self doesn't seem to trigger the dimension check to be called by imageview.
-        // are drawable dimensions supposed to be immutable?
-        imageView.setImageDrawable(null);
-
         IonDrawable ret;
         if (current == null || !(current instanceof IonDrawable)) {
             ret = new IonDrawable();
@@ -215,6 +227,30 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         else {
             ret = (IonDrawable)current;
         }
+        // invalidate self doesn't seem to trigger the dimension check to be called by imageview.
+        // are drawable dimensions supposed to be immutable?
+        imageView.setImageDrawable(null);
+        return ret;
+    }
+
+    void setIonDrawable(ImageView imageView, Drawable drawable) {
+        IonDrawable ret = getOrCreateIonDrawable(imageView);
+
+        int w = resizeWidth;
+        int h = resizeHeight;
+        if (w == 0 || h == 0) {
+            w = drawable.getIntrinsicWidth();
+            h = drawable.getIntrinsicHeight();
+        }
+
+//        ret.setDrawable(drawable, w, h);
+//        imageView.setImageDrawable(ret);
+        imageView.setBackgroundDrawable(drawable);
+
+    }
+
+    void setIonDrawable(ImageView imageView, Bitmap bitmap) {
+        IonDrawable ret = getOrCreateIonDrawable(imageView);
 
         int w = resizeWidth;
         int h = resizeHeight;
@@ -226,7 +262,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
         ret.setBitmap(bitmap, w, h);
         ret.setScaleMode(scaleMode);
-
         imageView.setImageDrawable(ret);
     }
 
@@ -378,12 +413,13 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    private static void setImageView(ImageView imageView, Drawable drawable, int resource) {
+    private void setImageView(ImageView imageView, Drawable drawable, int resource) {
         if (imageView == null)
             return;
         if (resource != 0)
             drawable = imageView.getContext().getResources().getDrawable(resource);
-        imageView.setImageDrawable(drawable);
+//        imageView.setImageDrawable(drawable);
+        setIonDrawable(imageView, drawable);
     }
 
     private void setPlaceholder(ImageView imageView) {
@@ -454,12 +490,12 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     }
 
     static enum ScaleMode {
+        FitXY,
         CenterCrop,
         CenterInside
     }
 
-    ScaleMode scaleMode;
-
+    ScaleMode scaleMode = ScaleMode.FitXY;
     @Override
     public IonBitmapRequestBuilder centerCrop() {
         if (resizeWidth == 0 || resizeHeight == 0)
@@ -486,6 +522,52 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
+    static class DefaultTransform implements Transform {
+        ScaleMode scaleMode;
+        int resizeWidth;
+        int resizeHeight;
+
+        public DefaultTransform(int width, int height, ScaleMode scaleMode) {
+            resizeWidth = width;
+            resizeHeight = height;
+            this.scaleMode = scaleMode;
+        }
+
+        @Override
+        public Bitmap transform(Bitmap b) {
+            Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, b.getConfig());
+            Canvas canvas = new Canvas(ret);
+
+            int transx = b.getWidth() >> 1;
+            int transy = b.getHeight() >> 1;
+
+//            canvas.translate(transx, transy);
+
+            float xratio = (float)resizeWidth / (float)b.getWidth();
+            float yratio = (float)resizeHeight / (float)b.getHeight();
+            if (scaleMode != ScaleMode.FitXY) {
+                float ratio;
+                if (scaleMode == ScaleMode.CenterCrop)
+                    ratio = Math.max(xratio, yratio);
+                else
+                    ratio = Math.min(xratio, yratio);
+
+                xratio = ratio;
+                yratio = ratio;
+            }
+
+            canvas.scale(xratio, yratio);
+            canvas.drawBitmap(b, 0, 0, null);
+
+            return ret;
+        }
+
+        @Override
+        public String key() {
+            return scaleMode.name() + resizeWidth  + "x" + resizeHeight;
+        }
+    }
+
     void reset() {
         placeholderDrawable = null;
         placeholderResource = 0;
@@ -499,7 +581,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         inAnimationResource = 0;
         loadAnimation = null;
         loadAnimationResource = 0;
-        scaleMode = ScaleMode.CenterInside;
+        scaleMode = ScaleMode.FitXY;
         resizeWidth = 0;
         resizeHeight = 0;
     }

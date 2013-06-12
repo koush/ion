@@ -16,6 +16,7 @@ public class IonDrawable extends Drawable {
     private Paint paint;
     private Bitmap bitmap;
     private IonBitmapRequestBuilder.ScaleMode scaleMode;
+    private Drawable drawable;
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
@@ -33,10 +34,22 @@ public class IonDrawable extends Drawable {
         if (bitmap == this.bitmap && this.width == width && this.height == height)
             return this;
 
+        this.drawable = null;
         this.bitmap = bitmap;
         this.width = width;
         this.height = height;
         invalidateSelf();
+        return this;
+    }
+
+    public IonDrawable setDrawable(Drawable drawable, int width, int height) {
+        if (drawable == this.drawable && this.width == width && this.height == height)
+            return this;
+
+        this.bitmap = null;
+        this.width = width;
+        this.height = height;
+        this.drawable = drawable;
         return this;
     }
 
@@ -73,8 +86,13 @@ public class IonDrawable extends Drawable {
     Rect drawBounds = new Rect();
     @Override
     public void draw(Canvas canvas) {
-        if (bitmap == null)
+        if (bitmap == null) {
+            if (drawable != null) {
+                drawable.setBounds(getBounds());
+                drawable.draw(canvas);
+            }
             return;
+        }
 
         if (scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterCrop) {
             Rect bounds = getBounds();
