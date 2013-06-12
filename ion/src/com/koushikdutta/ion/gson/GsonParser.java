@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.gson;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import com.koushikdutta.async.ByteBufferList;
@@ -28,7 +29,10 @@ public class GsonParser<T extends JsonElement> implements AsyncParser<T> {
             @Override
             protected void transform(ByteBufferList result) throws Exception {
                 JsonParser parser = new JsonParser();
-                setComplete(null, (T)parser.parse(new JsonReader(new InputStreamReader(new ByteBufferListInputStream(result)))));
+                T parsed = (T)parser.parse(new JsonReader(new InputStreamReader(new ByteBufferListInputStream(result))));
+                if (parsed.isJsonNull())
+                    throw new JsonParseException("unable to parse json");
+                setComplete(null, parsed);
             }
         }
         .from(new ByteBufferListParser().parse(emitter));
