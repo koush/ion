@@ -9,12 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -26,8 +21,9 @@ import com.koushikdutta.ion.Ion;
  * Created by koush on 6/4/13.
  */
 public class GoogleImageSearch extends Activity {
-    private ListView mListView;
     private MyAdapter mAdapter;
+
+    final static float GOLDEN_RATIO = 1.6180339887498948482f;
 
     // Adapter to populate and imageview from an url contained in the array adapter
     private class MyAdapter extends ArrayAdapter<String> {
@@ -49,10 +45,11 @@ public class GoogleImageSearch extends Activity {
 
             // select the image view
             Ion.with(iv)
-            .resize(getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().widthPixels)
+            .resize(getResources().getDisplayMetrics().widthPixels / 2, getResources().getDisplayMetrics().widthPixels / 2)
             .centerCrop()
             // fade in on load
             .animateIn(R.anim.fadein)
+            .placeholder(R.drawable.placeholder)
             // load the url
             .load(getItem(position));
 
@@ -111,16 +108,22 @@ public class GoogleImageSearch extends Activity {
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mAdapter.clear();
-                loadMore();
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(searchText.getWindowToken(), 0);
+                search();
             }
         });
 
-
-        mListView = (ListView) findViewById(R.id.results);
+        GridView view = (GridView) findViewById(R.id.results);
+        view.setNumColumns(getResources().getDisplayMetrics().widthPixels / 512);
         mAdapter = new MyAdapter(this);
-        mListView.setAdapter(mAdapter);
+        view.setAdapter(mAdapter);
+
+        search();
+    }
+
+    private void search() {
+        mAdapter.clear();
+        loadMore();
+        InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(searchText.getWindowToken(), 0);
     }
 }

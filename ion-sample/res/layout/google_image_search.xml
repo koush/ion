@@ -10,7 +10,7 @@
         android:orientation="horizontal" >
 
         <EditText
-            android:text="grumpycat"
+            android:text="Van Gogh"
             android:id="@+id/search_text"
             android:layout_width="0dp"
             android:layout_height="match_parent"
@@ -23,8 +23,8 @@
             android:text="Search" />
     </LinearLayout>
 
-    <ListView
-        android:listSelector="@android:color/transparent"
+    <GridView
+        android:listSelector="@null"
         android:id="@+id/results"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

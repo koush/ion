@@ -54,12 +54,12 @@ public class IonDrawable extends Drawable {
 
     @Override
     public int getIntrinsicWidth() {
-        return -1;
+        return width;
     }
 
     @Override
     public int getIntrinsicHeight() {
-        return -1;
+        return height;
     }
 
     public IonDrawable setScaleMode(IonBitmapRequestBuilder.ScaleMode scaleMode) {
