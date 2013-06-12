@@ -10,9 +10,15 @@ import com.koushikdutta.async.http.AsyncHttpRequest;
  */
 public interface Loader {
     public static class LoaderEmitter {
-        public LoaderEmitter(DataEmitter emitter, int length) {
+        public static final int LOADED_FROM_MEMORY = 0;
+        public static final int LOADED_FROM_CACHE = 1;
+        public static final int LOADED_FROM_CONDITIONAL_CACHE = 2;
+        public static final int LOADED_FROM_NETWORK = 3;
+
+        public LoaderEmitter(DataEmitter emitter, int length, int loadedFrom) {
             this.length = length;
             this.emitter = emitter;
+            this.loadedFrom = loadedFrom;
         }
         DataEmitter emitter;
         int length;
@@ -21,6 +27,10 @@ public interface Loader {
         }
         public int length() {
             return length;
+        }
+        int loadedFrom;
+        public int loadedFrom() {
+            return loadedFrom;
         }
     }
     // returns a Future if this loader can handle a request

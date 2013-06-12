@@ -5,8 +5,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -20,11 +18,11 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
-import com.koushikdutta.ion.builder.ImageViewBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
-import com.koushikdutta.ion.builder.RequestBuilder;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
@@ -349,7 +347,7 @@ public class Ion {
         return config;
     }
 
-    HashList<FutureCallback<Bitmap>> bitmapsPending = new HashList<FutureCallback<Bitmap>>();
+    HashList<FutureCallback<BitmapInfo>> bitmapsPending = new HashList<FutureCallback<BitmapInfo>>();
 
     IonBitmapCache bitmapCache;
     /**

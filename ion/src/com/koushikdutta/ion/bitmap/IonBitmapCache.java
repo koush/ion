@@ -1,4 +1,4 @@
-package com.koushikdutta.ion;
+package com.koushikdutta.ion.bitmap;
 
 import android.app.ActivityManager;
 import android.content.Context;
@@ -6,16 +6,14 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.Looper;
-import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
+import com.koushikdutta.ion.Ion;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashSet;
 
 /**
  * Created by koush on 5/23/13.
@@ -37,23 +35,23 @@ public class IonBitmapCache {
         mCache = new LruBitmapCache(getHeapSize(context) / 7);
     }
 
-    public void put(String key, Bitmap bitmap) {
+    public void put(BitmapInfo info) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-        mCache.put(key, bitmap);
+        mCache.put(info.key, info);
     }
 
-    public Bitmap get(String key) {
+    public BitmapInfo get(String key) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
         return mCache.get(key);
     }
 
-    void dump() {
+    public void dump() {
         Log.i("IonBitmapCache", "bitmap cache: " + mCache.size());
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
     boolean useBitmapScaling = true;
-    Bitmap loadBitmapFromStream(InputStream in) throws IOException {
+    public BitmapInfo loadBitmapFromStream(InputStream in, String key, int loadedFrom) throws IOException {
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         final int tw = mMetrics.widthPixels;
         final int th = mMetrics.heightPixels;
@@ -75,7 +73,13 @@ public class IonBitmapCache {
                 o = new BitmapFactory.Options();
                 o.inSampleSize = 1 << scale;
             }
-            return BitmapFactory.decodeStream(in, null, o);
+            Bitmap ret = BitmapFactory.decodeStream(in, null, o);
+
+            BitmapInfo info = new BitmapInfo();
+            info.key = key;
+            info.bitmap = ret;
+            info.loadedFrom = loadedFrom;
+            return info;
         }
         finally {
             if (in != null) {

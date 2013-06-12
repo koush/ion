@@ -1,13 +1,8 @@
 package com.koushikdutta.ion;
 
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.ColorFilter;
-import android.graphics.Paint;
-import android.graphics.PixelFormat;
-import android.graphics.Rect;
+import android.graphics.*;
 import android.graphics.drawable.Drawable;
+import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 /**
  * Created by koush on 6/8/13.
@@ -15,8 +10,9 @@ import android.graphics.drawable.Drawable;
 public class IonDrawable extends Drawable {
     private Paint paint;
     private Bitmap bitmap;
-    private IonBitmapRequestBuilder.ScaleMode scaleMode;
-    private Drawable drawable;
+    private BitmapInfo info;
+    private Drawable placeholder;
+    private Drawable error;
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
@@ -24,17 +20,14 @@ public class IonDrawable extends Drawable {
         paint = new Paint(DEFAULT_PAINT_FLAGS);
     }
 
-    public Bitmap getBitmap() {
-        return bitmap;
-    }
-
     int width;
     int height;
-    public IonDrawable setBitmap(Bitmap bitmap, int width, int height) {
+    public IonDrawable setBitmap(BitmapInfo info, int width, int height) {
+        Bitmap bitmap = info.bitmap;
+        this.info = info;
         if (bitmap == this.bitmap && this.width == width && this.height == height)
             return this;
 
-        this.drawable = null;
         this.bitmap = bitmap;
         this.width = width;
         this.height = height;
@@ -42,14 +35,25 @@ public class IonDrawable extends Drawable {
         return this;
     }
 
-    public IonDrawable setDrawable(Drawable drawable, int width, int height) {
-        if (drawable == this.drawable && this.width == width && this.height == height)
+    public IonDrawable setError(Drawable drawable, int width, int height) {
+        if (drawable == this.error && this.width == width && this.height == height)
             return this;
 
-        this.bitmap = null;
         this.width = width;
         this.height = height;
-        this.drawable = drawable;
+        this.error = drawable;
+        invalidateSelf();
+        return this;
+    }
+
+    public IonDrawable setPlaceholder(Drawable drawable, int width, int height) {
+        if (drawable == this.placeholder && this.width == width && this.height == height)
+            return this;
+
+        this.width = width;
+        this.height = height;
+        this.placeholder = drawable;
+        invalidateSelf();
         return this;
     }
 
@@ -75,79 +79,48 @@ public class IonDrawable extends Drawable {
         return height;
     }
 
-    public IonDrawable setScaleMode(IonBitmapRequestBuilder.ScaleMode scaleMode) {
-        if (this.scaleMode == scaleMode)
-            return this;
-        this.scaleMode = scaleMode;
-        invalidateSelf();
-        return this;
-    }
-
-    Rect drawBounds = new Rect();
     @Override
     public void draw(Canvas canvas) {
         if (bitmap == null) {
-            if (drawable != null) {
-                drawable.setBounds(getBounds());
-                drawable.draw(canvas);
+            if (placeholder != null) {
+                placeholder.setBounds(getBounds());
+                placeholder.draw(canvas);
             }
             return;
         }
 
-        if (scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterCrop) {
-            Rect bounds = getBounds();
+        canvas.drawBitmap(bitmap, null, getBounds(), paint);
 
-            float ratio = (float)bounds.width() / (float)bounds.height();
+        if (true)
+            return;
 
-            int newWidth;
-            int newHeight;
-            if (ratio < 1) {
-                newWidth = bitmap.getWidth();
-                newHeight = (int)(newWidth / ratio);
-            }
-            else {
-                newHeight = bitmap.getHeight();
-                newWidth = (int)(newHeight * ratio);
-            }
+        // stolen from picasso
+        canvas.save();
+        canvas.rotate(45);
 
-            if (newWidth > bitmap.getWidth()) {
-                ratio = (float)bitmap.getWidth() / (float)newWidth;
-                newWidth = bitmap.getWidth();
-                newHeight *= ratio;
-            }
+        paint.setColor(Color.WHITE);
+        canvas.drawRect(0, -10, 7.5f, 10, paint);
 
-            if (newHeight > bitmap.getHeight()) {
-                ratio = (float)bitmap.getHeight() / (float)newHeight;
-                newHeight = bitmap.getHeight();
-                newWidth *= ratio;
-            }
-
-            int clipx = (bitmap.getWidth() - newWidth) >> 1;
-            int clipy = (bitmap.getHeight() - newHeight) >> 1;
-
-            drawBounds.set(clipx, clipy, bitmap.getWidth() - clipx, bitmap.getHeight() - clipy);
-
-            canvas.drawBitmap(bitmap, drawBounds, bounds, paint);
+        int sourceColor;
+        switch (info.loadedFrom) {
+            case Loader.LoaderEmitter.LOADED_FROM_CACHE:
+                sourceColor = Color.CYAN;
+                break;
+            case Loader.LoaderEmitter.LOADED_FROM_CONDITIONAL_CACHE:
+                sourceColor = Color.YELLOW;
+                break;
+            case Loader.LoaderEmitter.LOADED_FROM_MEMORY:
+                sourceColor = Color.GREEN;
+                break;
+            default:
+                sourceColor = Color.RED;
+                break;
         }
-        else if (scaleMode == IonBitmapRequestBuilder.ScaleMode.CenterInside) {
-            Rect bounds = getBounds();
-            float xratio = (float)bounds.width() / (float)bitmap.getWidth();
-            float yratio = (float)bounds.height() / (float)bitmap.getHeight();
 
-            float ratio = Math.min(xratio, yratio);
+        paint.setColor(sourceColor);
+        canvas.drawRect(0, -9, 6.5f, 9, paint);
 
-            int newWidth = (int)(ratio * bitmap.getWidth());
-            int newHeight = (int)(ratio * bitmap.getHeight());
-
-            int clipx = (bounds.width() - newWidth) >> 1;
-            int clipy = (bounds.height() - newHeight) >> 1;
-
-            drawBounds.set(clipx, clipy, bounds.width() - clipx, bounds.height() - clipy);
-            canvas.drawBitmap(bitmap, null, drawBounds, paint);
-        }
-        else {
-            canvas.drawBitmap(bitmap, null, getBounds(), paint);
-        }
+        canvas.restore();
     }
 
     @Override

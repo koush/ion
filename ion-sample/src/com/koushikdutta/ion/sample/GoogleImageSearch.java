@@ -47,8 +47,8 @@ public class GoogleImageSearch extends Activity {
             Ion.with(iv)
             .resize(256, 256)
             .centerCrop()
-            // fade in on load
-            .animateIn(R.anim.fadein)
+//            // fade in on load
+//            .animateIn(R.anim.fadein)
             .placeholder(R.drawable.placeholder)
             .error(R.drawable.error)
             // load the url
@@ -81,7 +81,7 @@ public class GoogleImageSearch extends Activity {
                 }
                 catch (Exception ex) {
                     // toast any error we encounter (google image search has an API throttling limit that sometimes gets hit)
-                    Toast.makeText(GoogleImageSearch.this, ex.toString(), Toast.LENGTH_LONG).show();
+//                    Toast.makeText(GoogleImageSearch.this, ex.toString(), Toast.LENGTH_LONG).show();
                 }
 
             }

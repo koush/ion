@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.koushikdutta.ion;
+package com.koushikdutta.ion.bitmap;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

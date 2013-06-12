@@ -1,8 +1,9 @@
-package com.koushikdutta.ion;
+package com.koushikdutta.ion.bitmap;
 
 import android.graphics.Bitmap;
+import com.koushikdutta.ion.Ion;
 
-class LruBitmapCache extends LruCache<String, Bitmap> {
+class LruBitmapCache extends LruCache<String, BitmapInfo> {
     public LruBitmapCache(int maxSize) {
         super(maxSize);
     }
@@ -15,16 +16,9 @@ class LruBitmapCache extends LruCache<String, Bitmap> {
 //        }
 //    }
 
-
     @Override
-    protected void entryRemoved(boolean evicted, String key, Bitmap oldValue, Bitmap newValue) {
-        super.entryRemoved(evicted, key, oldValue, newValue);
-        System.out.println("entry removed: " + key);
-        Ion.instance.bitmapCache.dump();
-    }
-
-    @Override
-    protected int sizeOf(String key, Bitmap value) {
+    protected int sizeOf(String key, BitmapInfo info) {
+        Bitmap value = info.bitmap;
         return value.getRowBytes() * value.getHeight();
     }
 }

@@ -132,7 +132,7 @@ public class TwitterGson extends Activity {
             return;
 
         // load the tweets
-        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=koush&count=20";
+        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=favstar50&count=20";
         if (tweetAdapter.getCount() > 0) {
             // load from the "last" id
             Tweet last = tweetAdapter.getItem(tweetAdapter.getCount() - 1);

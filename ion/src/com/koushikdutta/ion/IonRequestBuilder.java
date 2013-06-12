@@ -235,7 +235,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> {
-        AsyncHttpRequest request;
+        private AsyncHttpRequest request;
+        private int loadedFrom;
+        public int loadedFrom() {
+            return loadedFrom;
+        }
+
         public EmitterTransform() {
             ion.addFutureInFlight(this, context.get());
             if (groups == null)
@@ -275,6 +280,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         @Override
         protected void transform(LoaderEmitter emitter) throws Exception {
             this.emitter = emitter.getDataEmitter();
+            this.loadedFrom = emitter.loadedFrom();
 
             final int total = emitter.length();
             DataTrackingEmitter tracker;
