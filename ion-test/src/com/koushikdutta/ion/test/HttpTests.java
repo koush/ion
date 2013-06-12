@@ -232,9 +232,32 @@ public class HttpTests extends AndroidTestCase {
         }
     }
 
-    public void testNullRef() throws Exception {
+    public void testSSLNullRef() throws Exception {
         Ion.with(getContext(), "https://launchpad.net/")
                 .asString()
                 .get();
+    }
+
+    public void testPut() throws Exception {
+        AsyncHttpServer httpServer = new AsyncHttpServer();
+        try {
+            httpServer.addAction("PUT", "/", new HttpServerRequestCallback() {
+                @Override
+                public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
+                    response.send(request.getMethod());
+                }
+            });
+
+            httpServer.listen(5555);
+
+            Future<String> ret = Ion.with(getContext())
+                    .load("PUT", "http://localhost:5555/")
+                    .asString();
+
+            assertEquals(ret.get(), "PUT");
+        }
+        finally {
+            httpServer.stop();
+        }
     }
 }
