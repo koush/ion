@@ -197,8 +197,8 @@ public class HttpTests extends AndroidTestCase {
     public void testProxy() throws Exception {
         wasProxied = false;
         final AsyncServer proxyServer = new AsyncServer();
+        AsyncHttpServer httpServer = new AsyncHttpServer();
         try {
-            AsyncHttpServer httpServer = new AsyncHttpServer();
             httpServer.get(".*", new HttpServerRequestCallback() {
                 @Override
                 public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
@@ -228,6 +228,7 @@ public class HttpTests extends AndroidTestCase {
             assertTrue(wasProxied);
         }
         finally {
+            httpServer.stop();
             proxyServer.stop();
         }
     }
@@ -249,6 +250,7 @@ public class HttpTests extends AndroidTestCase {
             });
 
             httpServer.listen(5555);
+            Thread.sleep(1000);
 
             Future<String> ret = Ion.with(getContext())
                     .load("PUT", "http://localhost:5555/")

@@ -3,6 +3,7 @@ package com.koushikdutta.ion.test;
 import android.test.AndroidTestCase;
 import android.util.Base64;
 import com.google.gson.JsonObject;
+import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
@@ -26,6 +27,7 @@ public class AuthTests extends AndroidTestCase {
     protected void tearDown() throws Exception {
         super.tearDown();
         httpServer.stop();
+        AsyncServer.getDefault().stop();
     }
 
     public void testBasicAuth() throws Exception {
