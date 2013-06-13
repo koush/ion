@@ -237,11 +237,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> {
         private AsyncHttpRequest request;
         private int loadedFrom;
+        Runnable cancelCallback;
         public int loadedFrom() {
             return loadedFrom;
         }
 
-        public EmitterTransform() {
+        public EmitterTransform(Runnable cancelCallback) {
+            this.cancelCallback = cancelCallback;
             ion.addFutureInFlight(this, context.get());
             if (groups == null)
                 return;
@@ -255,20 +257,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         DataEmitter emitter;
         @Override
         protected void cancelCleanup() {
+            super.cancelCleanup();
             if (emitter != null)
                 emitter.close();
-        }
-
-        @Override
-        protected void cleanup() {
-            super.cleanup();
-            if (groups == null)
-                return;
-            for (WeakReference<Object> ref: groups) {
-                Object group = ref.get();
-                if (group != null)
-                    ion.cancelAll(group);
-            }
+            if (cancelCallback != null)
+                cancelCallback.run();
         }
 
         @Override
@@ -368,14 +361,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
 
     <T> EmitterTransform<T> execute(final DataSink sink, final boolean close, final T result, final Runnable cancel) {
-        EmitterTransform<T> ret = new EmitterTransform<T>() {
+        EmitterTransform<T> ret = new EmitterTransform<T>(cancel) {
             @Override
             protected void cancelCleanup() {
                 super.cancelCleanup();
                 if (close)
                     sink.close();
-                if (cancel != null)
-                    cancel.run();
             }
 
             TransformFuture<T, LoaderEmitter> self = this;
@@ -397,8 +388,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     <T> EmitterTransform<T> execute(final AsyncParser<T> parser) {
+        return execute(parser, null);
+    }
+
+    <T> EmitterTransform<T> execute(final AsyncParser<T> parser, Runnable cancel) {
         assert parser != null;
-        EmitterTransform<T> ret = new EmitterTransform<T>() {
+        EmitterTransform<T> ret = new EmitterTransform<T>(cancel) {
             TransformFuture<T, LoaderEmitter> self = this;
             @Override
             protected void transform(LoaderEmitter emitter) throws Exception {

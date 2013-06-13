@@ -10,13 +10,6 @@ import android.view.animation.Animation;
 public interface ImageViewBuilder<I extends ImageViewBuilder & BitmapBuilder> extends BitmapBuilder<I> {
     /**
      * Set a placeholder on the ImageView while the request is loading
-     * @param bitmap
-     * @return
-     */
-    public I placeholder(Bitmap bitmap);
-
-    /**
-     * Set a placeholder on the ImageView while the request is loading
      * @param drawable
      * @return
      */
@@ -28,13 +21,6 @@ public interface ImageViewBuilder<I extends ImageViewBuilder & BitmapBuilder> ex
      * @return
      */
     public I placeholder(int resourceId);
-
-    /**
-     * Set an error image on the ImageView if the request fails to load
-     * @param bitmap
-     * @return
-     */
-    public I error(Bitmap bitmap);
 
     /**
      * Set an error image on the ImageView if the request fails to load

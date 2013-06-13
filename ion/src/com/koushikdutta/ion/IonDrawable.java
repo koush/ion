@@ -9,7 +9,7 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 /**
  * Created by koush on 6/8/13.
  */
-public class IonDrawable extends Drawable {
+class IonDrawable extends Drawable {
     private Paint paint;
     private Bitmap bitmap;
     private BitmapInfo info;
@@ -63,6 +63,8 @@ public class IonDrawable extends Drawable {
         this.placeholderResource = resource;
         this.placeholder = drawable;
         invalidateSelf();
+
+        assert placeholderResource != 0;
         return this;
     }
 
@@ -104,8 +106,7 @@ public class IonDrawable extends Drawable {
 
     @Override
     public void draw(Canvas canvas) {
-
-        if (bitmap == null) {
+        if (info == null) {
             if (placeholder == null && placeholderResource != 0)
                 placeholder = resources.getDrawable(placeholderResource);
             if (placeholder != null) {
@@ -126,13 +127,27 @@ public class IonDrawable extends Drawable {
             if (placeholder != null) {
                 placeholder.setBounds(getBounds());
                 placeholder.draw(canvas);
-                invalidateSelf();
             }
         }
 
-        paint.setAlpha((int)destAlpha);
-        canvas.drawBitmap(bitmap, null, getBounds(), paint);
-        paint.setAlpha(0xFF);
+        if (bitmap != null) {
+            paint.setAlpha((int)destAlpha);
+            canvas.drawBitmap(bitmap, null, getBounds(), paint);
+            paint.setAlpha(0xFF);
+        }
+        else {
+            if (error == null && errorResource != 0)
+                error = resources.getDrawable(errorResource);
+            if (error != null) {
+                error.setAlpha((int)destAlpha);
+                error.setBounds(getBounds());
+                error.draw(canvas);
+                error.setAlpha(0xFF);
+            }
+        }
+
+        if (destAlpha != 255)
+            invalidateSelf();
 
         if (true)
             return;

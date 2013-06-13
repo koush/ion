@@ -19,6 +19,8 @@ class LruBitmapCache extends LruCache<String, BitmapInfo> {
     @Override
     protected int sizeOf(String key, BitmapInfo info) {
         Bitmap value = info.bitmap;
+        if (value == null)
+            return 0;
         return value.getRowBytes() * value.getHeight();
     }
 }

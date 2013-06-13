@@ -2,8 +2,6 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.view.animation.Animation;
@@ -18,7 +16,6 @@ import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
-import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
@@ -87,7 +84,14 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             AsyncServer.post(IonRequestBuilder.mainHandler, new Runnable() {
                 @Override
                 public void run() {
-                    if (result != null && put()) {
+                    if (result == null) {
+                        // cache errors
+                        BitmapInfo info = new BitmapInfo();
+                        info.bitmap = null;
+                        info.key = key;
+                        ion.bitmapCache.put(info);
+                    }
+                    else if (put()) {
                         ion.bitmapCache.put(result);
                     }
 
@@ -135,8 +139,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                         info.loadedFrom = emitterTransform.loadedFrom();
 
                         report(null, info);
-                    }
-                    catch (Exception e) {
+                    } catch (Exception e) {
                         report(e, null);
                     }
                 }
@@ -181,8 +184,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     String bitmapKey;
     BitmapInfo execute() {
+        final String downloadKey = builder.uri;
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-        assert builder.uri != null;
+        assert downloadKey != null;
 
         if (resizeHeight != 0 || resizeWidth != 0) {
             transform(new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
@@ -192,7 +196,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
 
         // determine the key for this bitmap after all transformations
-        bitmapKey = builder.uri;
+        bitmapKey = downloadKey;
         boolean hasTransforms = transforms != null && transforms.size() > 0;
         if (hasTransforms) {
             for (Transform transform : transforms) {
@@ -208,18 +212,32 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
         // find/create the future for this download.
         IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = null;
-        if (!ion.bitmapsPending.contains(builder.uri)) {
+        if (!ion.bitmapsPending.contains(downloadKey)) {
             builder.setHandler(null);
-            emitterTransform = builder.execute(new ByteBufferListParser());
-            emitterTransform.setCallback(new LoadBitmap(builder.uri, !hasTransforms, emitterTransform));
+            // if we cancel, gotta remove any waiters.
+            emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
+                @Override
+                public void run() {
+                    AsyncServer.post(IonRequestBuilder.mainHandler, new Runnable() {
+                        @Override
+                        public void run() {
+                            ion.bitmapsPending.remove(downloadKey);
+                        }
+                    });
+                }
+            });
+            emitterTransform.setCallback(new LoadBitmap(downloadKey, !hasTransforms, emitterTransform));
         }
 
         // if there's a transform, do it
         if (!hasTransforms)
             return null;
 
-        if (!ion.bitmapsPending.contains(bitmapKey)) {
-            ion.bitmapsPending.add(builder.uri, new BitmapToBitmap(bitmapKey, emitterTransform));
+        // verify this transform isn't already pending
+        // make sure that the parent download isn't cancelled (empty list)
+        // and also make sure there are waiters for this transformed bitmap
+        if (!ion.bitmapsPending.contains(downloadKey) || !ion.bitmapsPending.contains(bitmapKey)) {
+            ion.bitmapsPending.add(downloadKey, new BitmapToBitmap(bitmapKey, emitterTransform));
         }
 
         return null;
@@ -281,7 +299,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
-            System.out.println(bitmapKey + " placeholder");
             setPlaceholder(imageView);
             setIonDrawable(imageView, null, 0);
             bitmapKey = null;
@@ -294,14 +311,13 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // execute the request, see if we get a bitmap from cache.
         BitmapInfo info = execute();
         if (info != null) {
-//            doAnimation(imageView, null, 0);
-            System.out.println(bitmapKey + " imemdiate");
+            doAnimation(imageView, null, 0);
+            setErrorImage(imageView);
             setIonDrawable(imageView, info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
             imageViewFuture.setComplete(imageView);
             return imageViewFuture;
         }
 
-        System.out.println(bitmapKey + " no drawable");
         setIonDrawable(imageView, null, 0);
 
         // note whether an ImageView was present during invocation, as
@@ -338,9 +354,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                     return;
                 }
 
-                System.out.println(bitmapKey + " loaded");
                 setIonDrawable(imageView, source, source.loadedFrom);
-//                doAnimation(imageView, inAnimation, inAnimationResource);
+                doAnimation(imageView, inAnimation, inAnimationResource);
                 imageViewFuture.setComplete(imageView);
             }
         });
@@ -374,12 +389,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return ret;
     }
 
-    @Override
-    public IonBitmapRequestBuilder placeholder(Bitmap bitmap) {
-        placeholder(new BitmapDrawable(builder.context.get().getResources(), bitmap));
-        return this;
-    }
-
     Drawable placeholderDrawable;
 
     @Override
@@ -392,12 +401,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     @Override
     public IonBitmapRequestBuilder placeholder(int resourceId) {
         placeholderResource = resourceId;
-        return this;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder error(Bitmap bitmap) {
-        error(new BitmapDrawable(builder.context.get().getResources(), bitmap));
         return this;
     }
 
@@ -425,7 +428,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     private void setErrorImage(ImageView imageView) {
         if (imageView == null)
             return;
-        getOrCreateIonDrawable(imageView).setError(errorResource, errorDrawable);
+        IonDrawable ret = getOrCreateIonDrawable(imageView).setError(errorResource, errorDrawable);
+        imageView.setImageDrawable(ret);
     }
 
     Animation inAnimation;
@@ -519,11 +523,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         public Bitmap transform(Bitmap b) {
             Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, b.getConfig());
             Canvas canvas = new Canvas(ret);
-
-            int transx = b.getWidth() >> 1;
-            int transy = b.getHeight() >> 1;
-
-//            canvas.translate(transx, transy);
 
             float xratio = (float)resizeWidth / (float)b.getWidth();
             float yratio = (float)resizeHeight / (float)b.getHeight();
