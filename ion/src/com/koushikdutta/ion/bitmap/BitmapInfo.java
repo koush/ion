@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
  */
 public class BitmapInfo {
     public long loadTime = System.currentTimeMillis();
+    public long drawTime;
     public String key;
     public int loadedFrom;
     public Bitmap bitmap;

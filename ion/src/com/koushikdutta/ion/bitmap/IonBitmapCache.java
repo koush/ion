@@ -51,7 +51,7 @@ public class IonBitmapCache {
     }
 
     boolean useBitmapScaling = true;
-    public BitmapInfo loadBitmapFromStream(InputStream in, String key, int loadedFrom) throws IOException {
+    public Bitmap loadBitmapFromStream(InputStream in) throws IOException {
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         final int tw = mMetrics.widthPixels;
         final int th = mMetrics.heightPixels;
@@ -73,13 +73,7 @@ public class IonBitmapCache {
                 o = new BitmapFactory.Options();
                 o.inSampleSize = 1 << scale;
             }
-            Bitmap ret = BitmapFactory.decodeStream(in, null, o);
-
-            BitmapInfo info = new BitmapInfo();
-            info.key = key;
-            info.bitmap = ret;
-            info.loadedFrom = loadedFrom;
-            return info;
+            return BitmapFactory.decodeStream(in, null, o);
         }
         finally {
             if (in != null) {

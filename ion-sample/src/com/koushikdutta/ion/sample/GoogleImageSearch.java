@@ -50,7 +50,8 @@ public class GoogleImageSearch extends Activity {
 //            // fade in on load
 //            .animateIn(R.anim.fadein)
             .placeholder(R.drawable.placeholder)
-            .error(R.drawable.error)
+//            .error(R.drawable.error)
+//            .animateIn(R.anim.fadein)
             // load the url
             .load(getItem(position));
 
@@ -100,7 +101,7 @@ public class GoogleImageSearch extends Activity {
 //        .build());
         super.onCreate(savedInstanceState);
 
-        Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
+//        Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
 
         setContentView(R.layout.google_image_search);
 

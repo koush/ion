@@ -124,9 +124,16 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                 public void run() {
                     try {
                         final ByteArrayInputStream bin = new ByteArrayInputStream(result.getAllByteArray());
-                        BitmapInfo info = ion.bitmapCache.loadBitmapFromStream(bin, key, emitterTransform.loadedFrom());
-                        if (info == null)
+                        Bitmap bitmap = ion.bitmapCache.loadBitmapFromStream(bin);
+
+                        if (bitmap == null)
                             throw new Exception("bitmap failed to load");
+
+                        BitmapInfo info = new BitmapInfo();
+                        info.key = key;
+                        info.bitmap = bitmap;
+                        info.loadedFrom = emitterTransform.loadedFrom();
+
                         report(null, info);
                     }
                     catch (Exception e) {
@@ -211,7 +218,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         if (!hasTransforms)
             return null;
 
-        ion.bitmapsPending.add(builder.uri, new BitmapToBitmap(bitmapKey, emitterTransform));
+        if (!ion.bitmapsPending.contains(bitmapKey)) {
+            ion.bitmapsPending.add(builder.uri, new BitmapToBitmap(bitmapKey, emitterTransform));
+        }
 
         return null;
     }
@@ -232,7 +241,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         Drawable current = imageView.getDrawable();
         IonDrawable ret;
         if (current == null || !(current instanceof IonDrawable)) {
-            ret = new IonDrawable();
+            ret = new IonDrawable(imageView.getResources());
+            imageView.setImageDrawable(ret);
         }
         else {
             ret = (IonDrawable)current;
@@ -243,34 +253,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return ret;
     }
 
-    void setIonDrawable(ImageView imageView, Drawable drawable) {
+    void setIonDrawable(ImageView imageView, BitmapInfo info, int loadedFrom) {
         IonDrawable ret = getOrCreateIonDrawable(imageView);
-
-        int w = resizeWidth;
-        int h = resizeHeight;
-        if ((w == 0 || h == 0) && drawable != null) {
-            w = drawable.getIntrinsicWidth();
-            h = drawable.getIntrinsicHeight();
-        }
-
-//        ret.setPlaceholder(drawable, w, h);
-//        imageView.setImageDrawable(ret);
-        imageView.setImageDrawable(drawable);
-    }
-
-    void setIonDrawable(ImageView imageView, BitmapInfo info) {
-        Bitmap bitmap = info.bitmap;
-        IonDrawable ret = getOrCreateIonDrawable(imageView);
-
-        int w = resizeWidth;
-        int h = resizeHeight;
-        if (w == 0 || h == 0) {
-            int density = imageView.getResources().getDisplayMetrics().densityDpi;
-            w = bitmap.getScaledWidth(density);
-            h = bitmap.getScaledHeight(density);
-        }
-
-        ret.setBitmap(info, w, h);
+        ret.setBitmap(info, loadedFrom);
         imageView.setImageDrawable(ret);
     }
 
@@ -296,22 +281,28 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
+            System.out.println(bitmapKey + " placeholder");
             setPlaceholder(imageView);
+            setIonDrawable(imageView, null, 0);
             bitmapKey = null;
             return FUTURE_IMAGEVIEW_NULL_URI;
         }
 
+        // set the placeholder since we're loading
+        setPlaceholder(imageView);
+
         // execute the request, see if we get a bitmap from cache.
         BitmapInfo info = execute();
         if (info != null) {
-            setIonDrawable(imageView, info);
-            doAnimation(imageView, null, 0);
+//            doAnimation(imageView, null, 0);
+            System.out.println(bitmapKey + " imemdiate");
+            setIonDrawable(imageView, info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
             imageViewFuture.setComplete(imageView);
             return imageViewFuture;
         }
 
-        // set the placeholder since we're loading
-        setPlaceholder(imageView);
+        System.out.println(bitmapKey + " no drawable");
+        setIonDrawable(imageView, null, 0);
 
         // note whether an ImageView was present during invocation, as
         // only a weak reference is held from here on out.
@@ -340,14 +331,16 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                 if (loadingExecuteCount != executeCount)
                     return;
 
+                setPlaceholder(imageView);
                 if (e != null) {
                     setErrorImage(imageView);
                     imageViewFuture.setComplete(e);
                     return;
                 }
 
-                setIonDrawable(imageView, source);
-                doAnimation(imageView, inAnimation, inAnimationResource);
+                System.out.println(bitmapKey + " loaded");
+                setIonDrawable(imageView, source, source.loadedFrom);
+//                doAnimation(imageView, inAnimation, inAnimationResource);
                 imageViewFuture.setComplete(imageView);
             }
         });
@@ -422,37 +415,17 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    private void setImageView(ImageView imageView, Drawable drawable, int resource) {
-        if (imageView == null)
-            return;
-        if (resource != 0)
-            drawable = imageView.getContext().getResources().getDrawable(resource);
-//        imageView.setImageDrawable(drawable);
-        setIonDrawable(imageView, drawable);
-    }
-
     private void setPlaceholder(ImageView imageView) {
         if (imageView == null)
             return;
-        setImageView(imageView, placeholderDrawable, placeholderResource);
-        doAnimation(imageView, loadAnimation, loadAnimationResource);
+        IonDrawable ret = getOrCreateIonDrawable(imageView).setPlaceholder(placeholderResource, placeholderDrawable);
+        imageView.setImageDrawable(ret);
     }
 
     private void setErrorImage(ImageView imageView) {
         if (imageView == null)
             return;
-        boolean usingPlaceholder = false;
-        Drawable drawable = errorDrawable;
-        int resource = errorResource;
-        // if we don't have a error drawable, keep the placeholder
-        if (drawable == null && resource == 0) {
-            drawable = placeholderDrawable;
-            resource = placeholderResource;
-            usingPlaceholder = true;
-        }
-        setImageView(imageView, drawable, resource);
-        if (!usingPlaceholder)
-            doAnimation(imageView, inAnimation, inAnimationResource);
+        getOrCreateIonDrawable(imageView).setError(errorResource, errorDrawable);
     }
 
     Animation inAnimation;

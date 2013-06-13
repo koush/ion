@@ -1,7 +1,9 @@
 package com.koushikdutta.ion;
 
+import android.content.res.Resources;
 import android.graphics.*;
 import android.graphics.drawable.Drawable;
+import android.os.SystemClock;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 /**
@@ -11,47 +13,54 @@ public class IonDrawable extends Drawable {
     private Paint paint;
     private Bitmap bitmap;
     private BitmapInfo info;
+    private int placeholderResource;
     private Drawable placeholder;
+    private int errorResource;
     private Drawable error;
+    private Resources resources;
+    int loadedFrom;
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
-    public IonDrawable() {
+    public IonDrawable(Resources resources) {
+        this.resources = resources;
         paint = new Paint(DEFAULT_PAINT_FLAGS);
     }
 
-    int width;
-    int height;
-    public IonDrawable setBitmap(BitmapInfo info, int width, int height) {
-        Bitmap bitmap = info.bitmap;
-        this.info = info;
-        if (bitmap == this.bitmap && this.width == width && this.height == height)
+
+    public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
+        this.loadedFrom = loadedFrom;
+
+        if (this.info == info)
             return this;
 
-        this.bitmap = bitmap;
-        this.width = width;
-        this.height = height;
         invalidateSelf();
+
+        this.info = info;
+        if (info == null) {
+            bitmap = null;
+            return this;
+        }
+
+        this.bitmap = info.bitmap;
         return this;
     }
 
-    public IonDrawable setError(Drawable drawable, int width, int height) {
-        if (drawable == this.error && this.width == width && this.height == height)
+    public IonDrawable setError(int resource, Drawable drawable) {
+        if (drawable == this.error && resource == errorResource)
             return this;
 
-        this.width = width;
-        this.height = height;
+        this.errorResource = resource;
         this.error = drawable;
         invalidateSelf();
         return this;
     }
 
-    public IonDrawable setPlaceholder(Drawable drawable, int width, int height) {
-        if (drawable == this.placeholder && this.width == width && this.height == height)
+    public IonDrawable setPlaceholder(int resource, Drawable drawable) {
+        if (drawable == this.placeholder && resource == placeholderResource)
             return this;
 
-        this.width = width;
-        this.height = height;
+        this.placeholderResource = resource;
         this.placeholder = drawable;
         invalidateSelf();
         return this;
@@ -71,17 +80,34 @@ public class IonDrawable extends Drawable {
 
     @Override
     public int getIntrinsicWidth() {
-        return width;
+        if (bitmap != null)
+            return bitmap.getScaledWidth(resources.getDisplayMetrics().densityDpi);
+        if (error != null)
+            return error.getIntrinsicWidth();
+        if (placeholder != null)
+            return placeholder.getIntrinsicWidth();
+        return -1;
     }
 
     @Override
     public int getIntrinsicHeight() {
-        return height;
+        if (bitmap != null)
+            return bitmap.getScaledHeight(resources.getDisplayMetrics().densityDpi);
+        if (error != null)
+            return error.getIntrinsicHeight();
+        if (placeholder != null)
+            return placeholder.getIntrinsicHeight();
+        return -1;
     }
+
+    public static final long FADE_DURATION = 200;
 
     @Override
     public void draw(Canvas canvas) {
+
         if (bitmap == null) {
+            if (placeholder == null && placeholderResource != 0)
+                placeholder = resources.getDrawable(placeholderResource);
             if (placeholder != null) {
                 placeholder.setBounds(getBounds());
                 placeholder.draw(canvas);
@@ -89,7 +115,24 @@ public class IonDrawable extends Drawable {
             return;
         }
 
+        if (info.drawTime == 0)
+            info.drawTime = SystemClock.uptimeMillis();
+        long destAlpha = ((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
+        destAlpha = Math.min(destAlpha, 0xFF);
+
+        if (destAlpha != 255) {
+            if (placeholder == null && placeholderResource != 0)
+                placeholder = resources.getDrawable(placeholderResource);
+            if (placeholder != null) {
+                placeholder.setBounds(getBounds());
+                placeholder.draw(canvas);
+                invalidateSelf();
+            }
+        }
+
+        paint.setAlpha((int)destAlpha);
         canvas.drawBitmap(bitmap, null, getBounds(), paint);
+        paint.setAlpha(0xFF);
 
         if (true)
             return;
@@ -102,7 +145,7 @@ public class IonDrawable extends Drawable {
         canvas.drawRect(0, -10, 7.5f, 10, paint);
 
         int sourceColor;
-        switch (info.loadedFrom) {
+        switch (loadedFrom) {
             case Loader.LoaderEmitter.LOADED_FROM_CACHE:
                 sourceColor = Color.CYAN;
                 break;
