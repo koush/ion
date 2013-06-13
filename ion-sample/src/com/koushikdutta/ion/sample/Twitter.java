@@ -65,8 +65,6 @@ public class Twitter extends Activity {
                 Ion.with(imageView)
                 // use a placeholder google_image if it needs to load from the network
                 .placeholder(R.drawable.twitter)
-                // use a fade in animation when it finishes loading
-                .animateIn(R.anim.fadein)
                 // load the url
                 .load(imageUrl);
 
