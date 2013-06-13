@@ -49,12 +49,8 @@ public class GoogleImageSearch extends Activity {
             Ion.with(iv)
             .resize(256, 256)
             .centerCrop()
-//            // fade in on load
-//            .animateIn(R.anim.fadein)
             .placeholder(R.drawable.placeholder)
             .error(R.drawable.error)
-//            .animateIn(R.anim.fadein)
-            // load the url
             .load(getItem(position));
 
             return convertView;

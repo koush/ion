@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.koushikdutta.ion"
-          android:versionCode="108"
-          android:versionName="1.0.8">
+          android:versionCode="109"
+          android:versionName="1.0.9">
     <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="17" />
     <application />
 </manifest>

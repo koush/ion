@@ -337,7 +337,7 @@ Using Charles Proxy on your desktop computer in conjunction with request proxyin
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
-   <version>1.0.8</version>
+   <version>1.0.9</version>
 </dependency>
 ```
 
