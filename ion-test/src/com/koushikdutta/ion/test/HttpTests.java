@@ -60,37 +60,6 @@ public class HttpTests extends AndroidTestCase {
         assertTrue(semaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
     }
 
-    final static String dataNameAndHash = "6691924d7d24237d3b3679310157d640";
-    public void testProgress() throws Exception {
-        final Semaphore semaphore = new Semaphore(0);
-        final Semaphore progressSemaphore = new Semaphore(0);
-        final Md5 md5 = Md5.createInstance();
-        Ion.with(getContext(),"https://github.com/koush/AndroidAsync/raw/master/AndroidAsyncTest/testdata/6691924d7d24237d3b3679310157d640")
-                .setHandler(null)
-                .setTimeout(600000)
-                .progress(new ProgressCallback() {
-                    @Override
-                    public void onProgress(int downloaded, int total) {
-                        // depending on gzip, etc. the total may vary... the actual length of the uncompressed data
-                        // is 100000
-                        assertTrue(total > 90000 && total < 110000);
-                        progressSemaphore.release();
-                    }
-                })
-                .write(new ByteArrayOutputStream())
-                .setCallback(new FutureCallback<ByteArrayOutputStream>() {
-                    @Override
-                    public void onCompleted(Exception e, ByteArrayOutputStream result) {
-                        byte[] bytes = result.toByteArray();
-                        md5.update(new ByteBufferList(bytes));
-                        assertEquals(md5.digest(), dataNameAndHash);
-                        semaphore.release();
-                    }
-                });
-        assertTrue(semaphore.tryAcquire(600000, TimeUnit.MILLISECONDS));
-        assertTrue(progressSemaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
-    }
-
     public void testJsonObject() throws Exception {
         JsonObject ret = Ion.with(getContext(),"https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
                 .asJsonObject().get();

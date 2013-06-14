@@ -59,6 +59,38 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
     public R progressDialog(ProgressDialog progressDialog);
 
     /**
+     * Specify a callback that is invoked on upload progress of a HTTP
+     * request body.
+     * @param callback
+     * @return
+     */
+    public R uploadProgress(ProgressCallback callback);
+
+    /**
+     * Specify a callback that is invoked on upload progress of a HTTP
+     * request body. This will be invoked on the UI thread.
+     * @param callback
+     * @return
+     */
+    public R uploadProgressHandler(ProgressCallback callback);
+
+    /**
+     * Specify a ProgressBar to update while uploading
+     * a request body.
+     * @param progressBar
+     * @return
+     */
+    public R uploadProgressBar(ProgressBar progressBar);
+
+    /**
+     * Specify a ProgressDialog to update while uploading
+     * a request body.
+     * @param progressDialog
+     * @return
+     */
+    public R uploadProgressDialog(ProgressDialog progressDialog);
+
+    /**
      * Post the Future callback onto the given handler. Not specifying this explicitly
      * results in the default handle of Thread.currentThread to be used, if one exists.
      * @param handler Handler to use or null

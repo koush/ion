@@ -205,7 +205,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             AsyncServer.post(handler, runner);
     }
 
-    private <T> void getLoaderEmitter(EmitterTransform<T> ret) {
+    private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
         URI uri = URI.create(this.uri);
         if (uri == null || uri.getScheme() == null) {
             ret.setComplete(new Exception("Invalid URI"));
@@ -213,7 +213,38 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         }
 
         AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
-        request.setBody(body);
+        AsyncHttpRequestBody wrappedBody = body;
+        if (uploadProgressHandler != null || uploadProgressBar != null || uploadProgress != null || uploadProgressDialog != null) {
+            wrappedBody = new RequestBodyUploadObserver(body, new ProgressCallback() {
+                @Override
+                public void onProgress(final int downloaded, final int total) {
+                    assert Thread.currentThread() != Looper.getMainLooper().getThread();
+
+                    int percent = (int)((float)total / total * 100f);
+
+                    if (uploadProgressBar != null)
+                        uploadProgressBar.setProgress(percent);
+
+                    if (uploadProgressDialog != null)
+                        uploadProgressDialog.setProgress(percent);
+
+                    if (uploadProgress != null)
+                        uploadProgress.onProgress(downloaded, total);
+
+                    if (uploadProgressHandler != null) {
+                        AsyncServer.post(handler, new Runnable() {
+                            @Override
+                            public void run() {
+                                if (ret.isCancelled() || ret.isDone())
+                                    return;
+                                progressHandler.onProgress(downloaded, total);
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        request.setBody(wrappedBody);
         request.setLogging(ion.LOGTAG, ion.logLevel);
         if (logTag != null)
             request.setLogging(logTag, logLevel);
@@ -561,6 +592,34 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public IonRequestBuilder basicAuthentication(String username, String password) {
         return setHeader("Authorization", "Basic " + Base64.encodeToString(String.format("%s:%s", username, password).getBytes(), Base64.NO_WRAP));
+    }
+
+    ProgressCallback uploadProgress;
+    @Override
+    public Builders.Any.B uploadProgress(ProgressCallback callback) {
+        uploadProgress = callback;
+        return this;
+    }
+
+    ProgressBar uploadProgressBar;
+    @Override
+    public Builders.Any.B uploadProgressBar(ProgressBar progressBar) {
+        uploadProgressBar = progressBar;
+        return this;
+    }
+
+    ProgressDialog uploadProgressDialog;
+    @Override
+    public Builders.Any.B uploadProgressDialog(ProgressDialog progressDialog) {
+        uploadProgressDialog = progressDialog;
+        return this;
+    }
+
+    ProgressCallback uploadProgressHandler;
+    @Override
+    public Builders.Any.B uploadProgressHandler(ProgressCallback callback) {
+        uploadProgressHandler = callback;
+        return this;
     }
 
     void reset() {
