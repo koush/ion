@@ -127,14 +127,11 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                 return;
             }
 
-//            builder.request.logd("Image file size: " + result.remaining());
-
             ion.getServer().getExecutorService().execute(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        final ByteArrayInputStream bin = new ByteArrayInputStream(result.getAllByteArray());
-                        Bitmap bitmap = ion.bitmapCache.loadBitmapFromStream(bin, resizeWidth, resizeHeight);
+                        Bitmap bitmap = ion.bitmapCache.loadBitmap(result.getAllByteArray(), resizeWidth, resizeHeight);
 
                         if (bitmap == null)
                             throw new Exception("bitmap failed to load");
