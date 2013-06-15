@@ -25,8 +25,6 @@ import java.util.UUID;
 public class GoogleImageSearch extends Activity {
     private MyAdapter mAdapter;
 
-    final static float GOLDEN_RATIO = 1.6180339887498948482f;
-
     // Adapter to populate and imageview from an url contained in the array adapter
     private class MyAdapter extends ArrayAdapter<String> {
         public MyAdapter(Context context) {
@@ -112,7 +110,7 @@ public class GoogleImageSearch extends Activity {
             }
         });
 
-        int cols = getResources().getDisplayMetrics().widthPixels / 512;
+        int cols = getResources().getDisplayMetrics().widthPixels / getResources().getDisplayMetrics().densityDpi;
         GridView view = (GridView) findViewById(R.id.results);
         view.setNumColumns(cols);
         mAdapter = new MyAdapter(this);
