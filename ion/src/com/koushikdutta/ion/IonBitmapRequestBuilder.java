@@ -527,6 +527,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
             float xratio = (float)resizeWidth / (float)b.getWidth();
             float yratio = (float)resizeHeight / (float)b.getHeight();
+            float transx = 0;
+            float transy = 0;
             if (scaleMode != ScaleMode.FitXY) {
                 float ratio;
                 if (scaleMode == ScaleMode.CenterCrop)
@@ -536,10 +538,15 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
                 xratio = ratio;
                 yratio = ratio;
+
+                float postx = b.getWidth() * ratio;
+                float posty = b.getHeight() * ratio;
+                transx = (resizeWidth - postx) / 2;
+                transy = (resizeHeight - posty) / 2;
             }
 
             canvas.scale(xratio, yratio);
-            canvas.drawBitmap(b, 0, 0, null);
+            canvas.drawBitmap(b, transx, transy, null);
 
             return ret;
         }
