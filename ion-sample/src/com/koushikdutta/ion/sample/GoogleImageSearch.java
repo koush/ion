@@ -61,7 +61,7 @@ public class GoogleImageSearch extends Activity {
             return;
 
         // query googles image search api
-        loading = Ion.with(GoogleImageSearch.this, String.format("https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=%s&start=%d&imgsz=medium", Uri.encode(searchText.getText().toString()), mAdapter.getCount()))
+        loading = Ion.with(GoogleImageSearch.this, String.format("https://ajax.googleapis.com/ajax/services/search/images?v=1.0&q=%s&start=%d&imgsz=large", Uri.encode(searchText.getText().toString()), mAdapter.getCount()))
         // get the results as json
         .asJsonObject()
         .setCallback(new FutureCallback<JsonObject>() {

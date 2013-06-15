@@ -65,14 +65,14 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    class BitmapCallback {
+    static class BitmapCallback {
         String key;
-        IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform;
+        Ion ion;
 
-        public BitmapCallback(String key, boolean put, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
+        public BitmapCallback(Ion ion, String key, boolean put) {
             this.key = key;
             this.put = put;
-            this.emitterTransform = emitterTransform;
+            this.ion = ion;
         }
 
         boolean put;
@@ -109,9 +109,15 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
     }
 
-    class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList> {
-        public LoadBitmap(String urlKey, boolean put, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
-            super(urlKey, put, emitterTransform);
+    static class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList> {
+        int resizeWidth;
+        int resizeHeight;
+        IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform;
+        public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
+            super(ion, urlKey, put);
+            this.resizeWidth = resizeWidth;
+            this.resizeHeight = resizeHeight;
+            this.emitterTransform = emitterTransform;
         }
 
         @Override
@@ -128,7 +134,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                 public void run() {
                     try {
                         final ByteArrayInputStream bin = new ByteArrayInputStream(result.getAllByteArray());
-                        Bitmap bitmap = ion.bitmapCache.loadBitmapFromStream(bin);
+                        Bitmap bitmap = ion.bitmapCache.loadBitmapFromStream(bin, resizeWidth, resizeHeight);
 
                         if (bitmap == null)
                             throw new Exception("bitmap failed to load");
@@ -147,9 +153,11 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
     }
 
-    class BitmapToBitmap extends BitmapCallback implements FutureCallback<BitmapInfo> {
-        public BitmapToBitmap(String transformKey, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
-            super(transformKey, true, emitterTransform);
+    static class BitmapToBitmap extends BitmapCallback implements FutureCallback<BitmapInfo> {
+        ArrayList<Transform> transforms;
+        public BitmapToBitmap(Ion ion, String transformKey, ArrayList<Transform> transforms) {
+            super(ion, transformKey, true);
+            this.transforms = transforms;
         }
 
         @Override
@@ -190,9 +198,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
         if (resizeHeight != 0 || resizeWidth != 0) {
             transform(new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
-            resizeWidth = 0;
-            resizeHeight = 0;
-            scaleMode = null;
         }
 
         // determine the key for this bitmap after all transformations
@@ -211,11 +216,10 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
 
         // find/create the future for this download.
-        IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = null;
         if (!ion.bitmapsPending.contains(downloadKey)) {
             builder.setHandler(null);
             // if we cancel, gotta remove any waiters.
-            emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
+            IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
                 @Override
                 public void run() {
                     AsyncServer.post(IonRequestBuilder.mainHandler, new Runnable() {
@@ -226,7 +230,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                     });
                 }
             });
-            emitterTransform.setCallback(new LoadBitmap(downloadKey, !hasTransforms, emitterTransform));
+            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, emitterTransform));
         }
 
         // if there's a transform, do it
@@ -237,7 +241,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // make sure that the parent download isn't cancelled (empty list)
         // and also make sure there are waiters for this transformed bitmap
         if (!ion.bitmapsPending.contains(downloadKey) || !ion.bitmapsPending.contains(bitmapKey)) {
-            ion.bitmapsPending.add(downloadKey, new BitmapToBitmap(bitmapKey, emitterTransform));
+            ion.bitmapsPending.add(downloadKey, new BitmapToBitmap(ion, bitmapKey, transforms));
         }
 
         return null;
