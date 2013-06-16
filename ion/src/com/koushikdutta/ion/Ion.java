@@ -93,7 +93,7 @@ public class Ion {
      * @param imageView
      * @return
      */
-    public static Builders.ImageView.F with(ImageView imageView) {
+    public static Builders.ImageView.F<? extends Builders.ImageView.F<?>> with(ImageView imageView) {
         Ion ion = getDefault(imageView.getContext());
         return ion.build(imageView);
     }
@@ -123,7 +123,7 @@ public class Ion {
      * @param imageView
      * @return
      */
-    public Builders.ImageView.F build(ImageView imageView) {
+    public Builders.ImageView.F<? extends Builders.ImageView.F<?>> build(ImageView imageView) {
         if (Thread.currentThread() != Looper.getMainLooper().getThread())
             throw new IllegalStateException("must be called from UI thread");
         bitmapBuilder.reset();

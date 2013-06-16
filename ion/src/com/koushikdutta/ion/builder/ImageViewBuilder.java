@@ -7,7 +7,7 @@ import android.view.animation.Animation;
 /**
 * Created by koush on 5/30/13.
 */
-public interface ImageViewBuilder<I extends ImageViewBuilder & BitmapBuilder> extends BitmapBuilder<I> {
+public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
     /**
      * Set a placeholder on the ImageView while the request is loading
      * @param drawable

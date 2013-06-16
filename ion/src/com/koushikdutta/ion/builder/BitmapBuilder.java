@@ -5,7 +5,7 @@ import com.koushikdutta.ion.bitmap.Transform;
 /**
 * Created by koush on 5/30/13.
 */
-public interface BitmapBuilder<B extends BitmapBuilder> {
+public interface BitmapBuilder<B extends BitmapBuilder<?>> {
     /**
      * Apply a transformation to a Bitmap
      * @param transform Transform to apply

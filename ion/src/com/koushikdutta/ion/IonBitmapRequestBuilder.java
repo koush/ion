@@ -26,7 +26,7 @@ import java.util.ArrayList;
 /**
  * Created by koush on 5/23/13.
  */
-class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBuilder, BitmapFutureBuilder {
+class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBuilder, BitmapFutureBuilder, Builders.Any.BF {
     IonRequestBuilder builder;
     Ion ion;
 

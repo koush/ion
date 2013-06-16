@@ -34,7 +34,7 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * Use the request as a Bitmap which can then be modified and/or applied to an ImageView.
      * @return
      */
-    public BitmapBuilder withBitmap();
+    public Builders.Any.BF<? extends Builders.Any.BF<?>> withBitmap();
 
     /**
      * Execute the request and write it to the given OutputStream.
