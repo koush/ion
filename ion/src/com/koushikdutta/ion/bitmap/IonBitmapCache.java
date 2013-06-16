@@ -50,7 +50,7 @@ public class IonBitmapCache {
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
-    public Bitmap loadBitmap(byte[] bytes, int minx, int miny) {
+    public Bitmap loadBitmap(byte[] bytes, int offset, int length, int minx, int miny) {
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         int targetWidth = minx;
         int targetHeight = miny;
@@ -67,12 +67,12 @@ public class IonBitmapCache {
         if (targetWidth != Integer.MAX_VALUE || targetHeight != Integer.MAX_VALUE) {
             o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
-            BitmapFactory.decodeByteArray(bytes, 0, bytes.length, o);
+            BitmapFactory.decodeByteArray(bytes, offset, length, o);
             int scale = Math.min(o.outWidth / targetWidth, o.outHeight / targetHeight);
             o = new BitmapFactory.Options();
             o.inSampleSize = scale;
         }
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, o);
+        return BitmapFactory.decodeByteArray(bytes, offset, length, o);
     }
 
     private static int getHeapSize(final Context context) {

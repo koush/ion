@@ -30,7 +30,8 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
             @Override
             public void run() {
                 try {
-                    Bitmap bitmap = ion.bitmapCache.loadBitmap(result.getAllByteArray(), resizeWidth, resizeHeight);
+                    byte[] bytes = result.getAllByteArray();
+                    Bitmap bitmap = ion.bitmapCache.loadBitmap(bytes, 0, bytes.length, resizeWidth, resizeHeight);
 
                     if (bitmap == null)
                         throw new Exception("bitmap failed to load");
