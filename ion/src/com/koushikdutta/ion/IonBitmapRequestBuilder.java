@@ -30,14 +30,21 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     IonRequestBuilder builder;
     Ion ion;
 
+    private void ensureBuilder() {
+        if (builder == null)
+            builder = new IonRequestBuilder(imageViewPostRef.get().getContext(), ion);
+    }
+
     @Override
     public Future<ImageView> load(String uri) {
+        ensureBuilder();
         builder.load(uri);
         return intoImageView(imageViewPostRef.get());
     }
 
     @Override
     public Future<ImageView> load(String method, String url) {
+        ensureBuilder();
         builder.load(method, url);
         return intoImageView(imageViewPostRef.get());
     }
@@ -51,6 +58,10 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     public IonBitmapRequestBuilder(IonRequestBuilder builder) {
         this.builder = builder;
         ion = builder.ion;
+    }
+
+    public IonBitmapRequestBuilder(Ion ion) {
+        this.ion = ion;
     }
 
     ArrayList<Transform> transforms;
@@ -147,8 +158,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         if (imageView == null)
             throw new IllegalArgumentException("imageView");
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-
-        imageView.setTag(this);
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
@@ -375,5 +384,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         scaleMode = ScaleMode.FitXY;
         resizeWidth = 0;
         resizeHeight = 0;
+        builder = null;
     }
 }

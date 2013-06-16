@@ -117,20 +117,16 @@ public class Ion {
         return new IonRequestBuilder(context, this);
     }
 
+    IonBitmapRequestBuilder bitmapBuilder = new IonBitmapRequestBuilder(this);
     /**
      * Create a builder that can be used to build an network request
      * @param imageView
      * @return
      */
     public Builders.ImageView.F build(ImageView imageView) {
-        Object tag = imageView.getTag();
-        if (!(tag instanceof IonBitmapRequestBuilder))
-            return new IonRequestBuilder(imageView.getContext(), this).withImageView(imageView);
-        IonBitmapRequestBuilder bitmapBuilder = (IonBitmapRequestBuilder)tag;
-        bitmapBuilder.builder.reset();
+        if (Thread.currentThread() != Looper.getMainLooper().getThread())
+            throw new IllegalStateException("must be called from UI thread");
         bitmapBuilder.reset();
-        bitmapBuilder.builder.context = new WeakReference<Context>(imageView.getContext());
-        bitmapBuilder.builder.ion = this;
         bitmapBuilder.ion = this;
         return bitmapBuilder.withImageView(imageView);
     }
