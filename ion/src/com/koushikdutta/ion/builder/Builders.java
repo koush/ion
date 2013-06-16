@@ -14,7 +14,7 @@ public interface Builders {
         public interface IF<A extends IF<?>> extends ImageViewBuilder<A>, ImageViewFutureBuilder {
         }
 
-        public interface BF<A extends BF<?>> extends BitmapBuilder<A>, BitmapFutureBuilder, IF<IF<?>> {
+        public interface BF<A extends BF<?>> extends BitmapBuilder<A>, BitmapFutureBuilder, IF<A> {
         }
 
         public interface F extends FutureBuilder, ImageViewFutureBuilder {
