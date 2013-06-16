@@ -62,8 +62,7 @@ import java.util.List;
 class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.M, Builders.Any.U, LoadBuilder<Builders.Any.B> {
     Ion ion;
     WeakReference<Context> context;
-    static Handler mainHandler = new Handler(Looper.getMainLooper());
-    Handler handler = mainHandler;
+    Handler handler = Ion.mainHandler;
     String method = AsyncHttpGet.METHOD;
     String uri;
 
@@ -625,7 +624,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         method = AsyncHttpGet.METHOD;
         methodWasSet = false;
         uri = null;
-        handler = mainHandler;
+        handler = Ion.mainHandler;
         headers = null;
         timeoutMilliseconds = AsyncHttpRequest.DEFAULT_TIMEOUT;
         body = null;

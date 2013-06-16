@@ -9,6 +9,8 @@ import java.util.WeakHashMap;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -32,6 +34,8 @@ import com.koushikdutta.ion.loader.HttpLoader;
  * Created by koush on 5/21/13.
  */
 public class Ion {
+    public static final Handler mainHandler = new Handler(Looper.getMainLooper());
+
     /**
      * Get the default Ion object instance and begin building a request
      * with the given uri

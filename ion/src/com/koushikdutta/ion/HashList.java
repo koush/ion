@@ -23,8 +23,4 @@ class HashList<T> extends Hashtable<String, ArrayList<T>> {
         }
         ret.add(value);
     }
-
-    public ArrayList<T> removeAll(String key) {
-        return remove(key);
-    }
 }
