@@ -7,6 +7,8 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
+import java.nio.ByteBuffer;
+
 class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList> {
     int resizeWidth;
     int resizeHeight;
@@ -29,9 +31,9 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
         ion.getServer().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
+                ByteBuffer bb = result.getAll();
                 try {
-                    byte[] bytes = result.getAllByteArray();
-                    Bitmap bitmap = ion.bitmapCache.loadBitmap(bytes, 0, bytes.length, resizeWidth, resizeHeight);
+                    Bitmap bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
 
                     if (bitmap == null)
                         throw new Exception("bitmap failed to load");
@@ -44,6 +46,9 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
                     report(null, info);
                 } catch (Exception e) {
                     report(e, null);
+                }
+                finally {
+                    ByteBufferList.reclaim(bb);
                 }
             }
         });

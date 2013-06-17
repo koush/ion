@@ -31,6 +31,11 @@ class IonDrawable extends Drawable {
     private int loadedFrom;
     private IonDrawableCallback callback;
 
+    public IonDrawable cancel() {
+        requestCount++;
+        return this;
+    }
+
     public SimpleFuture<ImageView> getFuture() {
         return callback.imageViewFuture;
     }
@@ -49,6 +54,7 @@ class IonDrawable extends Drawable {
         private SimpleFuture<ImageView> imageViewFuture = new SimpleFuture<ImageView>();
         private Animation inAnimation;
         private int inAnimationResource;
+        private int requestId;
 
         public IonDrawableCallback(IonDrawable drawable, ImageView imageView) {
             ionDrawableRef = new WeakReference<IonDrawable>(drawable);
@@ -69,8 +75,11 @@ class IonDrawable extends Drawable {
             if (drawable == null)
                 return;
 
-            // see if the ImageView is still waiting for the same transform key as before
-            if (!TextUtils.equals(result.key, bitmapKey))
+            if (imageView.getDrawable() != drawable)
+                return;
+
+            // see if the ImageView is still waiting for the same request
+            if (drawable.requestCount != requestId)
                 return;
 
             imageView.setImageDrawable(null);
@@ -82,7 +91,9 @@ class IonDrawable extends Drawable {
         }
     }
 
+    int requestCount;
     public void register(Ion ion, String bitmapKey) {
+        callback.requestId = ++requestCount;
         String previousKey = callback.bitmapKey;
         if (TextUtils.equals(previousKey, bitmapKey))
             return;
@@ -147,7 +158,6 @@ class IonDrawable extends Drawable {
         this.placeholder = drawable;
         invalidateSelf();
 
-        assert placeholderResource != 0;
         return this;
     }
 
