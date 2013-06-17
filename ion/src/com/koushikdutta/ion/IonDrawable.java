@@ -82,6 +82,7 @@ class IonDrawable extends Drawable {
             if (drawable.requestCount != requestId)
                 return;
 
+            drawable.requestCount++;
             imageView.setImageDrawable(null);
             drawable.setBitmap(result, result.loadedFrom);
             imageView.setImageDrawable(drawable);
