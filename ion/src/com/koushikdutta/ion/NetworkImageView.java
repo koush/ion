@@ -132,7 +132,7 @@ public class NetworkImageView extends ImageView {
         else
             future = mFuture.get();
 
-        // if the URL to be loaded in this view is empty, cancel any old requests and clear the
+        // if the URL to be loaded in this view is empty, cancel any old requests and recycle the
         // currently loaded image.
         if (TextUtils.isEmpty(mUrl)) {
             if (future != null) {
@@ -180,11 +180,11 @@ public class NetworkImageView extends ImageView {
             future = mFuture.get();
 
         if (future != null) {
-            // If the view was bound to an image request, cancel it and clear
+            // If the view was bound to an image request, cancel it and recycle
             // out the image from the view.
             future.cancel();
             setImageBitmap(null);
-            // also clear out the container so we can reload the image if necessary.
+            // also recycle out the container so we can reload the image if necessary.
             mFuture = null;
         }
         super.onDetachedFromWindow();
