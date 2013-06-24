@@ -97,6 +97,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public IonRequestBuilder userAgent(String userAgent) {
+        return setHeader("User-Agent", userAgent);
+    }
+
+    @Override
     public IonRequestBuilder setHeader(String name, String value) {
         getHeaders().set(name, value);
         return this;

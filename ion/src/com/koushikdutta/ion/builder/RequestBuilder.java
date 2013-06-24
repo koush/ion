@@ -115,6 +115,13 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
     public R addHeader(String name, String value);
 
     /**
+     * Set the user agent of this request.
+     * @param userAgent
+     * @return
+     */
+    public R userAgent(String userAgent);
+
+    /**
      * Specify the timeout in milliseconds before the request will cancel.
      * A CancellationException will be returned as the result.
      * @param timeoutMilliseconds Timeout in milliseconds
