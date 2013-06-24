@@ -30,7 +30,7 @@ public class GsonParser<T extends JsonElement> implements AsyncParser<T> {
             protected void transform(ByteBufferList result) throws Exception {
                 JsonParser parser = new JsonParser();
                 T parsed = (T)parser.parse(new JsonReader(new InputStreamReader(new ByteBufferListInputStream(result))));
-                if (parsed.isJsonNull())
+                if (parsed.isJsonNull() || parsed.isJsonPrimitive())
                     throw new JsonParseException("unable to parse json");
                 setComplete(null, parsed);
             }
