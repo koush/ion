@@ -7,13 +7,16 @@ import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
+import com.koushikdutta.ion.HeadersCallback;
 import com.koushikdutta.ion.Ion;
 
 /**
  * Created by koush on 6/30/13.
  */
 public class HeadersTests extends AndroidTestCase {
+    boolean gotHeaders;
     public void testHeaders() throws Exception {
+        gotHeaders = false;
         AsyncHttpServer httpServer = new AsyncHttpServer();
         try {
             httpServer.get("/", new HttpServerRequestCallback() {
@@ -24,14 +27,19 @@ public class HeadersTests extends AndroidTestCase {
             });
             httpServer.listen(Ion.getDefault(getContext()).getServer(), 5555);
 
-            RawHeaders headers = new RawHeaders();
             Ion.with(getContext())
             .load("http://localhost:5555/")
-            .putHeaders(headers)
+            .onHeaders(new HeadersCallback() {
+                @Override
+                public void onHeaders(RawHeaders headers) {
+                    assertEquals(headers.getResponseCode(), 200);
+                    gotHeaders = true;
+                }
+            })
             .asString()
             .get();
 
-            assertEquals(headers.getResponseCode(), 200);
+            assertTrue(gotHeaders);
         }
         finally {
             httpServer.stop();

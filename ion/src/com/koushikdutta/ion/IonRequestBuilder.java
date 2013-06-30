@@ -642,15 +642,4 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         headersCallback = callback;
         return this;
     }
-
-    @Override
-    public Builders.Any.B putHeaders(final RawHeaders headers) {
-        return onHeaders(new HeadersCallback() {
-            @Override
-            public void onHeaders(RawHeaders result) {
-                if (result != null)
-                    headers.copy(result);
-            }
-        });
-    }
 }
