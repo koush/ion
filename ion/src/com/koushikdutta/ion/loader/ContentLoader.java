@@ -35,7 +35,7 @@ public class ContentLoader implements Loader {
                     int available = stream.available();
                     InputStreamDataEmitter emitter = new InputStreamDataEmitter(ion.getHttpClient().getServer(), stream);
                     ret.setComplete(emitter);
-                    callback.onCompleted(null, new LoaderEmitter(emitter, available, LoaderEmitter.LOADED_FROM_CACHE));
+                    callback.onCompleted(null, new LoaderEmitter(emitter, available, LoaderEmitter.LOADED_FROM_CACHE, null));
                 }
                 catch (Exception e) {
                     ret.setComplete(e);

@@ -270,6 +270,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         private AsyncHttpRequest request;
         private int loadedFrom;
         Runnable cancelCallback;
+        DataEmitter emitter;
+
         public int loadedFrom() {
             return loadedFrom;
         }
@@ -286,7 +288,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             }
         }
 
-        DataEmitter emitter;
         @Override
         protected void cancelCleanup() {
             super.cancelCleanup();
@@ -307,6 +308,18 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             this.emitter = emitter.getDataEmitter();
             this.loadedFrom = emitter.loadedFrom();
 
+            if (headersCallback != null) {
+                final RawHeaders headers = emitter.getHeaders();
+                // what do we do on loaders that don't have headers? files, content://, etc.
+                AsyncServer.post(handler, new Runnable() {
+                    @Override
+                    public void run() {
+                        headersCallback.onHeaders(headers);
+                    }
+                });
+            }
+
+            // hook up data progress callbacks
             final int total = emitter.length();
             DataTrackingEmitter tracker;
             if (!(emitter instanceof DataTrackingEmitter)) {
@@ -623,26 +636,21 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return this;
     }
 
-    void reset() {
-        ion = null;
-        context = null;
-        method = AsyncHttpGet.METHOD;
-        methodWasSet = false;
-        uri = null;
-        handler = Ion.mainHandler;
-        headers = null;
-        timeoutMilliseconds = AsyncHttpRequest.DEFAULT_TIMEOUT;
-        body = null;
-        progress = null;
-        progressBar = null;
-        progressDialog = null;
-        progressHandler = null;
-        bodyParameters = null;
-        multipartBody = null;
-        logTag = null;
-        logLevel = 0;
-        groups = null;
-        proxyHost = null;
-        proxyPort = 0;
+    HeadersCallback headersCallback;
+    @Override
+    public Builders.Any.B onHeaders(HeadersCallback callback) {
+        headersCallback = callback;
+        return this;
+    }
+
+    @Override
+    public Builders.Any.B putHeaders(final RawHeaders headers) {
+        return onHeaders(new HeadersCallback() {
+            @Override
+            public void onHeaders(RawHeaders result) {
+                if (result != null)
+                    headers.copy(result);
+            }
+        });
     }
 }

@@ -218,8 +218,7 @@ public class HttpTests extends AndroidTestCase {
                 }
             });
 
-            httpServer.listen(5555);
-            Thread.sleep(1000);
+            httpServer.listen(Ion.getDefault(getContext()).getServer(), 5555);
 
             Future<String> ret = Ion.with(getContext())
                     .load("PUT", "http://localhost:5555/")

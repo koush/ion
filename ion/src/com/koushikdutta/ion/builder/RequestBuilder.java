@@ -7,6 +7,10 @@ import android.widget.ProgressBar;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.Multimap;
+import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.ion.HeadersCallback;
 import com.koushikdutta.ion.ProgressCallback;
 
 /**
@@ -128,6 +132,22 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @return
      */
     public R setTimeout(int timeoutMilliseconds);
+
+    /**
+     * Place any received headers into requested RawHeaders instance.
+     * The multimap should generally be a final variable that is
+     * within the scope of the asString, asBitmap, asJsonObject callback.
+     * @param headers
+     * @return
+     */
+    public R putHeaders(RawHeaders headers);
+
+    /**
+     * Invoke the given callback when the http request headers are received.
+     * @param callback
+     * @return
+     */
+    public R onHeaders(HeadersCallback callback);
 
     /**
      * Provide Basic authentication credentials to be sent with the request.
