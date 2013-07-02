@@ -43,6 +43,8 @@ import com.koushikdutta.ion.Loader.LoaderEmitter;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
+import com.koushikdutta.ion.future.RequestFuture;
+import com.koushikdutta.ion.future.RequestFutureCallback;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
@@ -266,11 +268,24 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         ret.setComplete(new Exception("Unknown uri scheme"));
     }
 
-    class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> {
+    class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> implements RequestFuture<T> {
         private AsyncHttpRequest request;
         private int loadedFrom;
         Runnable cancelCallback;
+        RawHeaders headers;
         DataEmitter emitter;
+
+        @Override
+        public RequestFuture<T> setRequestCallback(final RequestFutureCallback<T> callback) {
+            setCallback(new FutureCallback<T>() {
+                @Override
+                public void onCompleted(Exception e, T result) {
+                    if (callback != null)
+                        callback.onCompleted(e, headers, result);
+                }
+            });
+            return this;
+        }
 
         public int loadedFrom() {
             return loadedFrom;
@@ -307,6 +322,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         protected void transform(LoaderEmitter emitter) throws Exception {
             this.emitter = emitter.getDataEmitter();
             this.loadedFrom = emitter.loadedFrom();
+            this.headers = emitter.getHeaders();
 
             if (headersCallback != null) {
                 final RawHeaders headers = emitter.getHeaders();
@@ -456,32 +472,32 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public Future<JsonObject> asJsonObject() {
+    public RequestFuture<JsonObject> asJsonObject() {
         return execute(new GsonParser<JsonObject>());
     }
 
     @Override
-    public Future<JsonArray> asJsonArray() {
+    public RequestFuture<JsonArray> asJsonArray() {
         return execute(new GsonParser<JsonArray>());
     }
 
     @Override
-    public Future<String> asString() {
+    public RequestFuture<String> asString() {
         return execute(new StringParser());
     }
 
     @Override
-    public <F extends OutputStream> Future<F> write(F outputStream, boolean close) {
+    public <F extends OutputStream> RequestFuture<F> write(F outputStream, boolean close) {
         return execute(new OutputStreamDataSink(outputStream), close, outputStream);
     }
 
     @Override
-    public <F extends OutputStream> Future<F> write(F outputStream) {
+    public <F extends OutputStream> RequestFuture<F> write(F outputStream) {
         return execute(new OutputStreamDataSink(outputStream), true, outputStream);
     }
 
     @Override
-    public Future<File> write(final File file) {
+    public RequestFuture<File> write(final File file) {
         try {
             return execute(new OutputStreamDataSink(new FileOutputStream(file)), true, file, new Runnable() {
                 @Override
@@ -491,7 +507,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             });
         }
         catch (Exception e) {
-            SimpleFuture<File> ret = new SimpleFuture<File>();
+            EmitterTransform<File> ret = new EmitterTransform<File>(null);
             ret.setComplete(e);
             return ret;
         }
@@ -564,12 +580,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public <T> Future<T> as(Class<T> clazz) {
+    public <T> RequestFuture<T> as(Class<T> clazz) {
         return execute(new GsonSerializer<T>(ion.gson, clazz));
     }
 
     @Override
-    public <T> Future<T> as(TypeToken<T> token) {
+    public <T> RequestFuture<T> as(TypeToken<T> token) {
         return execute(new GsonSerializer<T>(ion.gson, token));
     }
 

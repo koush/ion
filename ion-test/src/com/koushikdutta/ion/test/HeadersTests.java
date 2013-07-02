@@ -9,6 +9,10 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.HeadersCallback;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.future.RequestFutureCallback;
+
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by koush on 6/30/13.
@@ -40,6 +44,38 @@ public class HeadersTests extends AndroidTestCase {
             .get();
 
             assertTrue(gotHeaders);
+        }
+        finally {
+            httpServer.stop();
+            Ion.getDefault(getContext()).getServer().stop();
+        }
+    }
+
+    public void testHeadersCallback() throws Exception {
+        AsyncHttpServer httpServer = new AsyncHttpServer();
+        try {
+            httpServer.get("/", new HttpServerRequestCallback() {
+                @Override
+                public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
+                    response.send("hello");
+                }
+            });
+            httpServer.listen(Ion.getDefault(getContext()).getServer(), 5555);
+
+            final Semaphore semaphore = new Semaphore(0);
+
+            Ion.with(getContext())
+            .load("http://localhost:5555/")
+            .asString()
+            .setRequestCallback(new RequestFutureCallback<String>() {
+                @Override
+                public void onCompleted(Exception e, RawHeaders headers, String result) {
+                    assertEquals(headers.getResponseCode(), 200);
+                    semaphore.release();
+                }
+            });
+
+            assertTrue(semaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
         }
         finally {
             httpServer.stop();
