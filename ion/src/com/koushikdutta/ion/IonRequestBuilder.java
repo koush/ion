@@ -227,15 +227,18 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
         URI uri;
         try {
-            Uri.Builder builder = Uri.parse(this.uri).buildUpon();
             if (query != null) {
+                Uri.Builder builder = Uri.parse(this.uri).buildUpon();
                 for (String key: query.keySet()) {
                     for (String value: query.get(key)) {
                         builder = builder.appendQueryParameter(key, value);
                     }
                 }
+                uri = URI.create(builder.toString());
             }
-            uri = URI.create(builder.toString());
+            else {
+                uri = URI.create(this.uri);
+            }
         }
         catch (Exception e) {
             uri = null;
