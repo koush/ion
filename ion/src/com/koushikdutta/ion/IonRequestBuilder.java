@@ -6,6 +6,7 @@ import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Base64;
@@ -114,6 +115,15 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return this;
     }
 
+    Multimap query;
+    @Override
+    public IonRequestBuilder addQuery(String name, String value) {
+        if (query == null)
+            query = new Multimap();
+        query.add(name, value);
+        return this;
+    }
+
     int timeoutMilliseconds;
     @Override
     public IonRequestBuilder setTimeout(int timeoutMilliseconds) {
@@ -215,7 +225,21 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
-        URI uri = URI.create(this.uri);
+        URI uri;
+        try {
+            Uri.Builder builder = Uri.parse(this.uri).buildUpon();
+            if (query != null) {
+                for (String key: query.keySet()) {
+                    for (String value: query.get(key)) {
+                        builder = builder.appendQueryParameter(key, value);
+                    }
+                }
+            }
+            uri = URI.create(builder.toString());
+        }
+        catch (Exception e) {
+            uri = null;
+        }
         if (uri == null || uri.getScheme() == null) {
             ret.setComplete(new Exception("Invalid URI"));
             return;

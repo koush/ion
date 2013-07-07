@@ -124,6 +124,14 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
     public R addHeader(String name, String value);
 
     /**
+     * Add a query parameter
+     * @param name
+     * @param value
+     * @return
+     */
+    public R addQuery(String name, String value);
+
+    /**
      * Set the user agent of this request.
      * @param userAgent
      * @return
