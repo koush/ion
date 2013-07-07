@@ -29,7 +29,7 @@
    * Connection pooling/reuse via HTTP Connection: keep-alive
    * Uses the best/stablest connection from a server if it has multiple IP addresses
    * Cookies
- * [Easily view received headers](https://github.com/koush/ion#viewing-received-headers)
+ * [View received headers](https://github.com/koush/ion#viewing-received-headers)
  * [Grouping and cancellation of requests](https://github.com/koush/ion#request-groups)
  * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
  * Supports file:/, http(s):/, and content:/ URIs
