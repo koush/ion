@@ -111,6 +111,11 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
     public R setHeader(String name, String value);
 
     /**
+     * Set whether this request will follow redirects
+     */
+    public R followRedirect(boolean follow);
+
+    /**
      * Add an HTTP header
      * @param name Header name
      * @param value Header value

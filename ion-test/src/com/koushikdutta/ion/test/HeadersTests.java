@@ -2,6 +2,7 @@ package com.koushikdutta.ion.test;
 
 import android.test.AndroidTestCase;
 
+import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
@@ -9,7 +10,7 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.HeadersCallback;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.future.RequestFutureCallback;
+import com.koushikdutta.ion.Response;
 
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -67,10 +68,11 @@ public class HeadersTests extends AndroidTestCase {
             Ion.with(getContext())
             .load("http://localhost:5555/")
             .asString()
-            .setRequestCallback(new RequestFutureCallback<String>() {
+            .withResponse()
+            .setCallback(new FutureCallback<Response<String>>() {
                 @Override
-                public void onCompleted(Exception e, RawHeaders headers, String result) {
-                    assertEquals(headers.getResponseCode(), 200);
+                public void onCompleted(Exception e, Response<String> result) {
+                    assertEquals(result.getHeaders().getResponseCode(), 200);
                     semaphore.release();
                 }
             });

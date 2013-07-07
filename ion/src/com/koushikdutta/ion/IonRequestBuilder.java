@@ -43,8 +43,7 @@ import com.koushikdutta.ion.Loader.LoaderEmitter;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
-import com.koushikdutta.ion.future.RequestFuture;
-import com.koushikdutta.ion.future.RequestFutureCallback;
+import com.koushikdutta.ion.future.ResponseFuture;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
@@ -154,6 +153,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return setBody(new StringBody(string));
     }
 
+    boolean followRedirect = true;
+    @Override
+    public IonRequestBuilder followRedirect(boolean follow) {
+        followRedirect = follow;
+        return this;
+    }
+
     private static boolean isServiceRunning(Service candidate) {
         ActivityManager manager = (ActivityManager)candidate.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningServiceInfo> services = manager.getRunningServices(Integer.MAX_VALUE);
@@ -215,7 +221,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             return;
         }
 
-        AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
         AsyncHttpRequestBody wrappedBody = body;
         if (uploadProgressHandler != null || uploadProgressBar != null || uploadProgress != null || uploadProgressDialog != null) {
             wrappedBody = new RequestBodyUploadObserver(body, new ProgressCallback() {
@@ -247,6 +252,9 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 }
             });
         }
+
+        AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
+        request.setFollowRedirect(followRedirect);
         request.setBody(wrappedBody);
         request.setLogging(ion.LOGTAG, ion.logLevel);
         if (logTag != null)
@@ -268,23 +276,35 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         ret.setComplete(new Exception("Unknown uri scheme"));
     }
 
-    class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> implements RequestFuture<T> {
+    class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> implements ResponseFuture<T> {
         private AsyncHttpRequest request;
         private int loadedFrom;
         Runnable cancelCallback;
         RawHeaders headers;
         DataEmitter emitter;
 
+        class ResponseFutureImpl extends TransformFuture<Response<T>, T> {
+            @Override
+            protected void error(Exception e) {
+                Response<T> response = new Response<T>();
+                response.headers = headers;
+                setComplete(e, response);
+            }
+
+            @Override
+            protected void transform(T result) throws Exception {
+                Response<T> response = new Response<T>();
+                response.headers = headers;
+                response.result = result;
+                setComplete(response);
+            }
+        }
+
         @Override
-        public RequestFuture<T> setRequestCallback(final RequestFutureCallback<T> callback) {
-            setCallback(new FutureCallback<T>() {
-                @Override
-                public void onCompleted(Exception e, T result) {
-                    if (callback != null)
-                        callback.onCompleted(e, headers, result);
-                }
-            });
-            return this;
+        public Future<Response<T>> withResponse() {
+            final ResponseFutureImpl ret = new ResponseFutureImpl();
+            setCallback(ret);
+            return ret;
         }
 
         public int loadedFrom() {
@@ -472,32 +492,32 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public RequestFuture<JsonObject> asJsonObject() {
+    public ResponseFuture<JsonObject> asJsonObject() {
         return execute(new GsonParser<JsonObject>());
     }
 
     @Override
-    public RequestFuture<JsonArray> asJsonArray() {
+    public ResponseFuture<JsonArray> asJsonArray() {
         return execute(new GsonParser<JsonArray>());
     }
 
     @Override
-    public RequestFuture<String> asString() {
+    public ResponseFuture<String> asString() {
         return execute(new StringParser());
     }
 
     @Override
-    public <F extends OutputStream> RequestFuture<F> write(F outputStream, boolean close) {
+    public <F extends OutputStream> ResponseFuture<F> write(F outputStream, boolean close) {
         return execute(new OutputStreamDataSink(outputStream), close, outputStream);
     }
 
     @Override
-    public <F extends OutputStream> RequestFuture<F> write(F outputStream) {
+    public <F extends OutputStream> ResponseFuture<F> write(F outputStream) {
         return execute(new OutputStreamDataSink(outputStream), true, outputStream);
     }
 
     @Override
-    public RequestFuture<File> write(final File file) {
+    public ResponseFuture<File> write(final File file) {
         try {
             return execute(new OutputStreamDataSink(new FileOutputStream(file)), true, file, new Runnable() {
                 @Override
@@ -580,12 +600,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public <T> RequestFuture<T> as(Class<T> clazz) {
+    public <T> ResponseFuture<T> as(Class<T> clazz) {
         return execute(new GsonSerializer<T>(ion.gson, clazz));
     }
 
     @Override
-    public <T> RequestFuture<T> as(TypeToken<T> token) {
+    public <T> ResponseFuture<T> as(TypeToken<T> token) {
         return execute(new GsonSerializer<T>(ion.gson, token));
     }
 
