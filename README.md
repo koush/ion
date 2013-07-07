@@ -29,6 +29,7 @@
    * Connection pooling/reuse via HTTP Connection: keep-alive
    * Uses the best/stablest connection from a server if it has multiple IP addresses
    * Cookies
+ * [Easily view received headers](https://github.com/koush/ion#viewing-received-headers)
  * [Grouping and cancellation of requests](https://github.com/koush/ion#request-groups)
  * [Download progress callbacks](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
  * Supports file:/, http(s):/, and content:/ URIs
@@ -325,6 +326,29 @@ Ion.with(context, "http://example.com/proxied.html")
 Using Charles Proxy on your desktop computer in conjunction with request proxying will prove invaluable for debugging!
 
 ![](ion-sample/charles.png)
+
+#### Viewing Received Headers
+
+Ion operations return a [ResponseFuture](https://github.com/koush/ion/blob/master/ion/src/com/koushikdutta/ion/future/ResponseFuture.java),
+which grant access to response properties via the [Response object](https://github.com/koush/ion/blob/master/ion/src/com/koushikdutta/ion/Response.java).
+The Response object contains the headers, as well as the result:
+
+```java
+Ion.with(getContext())
+.load("http://example.com/test.txt")
+.asString()
+.withResponse()
+.setCallback(new FutureCallback<Response<String>>() {
+    @Override
+    public void onCompleted(Exception e, Response<String> result) {
+        // print the response code, ie, 200
+        System.out.println(result.getHeaders().getResponseCode());
+        // print the String that was downloaded
+        System.out.println(response.getResult());
+    }
+});
+```
+
 
 #### Get Ion
 
