@@ -127,7 +127,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     int timeoutMilliseconds;
     @Override
     public IonRequestBuilder setTimeout(int timeoutMilliseconds) {
-        this.timeoutMilliseconds = AsyncHttpRequest.DEFAULT_TIMEOUT;
+        this.timeoutMilliseconds = timeoutMilliseconds;
         return this;
     }
 
