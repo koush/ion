@@ -59,7 +59,5 @@ public class ImageViewSample extends Activity {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-
-        loadCenterCrop();
     }
 }
