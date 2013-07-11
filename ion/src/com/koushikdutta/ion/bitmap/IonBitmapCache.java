@@ -10,10 +10,8 @@ import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
-import com.koushikdutta.ion.Ion;
 
-import java.io.IOException;
-import java.io.InputStream;
+import com.koushikdutta.ion.Ion;
 
 /**
  * Created by koush on 5/23/13.
@@ -33,6 +31,10 @@ public class IonBitmapCache {
         final AssetManager mgr = context.getAssets();
         mResources = new Resources(mgr, mMetrics, context.getResources().getConfiguration());
         mCache = new LruBitmapCache(getHeapSize(context) / 7);
+    }
+
+    public BitmapInfo remove(String key) {
+        return mCache.remove(key);
     }
 
     public void put(BitmapInfo info) {
