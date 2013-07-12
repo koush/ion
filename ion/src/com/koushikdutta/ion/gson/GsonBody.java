@@ -35,14 +35,14 @@ public class GsonBody<T extends JsonElement> implements AsyncHttpRequestBody<T> 
     }
 
     @Override
-    public void write(AsyncHttpRequest request, DataSink sink) {
+    public void write(AsyncHttpRequest request, DataSink sink, final CompletedCallback completed) {
         if (mBodyBytes == null) {
             ByteArrayOutputStream bout = new ByteArrayOutputStream();
             OutputStreamWriter out = new OutputStreamWriter(bout);
             gson.toJson(json, out);
             mBodyBytes = bout.toByteArray();
         }
-        Util.writeAll(sink, mBodyBytes, null);
+        Util.writeAll(sink, mBodyBytes, completed);
     }
 
     @Override

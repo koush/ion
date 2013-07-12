@@ -49,8 +49,8 @@ public class PojoBody<T> implements AsyncHttpRequestBody<T> {
     }
 
     @Override
-    public void write(AsyncHttpRequest request, DataSink sink) {
-        Util.writeAll(sink, getBodyBytes(), null);
+    public void write(AsyncHttpRequest request, DataSink sink, final CompletedCallback completed) {
+        Util.writeAll(sink, getBodyBytes(), completed);
     }
 
     @Override

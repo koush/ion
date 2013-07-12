@@ -23,7 +23,7 @@ class RequestBodyUploadObserver implements AsyncHttpRequestBody {
     }
 
     @Override
-    public void write(AsyncHttpRequest request, final DataSink sink) {
+    public void write(AsyncHttpRequest request, final DataSink sink, final CompletedCallback completed) {
         final int length = body.length();
         body.write(request, new DataSink() {
             int totalWritten;
@@ -84,7 +84,7 @@ class RequestBodyUploadObserver implements AsyncHttpRequestBody {
             public AsyncServer getServer() {
                 return sink.getServer();
             }
-        });
+        }, completed);
     }
 
     @Override
