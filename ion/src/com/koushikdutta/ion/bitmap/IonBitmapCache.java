@@ -17,38 +17,59 @@ import com.koushikdutta.ion.Ion;
  * Created by koush on 5/23/13.
  */
 public class IonBitmapCache {
-    Resources mResources;
-    DisplayMetrics mMetrics;
-    LruBitmapCache mCache;
+    public static final long DEFAULT_ERROR_CACHE_DURATION = 30000L;
+
+    Resources resources;
+    DisplayMetrics metrics;
+    LruBitmapCache cache;
     Ion ion;
+    long errorCacheDuration = DEFAULT_ERROR_CACHE_DURATION;
+
+    public long getErrorCacheDuration() {
+        return errorCacheDuration;
+    }
+
+    public void setErrorCacheDuration(long errorCacheDuration) {
+        this.errorCacheDuration = errorCacheDuration;
+    }
 
     public IonBitmapCache(Ion ion) {
         Context context = ion.getContext();
         this.ion = ion;
-        mMetrics = new DisplayMetrics();
+        metrics = new DisplayMetrics();
         ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
-                .getDefaultDisplay().getMetrics(mMetrics);
+                .getDefaultDisplay().getMetrics(metrics);
         final AssetManager mgr = context.getAssets();
-        mResources = new Resources(mgr, mMetrics, context.getResources().getConfiguration());
-        mCache = new LruBitmapCache(getHeapSize(context) / 7);
+        resources = new Resources(mgr, metrics, context.getResources().getConfiguration());
+        cache = new LruBitmapCache(getHeapSize(context) / 7);
     }
 
     public BitmapInfo remove(String key) {
-        return mCache.remove(key);
+        return cache.remove(key);
     }
 
     public void put(BitmapInfo info) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-        mCache.put(info.key, info);
+        cache.put(info.key, info);
     }
 
     public BitmapInfo get(String key) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-        return mCache.get(key);
+        BitmapInfo ret = cache.get(key);
+        if (ret == null || ret.bitmap != null)
+            return ret;
+
+        // if this bitmap load previously errored out, see if it is time to retry
+        // the fetch. connectivity error, server failure, etc, shouldn't be
+        // cached indefinitely...
+        if (ret.loadTime + errorCacheDuration > System.currentTimeMillis())
+            return ret;
+        cache.remove(key);
+        return null;
     }
 
     public void dump() {
-        Log.i("IonBitmapCache", "bitmap cache: " + mCache.size());
+        Log.i("IonBitmapCache", "bitmap cache: " + cache.size());
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
@@ -57,11 +78,11 @@ public class IonBitmapCache {
         int targetWidth = minx;
         int targetHeight = miny;
         if (targetWidth <= 0)
-            targetWidth = mMetrics.widthPixels;
+            targetWidth = metrics.widthPixels;
         if (targetWidth <= 0)
             targetWidth = Integer.MAX_VALUE;
         if (targetHeight <= 0)
-            targetHeight = mMetrics.heightPixels;
+            targetHeight = metrics.heightPixels;
         if (targetHeight <= 0)
             targetHeight = Integer.MAX_VALUE;
 
