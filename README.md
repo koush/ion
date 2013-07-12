@@ -344,7 +344,7 @@ Ion.with(getContext())
         // print the response code, ie, 200
         System.out.println(result.getHeaders().getResponseCode());
         // print the String that was downloaded
-        System.out.println(response.getResult());
+        System.out.println(result.getResult());
     }
 });
 ```
