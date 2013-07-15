@@ -9,6 +9,7 @@ import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.AsyncHttpRequestBody;
+import com.koushikdutta.async.http.JSONObjectBody;
 import com.koushikdutta.ion.Ion;
 
 import java.io.ByteArrayOutputStream;
@@ -47,7 +48,7 @@ public class GsonBody<T extends JsonElement> implements AsyncHttpRequestBody<T> 
 
     @Override
     public String getContentType() {
-        return "application/json";
+        return CONTENT_TYPE;
     }
 
     @Override
@@ -62,7 +63,7 @@ public class GsonBody<T extends JsonElement> implements AsyncHttpRequestBody<T> 
         return mBodyBytes.length;
     }
 
-    public static final String CONTENT_TYPE = "application/json";
+    public static final String CONTENT_TYPE = JSONObjectBody.CONTENT_TYPE;
 
     @Override
     public T get() {
