@@ -28,7 +28,9 @@ public class HttpLoader implements Loader {
                 int length = -1;
                 int loadedFrom = LoaderEmitter.LOADED_FROM_NETWORK;
                 RawHeaders headers = null;
+                AsyncHttpRequest request = null;
                 if (response != null) {
+                    request = response.getRequest();
                     headers = response.getHeaders().getHeaders();
                     length = response.getHeaders().getContentLength();
                     String servedFrom = response.getHeaders().getHeaders().get(ResponseCacheMiddleware.SERVED_FROM);
@@ -37,7 +39,7 @@ public class HttpLoader implements Loader {
                     else if (TextUtils.equals(servedFrom, ResponseCacheMiddleware.CONDITIONAL_CACHE))
                         loadedFrom = LoaderEmitter.LOADED_FROM_CONDITIONAL_CACHE;
                 }
-                callback.onCompleted(ex, new LoaderEmitter(response, length, loadedFrom, headers));
+                callback.onCompleted(ex, new LoaderEmitter(response, length, loadedFrom, headers, request));
             }
         });
     }

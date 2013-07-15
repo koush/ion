@@ -1,5 +1,6 @@
 package com.koushikdutta.ion;
 
+import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 
 /**
@@ -14,5 +15,10 @@ public class Response<T> {
     RawHeaders headers;
     public RawHeaders getHeaders() {
         return headers;
+    }
+
+    AsyncHttpRequest request;
+    public AsyncHttpRequest getRequest() {
+        return request;
     }
 }

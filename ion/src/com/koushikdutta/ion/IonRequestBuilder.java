@@ -291,7 +291,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         request.setHandler(null);
         request.logd("preparing request");
 
-        ret.request = request;
+        ret.initialRequest = request;
 
         for (Loader loader: ion.config.loaders) {
             Future<DataEmitter> emitter = loader.load(ion, request, ret);
@@ -304,7 +304,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> implements ResponseFuture<T> {
-        private AsyncHttpRequest request;
+        private AsyncHttpRequest initialRequest;
+        private AsyncHttpRequest finalRequest;
         private int loadedFrom;
         Runnable cancelCallback;
         RawHeaders headers;
@@ -315,6 +316,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             protected void error(Exception e) {
                 Response<T> response = new Response<T>();
                 response.headers = headers;
+                response.request = finalRequest;
                 setComplete(e, response);
             }
 
@@ -323,6 +325,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 Response<T> response = new Response<T>();
                 response.headers = headers;
                 response.result = result;
+                response.request = finalRequest;
                 setComplete(response);
             }
         }
@@ -370,6 +373,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             this.emitter = emitter.getDataEmitter();
             this.loadedFrom = emitter.loadedFrom();
             this.headers = emitter.getHeaders();
+            this.finalRequest = emitter.getRequest();
 
             if (headersCallback != null) {
                 final RawHeaders headers = emitter.getHeaders();

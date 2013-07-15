@@ -16,11 +16,12 @@ public interface Loader {
         public static final int LOADED_FROM_CONDITIONAL_CACHE = 2;
         public static final int LOADED_FROM_NETWORK = 3;
 
-        public LoaderEmitter(DataEmitter emitter, int length, int loadedFrom, RawHeaders headers) {
+        public LoaderEmitter(DataEmitter emitter, int length, int loadedFrom, RawHeaders headers, AsyncHttpRequest request) {
             this.length = length;
             this.emitter = emitter;
             this.loadedFrom = loadedFrom;
             this.headers = headers;
+            this.request = request;
         }
         DataEmitter emitter;
         int length;
@@ -37,6 +38,10 @@ public interface Loader {
         RawHeaders headers;
         public RawHeaders getHeaders() {
             return headers;
+        }
+        AsyncHttpRequest request;
+        public AsyncHttpRequest getRequest() {
+            return request;
         }
     }
     // returns a Future if this loader can handle a request
