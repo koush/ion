@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import java.io.File;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -10,6 +11,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.widget.ImageView;
 
 import com.google.gson.Gson;
@@ -17,7 +19,9 @@ import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.util.HashList;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
@@ -25,6 +29,7 @@ import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
+import com.koushikdutta.ion.loader.AsyncHttpRequestFactory;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
@@ -256,6 +261,13 @@ public class Ion {
         return context;
     }
 
+    private static class AsyncHttpRequestFactoryImpl implements AsyncHttpRequestFactory {
+        @Override
+        public AsyncHttpRequest createAsyncHttpRequest(URI uri, String method, RawHeaders headers) {
+            return new AsyncHttpRequest(uri, method, headers);
+        }
+    }
+
     AsyncHttpClient httpClient;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
@@ -267,6 +279,22 @@ public class Ion {
 
     private void addCookieMiddleware() {
         httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context));
+    }
+
+    HttpLoader httpLoader;
+    ContentLoader contentLoader;
+    FileLoader fileLoader;
+
+    public HttpLoader getHttpLoader() {
+        return httpLoader;
+    }
+
+    public ContentLoader getContentLoader() {
+        return contentLoader;
+    }
+
+    public FileLoader getFileLoader() {
+        return fileLoader;
     }
 
     Context context;
@@ -291,9 +319,9 @@ public class Ion {
         bitmapCache = new IonBitmapCache(this);
 
         configure()
-        .addLoader(new HttpLoader())
-        .addLoader(new ContentLoader())
-        .addLoader(new FileLoader());
+        .addLoader(httpLoader = new HttpLoader())
+        .addLoader(contentLoader = new ContentLoader())
+        .addLoader(fileLoader = new FileLoader());
     }
 
     /**
@@ -320,7 +348,18 @@ public class Ion {
         return httpClient.getServer();
     }
 
-    public class Config {
+    public static class Config {
+        AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactoryImpl();
+
+        public AsyncHttpRequestFactory getAsyncHttpRequestFactory() {
+            return asyncHttpRequestFactory;
+        }
+
+        public Config setAsyncHttpRequestFactory(AsyncHttpRequestFactory asyncHttpRequestFactory) {
+            this.asyncHttpRequestFactory = asyncHttpRequestFactory;
+            return this;
+        }
+
         ArrayList<Loader> loaders = new ArrayList<Loader>();
         public Config addLoader(int index, Loader loader) {
             loaders.add(index, loader);

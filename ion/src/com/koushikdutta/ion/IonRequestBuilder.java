@@ -280,7 +280,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             });
         }
 
-        AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
+        AsyncHttpRequest request = ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers);
         request.setFollowRedirect(followRedirect);
         request.setBody(wrappedBody);
         request.setLogging(ion.LOGTAG, ion.logLevel);
