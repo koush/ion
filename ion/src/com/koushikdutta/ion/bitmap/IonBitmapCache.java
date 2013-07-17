@@ -54,6 +54,8 @@ public class IonBitmapCache {
     }
 
     public BitmapInfo get(String key) {
+        if (key == null)
+            return null;
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
         BitmapInfo ret = cache.get(key);
         if (ret == null || ret.bitmap != null)
