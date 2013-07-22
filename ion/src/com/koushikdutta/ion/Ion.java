@@ -88,7 +88,7 @@ public class Ion {
      */
     public static Ion getDefault(Context context) {
         if (instance == null)
-            instance = new Ion(context);
+            instance = new Ion(context, "ion");
         return instance;
     }
 
@@ -278,7 +278,7 @@ public class Ion {
     WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
 
     private void addCookieMiddleware() {
-        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context));
+        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context, name));
     }
 
     HttpLoader httpLoader;
@@ -297,13 +297,15 @@ public class Ion {
         return fileLoader;
     }
 
+    String name;
     Context context;
-    private Ion(Context context) {
+    private Ion(Context context, String name) {
         httpClient = new AsyncHttpClient(new AsyncServer());
         this.context = context = context.getApplicationContext();
+        this.name = name;
 
         try {
-            responseCache = ResponseCacheMiddleware.addCache(httpClient, new File(context.getCacheDir(), "ion"), 10L * 1024L * 1024L);
+            responseCache = ResponseCacheMiddleware.addCache(httpClient, new File(context.getCacheDir(), name), 10L * 1024L * 1024L);
         }
         catch (Exception e) {
             IonLog.w("unable to set up response cache", e);
