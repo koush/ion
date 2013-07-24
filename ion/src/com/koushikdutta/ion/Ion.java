@@ -298,6 +298,10 @@ public class Ion {
     }
 
     String name;
+    public String getName() {
+        return name;
+    }
+
     Context context;
     private Ion(Context context, String name) {
         httpClient = new AsyncHttpClient(new AsyncServer());

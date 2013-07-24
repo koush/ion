@@ -9,6 +9,7 @@ import com.koushikdutta.async.http.libcore.RawHeaders;
 
 import java.net.CookieManager;
 import java.net.CookieStore;
+import java.net.HttpCookie;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
@@ -37,20 +38,27 @@ public class CookieMiddleware extends SimpleMiddleware {
         manager = new CookieManager(null, null);
         preferences = context.getSharedPreferences(name + "-cookies", Context.MODE_PRIVATE);
 
-            Map<String, ?> allPrefs = preferences.getAll();
-            for (String key: allPrefs.keySet()) {
-                try {
-                    String value = preferences.getString(key, null);
-                    RawHeaders headers = new RawHeaders();
-                    String[] lines = value.split("\n");
-                    for (String line: lines) {
-                        headers.addLine(line);
+        Map<String, ?> allPrefs = preferences.getAll();
+        for (String key: allPrefs.keySet()) {
+            try {
+                String value = preferences.getString(key, null);
+                RawHeaders headers = new RawHeaders();
+                String[] lines = value.split("\n");
+                boolean first = true;
+                for (String line: lines) {
+                    if (first) {
+                        first = false;
+                        headers.setStatusLine(line);
                     }
-                    manager.put(URI.create(key), headers.toMultimap());
+                    else {
+                        headers.addLine("Set-" + line);
+                    }
                 }
-                catch (Exception e) {
-                    Log.e("Ion", "unable to load cookies", e);
-                }
+                manager.put(URI.create(key), headers.toMultimap());
+            }
+            catch (Exception e) {
+                Log.e("Ion", "unable to load cookies", e);
+            }
         }
     }
     @Override
@@ -70,7 +78,11 @@ public class CookieMiddleware extends SimpleMiddleware {
 
             Map<String, List<String>> cookies =  manager.get (data.request.getUri(), data.request.getHeaders().getHeaders().toMultimap());
             RawHeaders headers = RawHeaders.fromMultimap(cookies);
-            preferences.edit().putString(data.request.getUri().toString(), headers.toHeaderString()).commit();
+            headers.setStatusLine(data.headers.getHeaders().getStatusLine());
+
+            URI uri = data.request.getUri();
+            String key = uri.getScheme() + "://" + uri.getAuthority();
+            preferences.edit().putString(key, headers.toHeaderString()).commit();
         }
         catch (Exception e) {
         }
