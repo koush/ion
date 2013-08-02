@@ -361,7 +361,7 @@ Ion.with(getContext())
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
-   <version>1.1.2</version>
+   <version>1.1.5</version>
 </dependency>
 ```
 
