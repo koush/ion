@@ -2,6 +2,7 @@ package com.koushikdutta.ion.cookie;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.koushikdutta.async.http.SimpleMiddleware;
@@ -13,6 +14,7 @@ import java.net.HttpCookie;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by koush on 5/29/13.
@@ -50,8 +52,8 @@ public class CookieMiddleware extends SimpleMiddleware {
                         first = false;
                         headers.setStatusLine(line);
                     }
-                    else {
-                        headers.addLine("Set-" + line);
+                    else if (!TextUtils.isEmpty(line)) {
+                        headers.addLine(line);
                     }
                 }
                 manager.put(URI.create(key), headers.toMultimap());
@@ -61,6 +63,7 @@ public class CookieMiddleware extends SimpleMiddleware {
             }
         }
     }
+
     @Override
     public void onSocket(OnSocketData data) {
         try {
@@ -76,13 +79,13 @@ public class CookieMiddleware extends SimpleMiddleware {
         try {
             manager.put(data.request.getUri(), data.headers.getHeaders().toMultimap());
 
-            Map<String, List<String>> cookies =  manager.get (data.request.getUri(), data.request.getHeaders().getHeaders().toMultimap());
-            RawHeaders headers = RawHeaders.fromMultimap(cookies);
-            headers.setStatusLine(data.headers.getHeaders().getStatusLine());
+            // no cookies to persist.
+            if (data.headers.getHeaders().get("Set-Cookie") == null)
+                return;
 
             URI uri = data.request.getUri();
             String key = uri.getScheme() + "://" + uri.getAuthority();
-            preferences.edit().putString(key, headers.toHeaderString()).commit();
+            preferences.edit().putString(key, data.headers.getHeaders().toHeaderString()).commit();
         }
         catch (Exception e) {
         }
