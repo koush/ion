@@ -365,6 +365,13 @@ Ion.with(getContext())
 </dependency>
 ```
 
+##### Gradle
+```groovy
+dependencies {
+   compile 'com.koushikdutta.ion:ion:1.1.5'
+}
+````
+
 ##### Local Checkout (with [AndroidAsync](https://github.com/koush/AndroidAsync) dependency)
 ```
 git clone git://github.com/koush/AndroidAsync.git
