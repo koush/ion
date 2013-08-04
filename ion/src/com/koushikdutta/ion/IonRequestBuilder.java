@@ -45,10 +45,13 @@ import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.future.ResponseFuture;
+import com.koushikdutta.ion.gson.DocumentParser;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 import com.koushikdutta.ion.gson.PojoBody;
+
+import org.w3c.dom.Document;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -708,5 +711,10 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     public Builders.Any.B onHeaders(HeadersCallback callback) {
         headersCallback = callback;
         return this;
+    }
+
+    @Override
+    public ResponseFuture<Document> asDocument() {
+        return execute(new DocumentParser());
     }
 }

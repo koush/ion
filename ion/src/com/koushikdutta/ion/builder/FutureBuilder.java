@@ -1,9 +1,13 @@
 package com.koushikdutta.ion.builder;
 
+import android.util.Xml;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.ion.future.ResponseFuture;
+
+import org.w3c.dom.Document;
 
 import java.io.File;
 import java.io.OutputStream;
@@ -29,6 +33,8 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @return
      */
     public ResponseFuture<JsonObject> asJsonObject();
+
+    public ResponseFuture<Document> asDocument();
 
     /**
      * Use the request as a Bitmap which can then be modified and/or applied to an ImageView.
