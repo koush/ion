@@ -291,12 +291,6 @@ class IonDrawable extends Drawable {
                 PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
     }
 
-    @Override
-    public Drawable mutate() {
-        throw new UnsupportedOperationException();
-    }
-
-
     static IonDrawable getOrCreateIonDrawable(ImageView imageView) {
         Drawable current = imageView.getDrawable();
         IonDrawable ret;
