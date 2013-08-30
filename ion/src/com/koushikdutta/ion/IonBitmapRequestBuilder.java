@@ -395,6 +395,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         resizeWidth = 0;
         resizeHeight = 0;
         disableFadeIn=false;
-	builder = null;
+        builder = null;
     }
 }
