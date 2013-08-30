@@ -150,7 +150,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         ret.setPlaceholder(placeholderResource, placeholderDrawable);
         ret.setInAnimation(inAnimation, inAnimationResource);
         ret.setDisableFadeIn(disableFadeIn);
-	imageView.setImageDrawable(ret);
+        imageView.setImageDrawable(ret);
         return ret;
     }
 

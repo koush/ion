@@ -220,10 +220,10 @@ class IonDrawable extends Drawable {
 
         long destAlpha = 0xFF;
 
-	if(!disableFadeIn){
-	    destAlpha=((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
-	    destAlpha = Math.min(destAlpha, 0xFF);
-	}
+        if(!disableFadeIn){
+            destAlpha=((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
+            destAlpha = Math.min(destAlpha, 0xFF);
+        }
 
         if (destAlpha != 255) {
             if (placeholder == null && placeholderResource != 0)
