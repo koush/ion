@@ -31,11 +31,11 @@ import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.AsyncHttpRequestBody;
+import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
 import com.koushikdutta.async.http.Multimap;
-import com.koushikdutta.async.http.MultipartFormDataBody;
-import com.koushikdutta.async.http.StringBody;
-import com.koushikdutta.async.http.UrlEncodedFormBody;
+import com.koushikdutta.async.http.body.MultipartFormDataBody;
+import com.koushikdutta.async.http.body.StringBody;
+import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.StringParser;
@@ -45,7 +45,7 @@ import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.future.ResponseFuture;
-import com.koushikdutta.ion.gson.DocumentParser;
+import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
@@ -710,6 +710,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public Builders.Any.B onHeaders(HeadersCallback callback) {
         headersCallback = callback;
+        return this;
+    }
+
+    @Override
+    public Builders.Any.F setDocumentBody(Document document) {
+        setBody(new )
         return this;
     }
 

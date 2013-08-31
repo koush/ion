@@ -8,9 +8,8 @@ import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.AsyncHttpRequestBody;
-import com.koushikdutta.async.http.JSONObjectBody;
-import com.koushikdutta.ion.Ion;
+import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
+import com.koushikdutta.async.http.body.JSONObjectBody;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStreamWriter;

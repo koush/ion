@@ -7,7 +7,7 @@ import com.koushikdutta.async.DataSink;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.WritableCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.AsyncHttpRequestBody;
+import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
 
 import java.nio.ByteBuffer;
 
