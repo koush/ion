@@ -97,8 +97,10 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     RawHeaders headers;
     private RawHeaders getHeaders() {
-        if (headers == null)
+        if (headers == null) {
             headers = new RawHeaders();
+            AsyncHttpRequest.setDefaultHeaders(headers, URI.create(uri));
+        }
         return headers;
     }
 
@@ -151,19 +153,16 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder setJsonObjectBody(JsonObject jsonObject) {
-        setHeader("Content-Type", "application/json");
         return setBody(new GsonBody<JsonObject>(ion.getGson(), jsonObject));
     }
 
     @Override
     public IonRequestBuilder setJsonArrayBody(JsonArray jsonArray) {
-        setHeader("Content-Type", "application/json");
         return setBody(new GsonBody<JsonArray>(ion.getGson(), jsonArray));
     }
 
     @Override
     public IonRequestBuilder setStringBody(String string) {
-        setHeader("Content-Type", "text/plain");
         return setBody(new StringBody(string));
     }
 

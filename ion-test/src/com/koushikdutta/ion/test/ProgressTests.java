@@ -57,7 +57,7 @@ public class ProgressTests extends AndroidTestCase {
     public void testUpload() throws Exception {
         AsyncHttpServer httpServer = new AsyncHttpServer();
         try {
-            httpServer.listen(AsyncServer.getDefault(), 5000);
+            httpServer.listen(Ion.getDefault(getContext()).getServer(), 5000);
             httpServer.post("/", new HttpServerRequestCallback() {
                 @Override
                 public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
@@ -93,7 +93,7 @@ public class ProgressTests extends AndroidTestCase {
             assertTrue(semaphore.tryAcquire());
         }
         finally {
-            AsyncServer.getDefault().stop();
+            Ion.getDefault(getContext()).getServer().stop();
         }
     }
 }
