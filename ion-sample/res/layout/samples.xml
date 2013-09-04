@@ -26,5 +26,9 @@
             android:layout_height="wrap_content"
             android:text="Google Image Search"
             />
+    <Button android:id="@+id/gallery" android:layout_width="240dp"
+        android:layout_height="wrap_content"
+        android:text="Gallery"
+        />
 
 </LinearLayout>
