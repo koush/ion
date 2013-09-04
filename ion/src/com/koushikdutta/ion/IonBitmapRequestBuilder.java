@@ -373,8 +373,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     private boolean disableFadeIn;
 
     @Override
-    public IonBitmapRequestBuilder disableFadeIn(){
-        this.disableFadeIn=true;
+    public IonBitmapRequestBuilder disableFadeIn() {
+        this.disableFadeIn = true;
         return this;
     }
 
@@ -394,7 +394,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         scaleMode = ScaleMode.FitXY;
         resizeWidth = 0;
         resizeHeight = 0;
-        disableFadeIn=false;
+        disableFadeIn = false;
         builder = null;
     }
 }
