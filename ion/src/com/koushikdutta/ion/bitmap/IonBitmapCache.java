@@ -13,6 +13,8 @@ import android.view.WindowManager;
 
 import com.koushikdutta.ion.Ion;
 
+import java.io.InputStream;
+
 /**
  * Created by koush on 5/23/13.
  */
@@ -98,6 +100,38 @@ public class IonBitmapCache {
             o.inSampleSize = scale;
         }
         return BitmapFactory.decodeByteArray(bytes, offset, length, o);
+    }
+
+    public Bitmap loadBitmap(InputStream stream, int minx, int miny) {
+        assert Thread.currentThread() != Looper.getMainLooper().getThread();
+        int targetWidth = minx;
+        int targetHeight = miny;
+        if (targetWidth <= 0)
+            targetWidth = metrics.widthPixels;
+        if (targetWidth <= 0)
+            targetWidth = Integer.MAX_VALUE;
+        if (targetHeight <= 0)
+            targetHeight = metrics.heightPixels;
+        if (targetHeight <= 0)
+            targetHeight = Integer.MAX_VALUE;
+
+        BitmapFactory.Options o = null;
+        if (targetWidth != Integer.MAX_VALUE || targetHeight != Integer.MAX_VALUE) {
+            o = new BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            stream.mark(Integer.MAX_VALUE);
+            BitmapFactory.decodeStream(stream, null, o);
+            try {
+                stream.reset();
+            }
+            catch (Exception e) {
+                return null;
+            }
+            int scale = Math.min(o.outWidth / targetWidth, o.outHeight / targetHeight);
+            o = new BitmapFactory.Options();
+            o.inSampleSize = scale;
+        }
+        return BitmapFactory.decodeStream(stream, null, o);
     }
 
     private static int getHeapSize(final Context context) {
