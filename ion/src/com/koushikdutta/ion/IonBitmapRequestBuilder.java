@@ -20,6 +20,7 @@ import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -101,20 +102,30 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
         // find/create the future for this download.
         if (!ion.bitmapsPending.contains(downloadKey)) {
-            builder.setHandler(null);
-            // if we cancel, gotta remove any waiters.
-            IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
-                @Override
-                public void run() {
-                    AsyncServer.post(Ion.mainHandler, new Runnable() {
-                        @Override
-                        public void run() {
-                            ion.bitmapsPending.remove(downloadKey);
-                        }
-                    });
-                }
-            });
-            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, emitterTransform));
+            // see if we can get a direct input stream. This should be a seekable InputStream
+            // that will not block on read. Ie, it needs to be fully downloaded, before returning
+            // the stream.
+            // Otherwise, just grab the asynchronous DataEmitter.
+            Future<InputStream> inputStreamFuture = builder.execute();
+            if (inputStreamFuture != null) {
+                inputStreamFuture.setCallback(new LoadBitmapStream(ion ,downloadKey, !hasTransforms, resizeWidth, resizeHeight));
+            }
+            else {
+                builder.setHandler(null);
+                // if we cancel, gotta remove any waiters.
+                IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
+                    @Override
+                    public void run() {
+                        AsyncServer.post(Ion.mainHandler, new Runnable() {
+                            @Override
+                            public void run() {
+                                ion.bitmapsPending.remove(downloadKey);
+                            }
+                        });
+                    }
+                });
+                emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, emitterTransform));
+            }
         }
 
         // if there's a transform, do it

@@ -10,12 +10,18 @@ import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 
 import java.io.File;
+import java.io.InputStream;
 
 /**
  * Created by koush on 5/22/13.
  */
 public class FileLoader implements Loader {
     private static final class FileFuture extends SimpleFuture<DataEmitter> {
+    }
+
+    @Override
+    public Future<InputStream> load(Ion ion, AsyncHttpRequest request) {
+        return null;
     }
 
     @Override

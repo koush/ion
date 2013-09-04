@@ -103,6 +103,8 @@ public class IonBitmapCache {
     }
 
     public Bitmap loadBitmap(InputStream stream, int minx, int miny) {
+        if (!stream.markSupported())
+            stream = new MarkableInputStream(stream);
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         int targetWidth = minx;
         int targetHeight = miny;

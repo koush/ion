@@ -56,6 +56,7 @@ import org.w3c.dom.Document;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
@@ -227,7 +228,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             AsyncServer.post(handler, runner);
     }
 
-    private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
+    private URI prepareURI() {
         URI uri;
         try {
             if (query != null) {
@@ -246,7 +247,29 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         catch (Exception e) {
             uri = null;
         }
-        if (uri == null || uri.getScheme() == null) {
+        if (uri == null || uri.getScheme() == null)
+            return null;
+
+        return uri;
+    }
+
+    private AsyncHttpRequest prepareRequest(URI uri, AsyncHttpRequestBody wrappedBody) {
+        AsyncHttpRequest request = ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers);
+        request.setFollowRedirect(followRedirect);
+        request.setBody(wrappedBody);
+        request.setLogging(ion.LOGTAG, ion.logLevel);
+        if (logTag != null)
+            request.setLogging(logTag, logLevel);
+        request.enableProxy(proxyHost, proxyPort);
+        request.setTimeout(timeoutMilliseconds);
+        request.setHandler(null);
+        request.logd("preparing request");
+        return request;
+    }
+
+    private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
+        URI uri = prepareURI();
+        if (uri == null) {
             ret.setComplete(new Exception("Invalid URI"));
             return;
         }
@@ -283,17 +306,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             });
         }
 
-        AsyncHttpRequest request = ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers);
-        request.setFollowRedirect(followRedirect);
-        request.setBody(wrappedBody);
-        request.setLogging(ion.LOGTAG, ion.logLevel);
-        if (logTag != null)
-            request.setLogging(logTag, logLevel);
-        request.enableProxy(proxyHost, proxyPort);
-        request.setTimeout(timeoutMilliseconds);
-        request.setHandler(null);
-        request.logd("preparing request");
-
+        AsyncHttpRequest request = prepareRequest(uri, wrappedBody);
         ret.initialRequest = request;
 
         for (Loader loader: ion.config.loaders) {
@@ -523,6 +536,21 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         };
         getLoaderEmitter(ret);
         return ret;
+    }
+
+    Future<InputStream> execute() {
+        URI uri = prepareURI();
+        if (uri == null)
+            return null;
+
+        AsyncHttpRequest request = prepareRequest(uri, null);
+
+        for (Loader loader: ion.config.loaders) {
+            Future<InputStream> ret = loader.load(ion, request);
+            if (ret != null)
+                return ret;
+        }
+        return null;
     }
 
     @Override
