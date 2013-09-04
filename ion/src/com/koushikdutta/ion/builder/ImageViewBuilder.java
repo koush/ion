@@ -71,4 +71,11 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      * @return
      */
     public I animateLoad(int animationResource);
+
+    /**
+     * Disable fadeIn when the image loads.
+     * @return
+     */
+    public I disableFadeIn();
+
 }

@@ -149,6 +149,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         ret.setError(errorResource, errorDrawable);
         ret.setPlaceholder(placeholderResource, placeholderDrawable);
         ret.setInAnimation(inAnimation, inAnimationResource);
+        ret.setDisableFadeIn(disableFadeIn);
         imageView.setImageDrawable(ret);
         return ret;
     }
@@ -369,6 +370,14 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
     }
 
+    private boolean disableFadeIn;
+
+    @Override
+    public IonBitmapRequestBuilder disableFadeIn(){
+        this.disableFadeIn=true;
+        return this;
+    }
+
     void reset() {
         placeholderDrawable = null;
         placeholderResource = 0;
@@ -385,6 +394,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         scaleMode = ScaleMode.FitXY;
         resizeWidth = 0;
         resizeHeight = 0;
+        disableFadeIn=false;
         builder = null;
     }
 }
