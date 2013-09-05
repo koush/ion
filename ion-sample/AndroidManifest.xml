@@ -24,8 +24,11 @@
                 android:name=".ProgressBarDownload"
                 android:label="Progress Bar Download"/>
         <activity
-                android:name=".GoogleImageSearch"
-                android:label="Google Image Search"/>
+            android:name=".GoogleImageSearch"
+            android:label="Google Image Search"/>
+        <activity
+            android:name=".GallerySample"
+            android:label="Gallery Sample"/>
         <activity
             android:name=".ImageViewSample"
             android:label="ImageView Sample"/>

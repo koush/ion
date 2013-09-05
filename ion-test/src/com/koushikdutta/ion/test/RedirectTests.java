@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.test;
 
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
@@ -15,8 +16,9 @@ import com.koushikdutta.ion.Response;
 public class RedirectTests extends AndroidTestCase {
     public void testFinalLocation() throws Exception {
         try {
+            Ion.getDefault(getContext()).setLogging("redirect", Log.VERBOSE);
             AsyncHttpServer server = new AsyncHttpServer();
-            server.listen(Ion.getDefault(getContext()).getServer(), 5000);
+            server.listen(Ion.getDefault(getContext()).getServer(), 5555);
             server.get("/", new HttpServerRequestCallback() {
                 @Override
                 public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
@@ -32,13 +34,13 @@ public class RedirectTests extends AndroidTestCase {
             });
 
             Response<String> response = Ion.with(getContext())
-            .load("http://localhost:5000")
+            .load("http://localhost:5555")
             .asString()
             .withResponse()
             .get();
 
             assertEquals(response.getResult(), "bar");
-            assertEquals(response.getRequest().getUri().toString(), "http://localhost:5000/foo");
+            assertEquals(response.getRequest().getUri().toString(), "http://localhost:5555/foo");
         }
         finally {
             Ion.getDefault(getContext()).getServer().stop();

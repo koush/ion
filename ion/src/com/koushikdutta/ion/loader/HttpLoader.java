@@ -12,10 +12,17 @@ import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 
+import java.io.InputStream;
+
 /**
  * Created by koush on 5/22/13.
  */
 public class HttpLoader implements Loader {
+    @Override
+    public Future<InputStream> load(Ion ion, AsyncHttpRequest request) {
+        return null;
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {

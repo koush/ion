@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.test;
 
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.provider.ContactsContract;
 import android.test.AndroidTestCase;
 import com.koushikdutta.ion.Ion;
@@ -36,6 +37,22 @@ public class ContentTests extends AndroidTestCase {
         }
         Ion.with(getContext(), id)
         .write(new File("/sdcard/test2.png")).get();
+        assertNotNull(id);
+        assertNotNull(c);
+    }
+
+    public void testContactBitmap() throws Exception {
+        Cursor c = getContext().getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+        String id = null;
+        while (c.moveToNext()) {
+            id = c.getString(c.getColumnIndex(ContactsContract.Contacts.PHOTO_URI));
+            if (id != null)
+                break;
+        }
+        Bitmap b = Ion.with(getContext(), id)
+                .asBitmap()
+                .get();
+        assertNotNull(b);
         assertNotNull(id);
         assertNotNull(c);
     }

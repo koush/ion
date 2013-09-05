@@ -13,6 +13,8 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.future.TransformFuture;
+import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
@@ -20,6 +22,7 @@ import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -76,7 +79,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     String bitmapKey;
     BitmapInfo execute() {
-        final String downloadKey = builder.uri;
+        final String downloadKey = ResponseCacheMiddleware.toKeyString(builder.uri);
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
         assert downloadKey != null;
 
@@ -91,6 +94,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             for (Transform transform : transforms) {
                 bitmapKey += transform.key();
             }
+            bitmapKey = ResponseCacheMiddleware.toKeyString(bitmapKey);
         }
 
         // see if this request can be fulfilled from the cache
@@ -99,22 +103,41 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             return bitmap;
         }
 
-        // find/create the future for this download.
+        // bitmaps that were transformed are put into the DiskLruCache to prevent
+        // subsequent retransformation. See if we can retrieve the bitmap from the disk cache.
+        // See BitmapToBitmapInfo for where the cache is populated.
+        DiskLruCache diskLruCache = ion.getResponseCache().getDiskLruCache();
+        if (diskLruCache.containsKey(bitmapKey)) {
+            BitmapToBitmapInfo.getBitmapSnapshot(ion, bitmapKey);
+            return null;
+        }
+
+        // Perform a download as necessary.
         if (!ion.bitmapsPending.contains(downloadKey)) {
-            builder.setHandler(null);
-            // if we cancel, gotta remove any waiters.
-            IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
-                @Override
-                public void run() {
-                    AsyncServer.post(Ion.mainHandler, new Runnable() {
-                        @Override
-                        public void run() {
-                            ion.bitmapsPending.remove(downloadKey);
-                        }
-                    });
-                }
-            });
-            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, emitterTransform));
+            // see if we can get a direct input stream. This should be a seekable InputStream
+            // that will not block on read. Ie, it needs to be fully downloaded, before returning
+            // the stream.
+            // Otherwise, just grab the asynchronous DataEmitter.
+            Future<InputStream> inputStreamFuture = builder.execute();
+            if (inputStreamFuture != null) {
+                inputStreamFuture.setCallback(new LoadBitmapStream(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight));
+            }
+            else {
+                builder.setHandler(null);
+                // if we cancel, gotta remove any waiters.
+                IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
+                    @Override
+                    public void run() {
+                        AsyncServer.post(Ion.mainHandler, new Runnable() {
+                            @Override
+                            public void run() {
+                                ion.bitmapsPending.remove(downloadKey);
+                            }
+                        });
+                    }
+                });
+                emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, emitterTransform));
+            }
         }
 
         // if there's a transform, do it
@@ -149,6 +172,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         ret.setError(errorResource, errorDrawable);
         ret.setPlaceholder(placeholderResource, placeholderDrawable);
         ret.setInAnimation(inAnimation, inAnimationResource);
+        ret.setDisableFadeIn(disableFadeIn);
         imageView.setImageDrawable(ret);
         return ret;
     }
@@ -369,6 +393,14 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
     }
 
+    private boolean disableFadeIn;
+
+    @Override
+    public IonBitmapRequestBuilder disableFadeIn() {
+        this.disableFadeIn = true;
+        return this;
+    }
+
     void reset() {
         placeholderDrawable = null;
         placeholderResource = 0;
@@ -385,6 +417,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         scaleMode = ScaleMode.FitXY;
         resizeWidth = 0;
         resizeHeight = 0;
+        disableFadeIn = false;
         builder = null;
     }
 }

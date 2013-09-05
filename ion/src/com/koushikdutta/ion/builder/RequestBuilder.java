@@ -13,6 +13,8 @@ import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.ion.HeadersCallback;
 import com.koushikdutta.ion.ProgressCallback;
 
+import org.w3c.dom.Document;
+
 /**
 * Created by koush on 5/30/13.
 */ // set parameters
@@ -201,4 +203,12 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @return
      */
     public F setStringBody(String string);
+
+    /**
+     * Specify an XML Document to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param document Document to send with the request
+     * @return
+     */
+    public F setDocumentBody(Document document);
 }

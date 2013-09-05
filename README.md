@@ -20,7 +20,7 @@
    * All operations return a [Future](https://github.com/koush/ion#futures) and [can be cancelled](https://github.com/koush/ion#cancelling-requests)
  * HTTP POST/PUT:
    * text/plain
-   * [application/json](https://github.com/koush/ion#post-json-and-read-json) (both JsonObject and POJO)
+   * application/json - both [JsonObject](https://github.com/koush/ion#post-json-and-read-json) and [POJO](https://github.com/koush/ion#seamlessly-use-your-own-java-classes-with-gson)
    * [application/x-www-form-urlencoded](https://github.com/koush/ion#post-applicationx-www-form-urlencoded-and-read-a-string)
    * [multipart/form-data](https://github.com/koush/ion#post-multipartform-data-and-read-json)
  * Transparent usage of HTTP features and optimizations:
@@ -361,9 +361,16 @@ Ion.with(getContext())
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
-   <version>1.1.2</version>
+   <version>1.1.5</version>
 </dependency>
 ```
+
+##### Gradle
+```groovy
+dependencies {
+   compile 'com.koushikdutta.ion:ion:1.1.5'
+}
+````
 
 ##### Local Checkout (with [AndroidAsync](https://github.com/koush/AndroidAsync) dependency)
 ```

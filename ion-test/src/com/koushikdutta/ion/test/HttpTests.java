@@ -19,6 +19,7 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
+import com.koushikdutta.ion.cookie.CookieMiddleware;
 
 import java.io.ByteArrayOutputStream;
 import java.net.HttpCookie;
@@ -91,16 +92,19 @@ public class HttpTests extends AndroidTestCase {
 
     public void testCookie() throws Exception {
         Ion ion = Ion.getDefault(getContext());
-        ion.getCookieMiddleware().getCookieStore().removeAll();
+        ion.getCookieMiddleware().clear();
 
         ion.build(getContext(), "http://google.com")
                 .asString()
                 .get();
 
-        for (HttpCookie cookie: ion.getCookieMiddleware().getCookieStore().get(URI.create("http://google.com"))) {
+        for (HttpCookie cookie: ion.getCookieMiddleware().getCookieStore().get(URI.create("http://www.google.com"))) {
             Log.i("CookieTest", cookie.getName() + ": " + cookie.getValue());
         }
-        assertTrue(ion.getCookieMiddleware().getCookieManager().get(URI.create("http://google.com"), new Multimap()).size() > 0);
+        assertTrue(ion.getCookieMiddleware().getCookieManager().get(URI.create("http://www.google.com/test/path"), new Multimap()).size() > 0);
+
+        CookieMiddleware deserialize = new CookieMiddleware(getContext(), ion.getDefault(getContext()).getName());
+        assertTrue(deserialize.getCookieManager().get(URI.create("http://www.google.com/test/path"), new Multimap()).size() > 0);
     }
 
 

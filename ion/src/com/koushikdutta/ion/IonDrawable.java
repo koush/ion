@@ -30,6 +30,7 @@ class IonDrawable extends Drawable {
     private Resources resources;
     private int loadedFrom;
     private IonDrawableCallback callback;
+    private boolean disableFadeIn;
 
     public IonDrawable cancel() {
         requestCount++;
@@ -38,6 +39,10 @@ class IonDrawable extends Drawable {
 
     public SimpleFuture<ImageView> getFuture() {
         return callback.imageViewFuture;
+    }
+    
+    public void setDisableFadeIn(boolean disableFadeIn) {
+        this.disableFadeIn = disableFadeIn;
     }
 
     public void setInAnimation(Animation inAnimation, int inAnimationResource) {
@@ -212,8 +217,13 @@ class IonDrawable extends Drawable {
 
         if (info.drawTime == 0)
             info.drawTime = SystemClock.uptimeMillis();
-        long destAlpha = ((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
-        destAlpha = Math.min(destAlpha, 0xFF);
+
+        long destAlpha = 0xFF;
+
+        if(!disableFadeIn) {
+            destAlpha = ((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
+            destAlpha = Math.min(destAlpha, 0xFF);
+        }
 
         if (destAlpha != 255) {
             if (placeholder == null && placeholderResource != 0)
@@ -290,12 +300,6 @@ class IonDrawable extends Drawable {
         return (bitmap == null || bitmap.hasAlpha() || paint.getAlpha() < 255) ?
                 PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
     }
-
-    @Override
-    public Drawable mutate() {
-        throw new UnsupportedOperationException();
-    }
-
 
     static IonDrawable getOrCreateIonDrawable(ImageView imageView) {
         Drawable current = imageView.getDrawable();

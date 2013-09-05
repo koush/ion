@@ -55,5 +55,13 @@ public class Samples extends Activity {
                 startActivity(new Intent(Samples.this, ImageViewSample.class));
             }
         });
+
+        Button gallerySample = (Button)findViewById(R.id.gallery);
+        gallerySample.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, GallerySample.class));
+            }
+        });
     }
 }

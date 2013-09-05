@@ -31,11 +31,12 @@ import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.AsyncHttpRequestBody;
+import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
 import com.koushikdutta.async.http.Multimap;
-import com.koushikdutta.async.http.MultipartFormDataBody;
-import com.koushikdutta.async.http.StringBody;
-import com.koushikdutta.async.http.UrlEncodedFormBody;
+import com.koushikdutta.async.http.body.DocumentBody;
+import com.koushikdutta.async.http.body.MultipartFormDataBody;
+import com.koushikdutta.async.http.body.StringBody;
+import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.StringParser;
@@ -45,13 +46,17 @@ import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.future.ResponseFuture;
+import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 import com.koushikdutta.ion.gson.PojoBody;
 
+import org.w3c.dom.Document;
+
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
@@ -93,8 +98,10 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     RawHeaders headers;
     private RawHeaders getHeaders() {
-        if (headers == null)
+        if (headers == null) {
             headers = new RawHeaders();
+            AsyncHttpRequest.setDefaultHeaders(headers, URI.create(uri));
+        }
         return headers;
     }
 
@@ -147,19 +154,16 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder setJsonObjectBody(JsonObject jsonObject) {
-        setHeader("Content-Type", "application/json");
         return setBody(new GsonBody<JsonObject>(ion.getGson(), jsonObject));
     }
 
     @Override
     public IonRequestBuilder setJsonArrayBody(JsonArray jsonArray) {
-        setHeader("Content-Type", "application/json");
         return setBody(new GsonBody<JsonArray>(ion.getGson(), jsonArray));
     }
 
     @Override
     public IonRequestBuilder setStringBody(String string) {
-        setHeader("Content-Type", "text/plain");
         return setBody(new StringBody(string));
     }
 
@@ -224,7 +228,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             AsyncServer.post(handler, runner);
     }
 
-    private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
+    private URI prepareURI() {
         URI uri;
         try {
             if (query != null) {
@@ -243,7 +247,29 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         catch (Exception e) {
             uri = null;
         }
-        if (uri == null || uri.getScheme() == null) {
+        if (uri == null || uri.getScheme() == null)
+            return null;
+
+        return uri;
+    }
+
+    private AsyncHttpRequest prepareRequest(URI uri, AsyncHttpRequestBody wrappedBody) {
+        AsyncHttpRequest request = ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers);
+        request.setFollowRedirect(followRedirect);
+        request.setBody(wrappedBody);
+        request.setLogging(ion.LOGTAG, ion.logLevel);
+        if (logTag != null)
+            request.setLogging(logTag, logLevel);
+        request.enableProxy(proxyHost, proxyPort);
+        request.setTimeout(timeoutMilliseconds);
+        request.setHandler(null);
+        request.logd("preparing request");
+        return request;
+    }
+
+    private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
+        URI uri = prepareURI();
+        if (uri == null) {
             ret.setComplete(new Exception("Invalid URI"));
             return;
         }
@@ -280,17 +306,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             });
         }
 
-        AsyncHttpRequest request = ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers);
-        request.setFollowRedirect(followRedirect);
-        request.setBody(wrappedBody);
-        request.setLogging(ion.LOGTAG, ion.logLevel);
-        if (logTag != null)
-            request.setLogging(logTag, logLevel);
-        request.enableProxy(proxyHost, proxyPort);
-        request.setTimeout(timeoutMilliseconds);
-        request.setHandler(null);
-        request.logd("preparing request");
-
+        AsyncHttpRequest request = prepareRequest(uri, wrappedBody);
         ret.initialRequest = request;
 
         for (Loader loader: ion.config.loaders) {
@@ -522,6 +538,21 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return ret;
     }
 
+    Future<InputStream> execute() {
+        URI uri = prepareURI();
+        if (uri == null)
+            return null;
+
+        AsyncHttpRequest request = prepareRequest(uri, null);
+
+        for (Loader loader: ion.config.loaders) {
+            Future<InputStream> ret = loader.load(ion, request);
+            if (ret != null)
+                return ret;
+        }
+        return null;
+    }
+
     @Override
     public ResponseFuture<JsonObject> asJsonObject() {
         return execute(new GsonParser<JsonObject>());
@@ -708,5 +739,16 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     public Builders.Any.B onHeaders(HeadersCallback callback) {
         headersCallback = callback;
         return this;
+    }
+
+    @Override
+    public Builders.Any.F setDocumentBody(Document document) {
+        setBody(new DocumentBody(document));
+        return this;
+    }
+
+    @Override
+    public ResponseFuture<Document> asDocument() {
+        return execute(new DocumentParser());
     }
 }

@@ -297,7 +297,15 @@ public class Ion {
         return fileLoader;
     }
 
+    public ResponseCacheMiddleware getResponseCache() {
+        return responseCache;
+    }
+
     String name;
+    public String getName() {
+        return name;
+    }
+
     Context context;
     private Ion(Context context, String name) {
         httpClient = new AsyncHttpClient(new AsyncServer());

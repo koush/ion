@@ -6,6 +6,8 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 
+import java.io.InputStream;
+
 /**
  * Created by koush on 5/22/13.
  */
@@ -44,6 +46,11 @@ public interface Loader {
             return request;
         }
     }
+
+    // returns a Future if this loader can handle a request as a stream.
+    // this implies that the stream is
+    public Future<InputStream> load(Ion ion, AsyncHttpRequest request);
+
     // returns a Future if this loader can handle a request
     // otherwise it returns null, and Ion continues to the next loader.
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, FutureCallback<LoaderEmitter> callback);

@@ -6,8 +6,8 @@ import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.http.MultipartFormDataBody;
-import com.koushikdutta.async.http.Part;
+import com.koushikdutta.async.http.body.MultipartFormDataBody;
+import com.koushikdutta.async.http.body.Part;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
@@ -57,7 +57,7 @@ public class ProgressTests extends AndroidTestCase {
     public void testUpload() throws Exception {
         AsyncHttpServer httpServer = new AsyncHttpServer();
         try {
-            httpServer.listen(AsyncServer.getDefault(), 5000);
+            httpServer.listen(Ion.getDefault(getContext()).getServer(), 5000);
             httpServer.post("/", new HttpServerRequestCallback() {
                 @Override
                 public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
@@ -93,7 +93,7 @@ public class ProgressTests extends AndroidTestCase {
             assertTrue(semaphore.tryAcquire());
         }
         finally {
-            AsyncServer.getDefault().stop();
+            Ion.getDefault(getContext()).getServer().stop();
         }
     }
 }
