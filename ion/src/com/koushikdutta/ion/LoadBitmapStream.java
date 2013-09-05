@@ -18,6 +18,24 @@ class LoadBitmapStream extends BitmapCallback implements FutureCallback<InputStr
         this.resizeHeight = resizeHeight;
     }
 
+    public void loadInputStream(InputStream result) {
+        try {
+            Bitmap bitmap = ion.bitmapCache.loadBitmap(result, resizeWidth, resizeHeight);
+
+            if (bitmap == null)
+                throw new Exception("bitmap failed to load");
+
+            BitmapInfo info = new BitmapInfo();
+            info.key = key;
+            info.bitmap = bitmap;
+            info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_CACHE;
+
+            report(null, info);
+        } catch (Exception e) {
+            report(e, null);
+        }
+    }
+
     @Override
     public void onCompleted(Exception e, final InputStream result) {
         if (e != null) {
@@ -28,21 +46,7 @@ class LoadBitmapStream extends BitmapCallback implements FutureCallback<InputStr
         ion.getServer().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Bitmap bitmap = ion.bitmapCache.loadBitmap(result, resizeWidth, resizeHeight);
-
-                    if (bitmap == null)
-                        throw new Exception("bitmap failed to load");
-
-                    BitmapInfo info = new BitmapInfo();
-                    info.key = key;
-                    info.bitmap = bitmap;
-                    info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_NETWORK;
-
-                    report(null, info);
-                } catch (Exception e) {
-                    report(e, null);
-                }
+                loadInputStream(result);
             }
         });
     }

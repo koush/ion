@@ -297,6 +297,10 @@ public class Ion {
         return fileLoader;
     }
 
+    public ResponseCacheMiddleware getResponseCache() {
+        return responseCache;
+    }
+
     String name;
     public String getName() {
         return name;
