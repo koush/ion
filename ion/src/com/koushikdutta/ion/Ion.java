@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import android.view.ContextThemeWrapper;
 import android.widget.ImageView;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
@@ -416,7 +418,13 @@ public class Ion {
         return bitmapCache;
     }
 
-    Gson gson = new Gson();
+    GsonBuilder gsonBuilder = new GsonBuilder();
+
+    public Ion registerTypeAdapter(Type type, Object typeAdapter) {
+        gsonBuilder.registerTypeAdapter(type, typeAdapter);
+        return this;
+    }
+
     /**
      * Get the Gson object in use by this Ion instance.
      * This can be used to customize serialization and deserialization
@@ -424,7 +432,7 @@ public class Ion {
      * @return
      */
     public Gson getGson() {
-        return gson;
+        return gsonBuilder.create();
     }
 
     static Ion instance;
