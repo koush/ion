@@ -443,6 +443,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                             }
                         });
                     }
+                    lastPercent = percent;
 
                     if (progress != null)
                         progress.onProgress(totalBytesRead, total);
