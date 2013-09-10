@@ -414,6 +414,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             }
             this.emitter = tracker;
             tracker.setDataTracker(new DataTracker() {
+                int lastPercent;
                 @Override
                 public void onData(final int totalBytesRead) {
                     assert Thread.currentThread() != Looper.getMainLooper().getThread();
@@ -423,17 +424,24 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                         return;
                     }
 
-                    int percent = (int)((float)totalBytesRead / total * 100f);
+                    final int percent = (int)((float)totalBytesRead / total * 100f);
 
-                    if (progressBar != null) {
-                        ProgressBar bar = progressBar.get();
-                        if (bar != null)
-                            bar.setProgress(percent);
-                    }
-                    if (progressDialog != null) {
-                        ProgressDialog dlg = progressDialog.get();
-                        if (dlg != null)
-                            dlg.setProgress(percent);
+                    if ((progressBar != null || progressDialog != null) && percent != lastPercent) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (progressBar != null) {
+                                    ProgressBar bar = progressBar.get();
+                                    if (bar != null)
+                                        bar.setProgress(percent);
+                                }
+                                if (progressDialog != null) {
+                                    ProgressDialog dlg = progressDialog.get();
+                                    if (dlg != null)
+                                        dlg.setProgress(percent);
+                                }
+                            }
+                        });
                     }
 
                     if (progress != null)
