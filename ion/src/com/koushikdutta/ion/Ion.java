@@ -15,6 +15,7 @@ import android.view.ContextThemeWrapper;
 import android.widget.ImageView;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
@@ -417,6 +418,13 @@ public class Ion {
     }
 
     Gson gson = new Gson();
+
+    public void setGsonBuilder(GsonBuilder gsonBuilder) {
+        if (gsonBuilder != null) {
+            gson = gsonBuilder.create();
+        }
+    }
+
     /**
      * Get the Gson object in use by this Ion instance.
      * This can be used to customize serialization and deserialization

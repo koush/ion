@@ -672,12 +672,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public <T> ResponseFuture<T> as(Class<T> clazz) {
-        return execute(new GsonSerializer<T>(ion.gson, clazz));
+        return execute(new GsonSerializer<T>(ion.getGson(), clazz));
     }
 
     @Override
     public <T> ResponseFuture<T> as(TypeToken<T> token) {
-        return execute(new GsonSerializer<T>(ion.gson, token));
+        return execute(new GsonSerializer<T>(ion.getGson(), token));
     }
 
     ArrayList<WeakReference<Object>> groups;
