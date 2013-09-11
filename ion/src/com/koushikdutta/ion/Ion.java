@@ -418,11 +418,12 @@ public class Ion {
         return bitmapCache;
     }
 
-    GsonBuilder gsonBuilder = new GsonBuilder();
+    Gson gson = new Gson();
 
-    public Ion registerTypeAdapter(Type type, Object typeAdapter) {
-        gsonBuilder.registerTypeAdapter(type, typeAdapter);
-        return this;
+    public void setGsonBuilder(GsonBuilder gsonBuilder) {
+        if (gsonBuilder != null) {
+            gson = gsonBuilder.create();
+        }
     }
 
     /**
@@ -432,7 +433,7 @@ public class Ion {
      * @return
      */
     public Gson getGson() {
-        return gsonBuilder.create();
+        return gson;
     }
 
     static Ion instance;
