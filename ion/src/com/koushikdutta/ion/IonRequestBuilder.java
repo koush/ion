@@ -154,12 +154,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder setJsonObjectBody(JsonObject jsonObject) {
-        return setBody(new GsonBody<JsonObject>(ion.getGson(), jsonObject));
+        return setBody(new GsonBody<JsonObject>(ion.configure().getGson(), jsonObject));
     }
 
     @Override
     public IonRequestBuilder setJsonArrayBody(JsonArray jsonArray) {
-        return setBody(new GsonBody<JsonArray>(ion.getGson(), jsonArray));
+        return setBody(new GsonBody<JsonArray>(ion.configure().getGson(), jsonArray));
     }
 
     @Override
@@ -672,12 +672,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public <T> ResponseFuture<T> as(Class<T> clazz) {
-        return execute(new GsonSerializer<T>(ion.gson, clazz));
+        return execute(new GsonSerializer<T>(ion.configure().getGson(), clazz));
     }
 
     @Override
     public <T> ResponseFuture<T> as(TypeToken<T> token) {
-        return execute(new GsonSerializer<T>(ion.gson, token));
+        return execute(new GsonSerializer<T>(ion.configure().getGson(), token));
     }
 
     ArrayList<WeakReference<Object>> groups;
@@ -700,13 +700,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder setJsonObjectBody(Object object, TypeToken token) {
-        setBody(new PojoBody(ion.getGson(), object, token));
+        setBody(new PojoBody(ion.configure().getGson(), object, token));
         return this;
     }
 
     @Override
     public IonRequestBuilder setJsonObjectBody(Object object) {
-        setBody(new PojoBody(ion.getGson(), object, null));
+        setBody(new PojoBody(ion.configure().getGson(), object, null));
         return this;
     }
 

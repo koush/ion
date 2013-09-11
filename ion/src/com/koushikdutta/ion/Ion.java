@@ -359,6 +359,27 @@ public class Ion {
     }
 
     public static class Config {
+        private Gson gson = new Gson();
+        /**
+         * Get the Gson object in use by this Ion instance.
+         * This can be used to customize serialization and deserialization
+         * from java objects.
+         * @return
+         */
+        public Gson getGson() {
+            return gson;
+        }
+
+        /**
+         * Set the Gson object in use by this Ion instance.
+         * This can be used to customize serialization and deserialization
+         * from java objects.
+         * @param gson
+         */
+        public void setGson(Gson gson) {
+            this.gson = gson;
+        }
+
         AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactoryImpl();
 
         public AsyncHttpRequestFactory getAsyncHttpRequestFactory() {
@@ -414,17 +435,6 @@ public class Ion {
      */
     public IonBitmapCache getBitmapCache() {
         return bitmapCache;
-    }
-
-    Gson gson = new Gson();
-    /**
-     * Get the Gson object in use by this Ion instance.
-     * This can be used to customize serialization and deserialization
-     * from java objects.
-     * @return
-     */
-    public Gson getGson() {
-        return gson;
     }
 
     static Ion instance;
