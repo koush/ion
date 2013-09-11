@@ -26,7 +26,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                 try {
                     DiskLruCache.Snapshot snapshot = ion.getResponseCache().getDiskLruCache().get(transformKey);
                     try {
-                        callback.loadInputStream(snapshot.getInputStream(ResponseCacheMiddleware.ENTRY_COUNT - 1));
+                        callback.loadInputStream(snapshot.getInputStream(0));
                     }
                     finally {
                         snapshot.close();
@@ -84,10 +84,10 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                     if (editor == null)
                         return;
                     try {
-                        for (int i = 0; i < ResponseCacheMiddleware.ENTRY_COUNT - 1; i++) {
+                        for (int i = 1; i < ResponseCacheMiddleware.ENTRY_COUNT; i++) {
                             editor.set(0, key);
                         }
-                        OutputStream out = editor.newOutputStream(ResponseCacheMiddleware.ENTRY_COUNT - 1);
+                        OutputStream out = editor.newOutputStream(0);
                         Bitmap.CompressFormat format = info.bitmap.hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
                         info.bitmap.compress(format, 100, out);
                         out.close();

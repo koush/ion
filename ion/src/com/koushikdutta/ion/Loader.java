@@ -48,7 +48,8 @@ public interface Loader {
     }
 
     // returns a Future if this loader can handle a request as a stream.
-    // this implies that the stream is
+    // this implies that the stream is essentially non blocking...
+    // ie file or memory based.
     public Future<InputStream> load(Ion ion, AsyncHttpRequest request);
 
     // returns a Future if this loader can handle a request

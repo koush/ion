@@ -154,12 +154,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder setJsonObjectBody(JsonObject jsonObject) {
-        return setBody(new GsonBody<JsonObject>(ion.getGson(), jsonObject));
+        return setBody(new GsonBody<JsonObject>(ion.configure().getGson(), jsonObject));
     }
 
     @Override
     public IonRequestBuilder setJsonArrayBody(JsonArray jsonArray) {
-        return setBody(new GsonBody<JsonArray>(ion.getGson(), jsonArray));
+        return setBody(new GsonBody<JsonArray>(ion.configure().getGson(), jsonArray));
     }
 
     @Override
@@ -414,6 +414,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             }
             this.emitter = tracker;
             tracker.setDataTracker(new DataTracker() {
+                int lastPercent;
                 @Override
                 public void onData(final int totalBytesRead) {
                     assert Thread.currentThread() != Looper.getMainLooper().getThread();
@@ -423,18 +424,26 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                         return;
                     }
 
-                    int percent = (int)((float)totalBytesRead / total * 100f);
+                    final int percent = (int)((float)totalBytesRead / total * 100f);
 
-                    if (progressBar != null) {
-                        ProgressBar bar = progressBar.get();
-                        if (bar != null)
-                            bar.setProgress(percent);
+                    if ((progressBar != null || progressDialog != null) && percent != lastPercent) {
+                        handler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (progressBar != null) {
+                                    ProgressBar bar = progressBar.get();
+                                    if (bar != null)
+                                        bar.setProgress(percent);
+                                }
+                                if (progressDialog != null) {
+                                    ProgressDialog dlg = progressDialog.get();
+                                    if (dlg != null)
+                                        dlg.setProgress(percent);
+                                }
+                            }
+                        });
                     }
-                    if (progressDialog != null) {
-                        ProgressDialog dlg = progressDialog.get();
-                        if (dlg != null)
-                            dlg.setProgress(percent);
-                    }
+                    lastPercent = percent;
 
                     if (progress != null)
                         progress.onProgress(totalBytesRead, total);
@@ -663,12 +672,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public <T> ResponseFuture<T> as(Class<T> clazz) {
-        return execute(new GsonSerializer<T>(ion.gson, clazz));
+        return execute(new GsonSerializer<T>(ion.configure().getGson(), clazz));
     }
 
     @Override
     public <T> ResponseFuture<T> as(TypeToken<T> token) {
-        return execute(new GsonSerializer<T>(ion.gson, token));
+        return execute(new GsonSerializer<T>(ion.configure().getGson(), token));
     }
 
     ArrayList<WeakReference<Object>> groups;
@@ -691,13 +700,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder setJsonObjectBody(Object object, TypeToken token) {
-        setBody(new PojoBody(ion.getGson(), object, token));
+        setBody(new PojoBody(ion.configure().getGson(), object, token));
         return this;
     }
 
     @Override
     public IonRequestBuilder setJsonObjectBody(Object object) {
-        setBody(new PojoBody(ion.getGson(), object, null));
+        setBody(new PojoBody(ion.configure().getGson(), object, null));
         return this;
     }
 

@@ -95,6 +95,8 @@ public class IonBitmapCache {
             o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
             BitmapFactory.decodeByteArray(bytes, offset, length, o);
+            if (o.outWidth < 0 || o.outHeight < 0)
+                return null;
             int scale = Math.min(o.outWidth / targetWidth, o.outHeight / targetHeight);
             o = new BitmapFactory.Options();
             o.inSampleSize = scale;
@@ -123,6 +125,8 @@ public class IonBitmapCache {
             o.inJustDecodeBounds = true;
             stream.mark(Integer.MAX_VALUE);
             BitmapFactory.decodeStream(stream, null, o);
+            if (o.outWidth < 0 || o.outHeight < 0)
+                return null;
             try {
                 stream.reset();
             }
