@@ -579,18 +579,18 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public <F extends OutputStream> ResponseFuture<F> write(F outputStream, boolean close) {
-        return execute(new OutputStreamDataSink(outputStream), close, outputStream);
+        return execute(new OutputStreamDataSink(ion.getServer(), outputStream), close, outputStream);
     }
 
     @Override
     public <F extends OutputStream> ResponseFuture<F> write(F outputStream) {
-        return execute(new OutputStreamDataSink(outputStream), true, outputStream);
+        return execute(new OutputStreamDataSink(ion.getServer(), outputStream), true, outputStream);
     }
 
     @Override
     public ResponseFuture<File> write(final File file) {
         try {
-            return execute(new OutputStreamDataSink(new FileOutputStream(file)), true, file, new Runnable() {
+            return execute(new OutputStreamDataSink(ion.getServer(), new FileOutputStream(file)), true, file, new Runnable() {
                 @Override
                 public void run() {
                     file.delete();
