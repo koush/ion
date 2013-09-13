@@ -85,7 +85,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                         return;
                     try {
                         for (int i = 1; i < ResponseCacheMiddleware.ENTRY_COUNT; i++) {
-                            editor.set(0, key);
+                            editor.set(i, key);
                         }
                         OutputStream out = editor.newOutputStream(0);
                         Bitmap.CompressFormat format = info.bitmap.hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;

@@ -500,8 +500,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     <T> EmitterTransform<T> execute(final DataSink sink, final boolean close, final T result, final Runnable cancel) {
         EmitterTransform<T> ret = new EmitterTransform<T>(cancel) {
             @Override
-            protected void cancelCleanup() {
-                super.cancelCleanup();
+            protected void cleanup() {
+                super.cleanup();
                 if (close)
                     sink.close();
             }
@@ -513,8 +513,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 Util.pump(this.emitter, sink, new CompletedCallback() {
                     @Override
                     public void onCompleted(Exception ex) {
-                        if (close)
-                            sink.close();
                         postExecute(self, ex, result);
                     }
                 });
