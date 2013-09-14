@@ -107,7 +107,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // subsequent retransformation. See if we can retrieve the bitmap from the disk cache.
         // See BitmapToBitmapInfo for where the cache is populated.
         DiskLruCache diskLruCache = ion.getResponseCache().getDiskLruCache();
-        if (diskLruCache.containsKey(bitmapKey)) {
+        if (hasTransforms && diskLruCache.containsKey(bitmapKey)) {
             BitmapToBitmapInfo.getBitmapSnapshot(ion, bitmapKey);
             return null;
         }
