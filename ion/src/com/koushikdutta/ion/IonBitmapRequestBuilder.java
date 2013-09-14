@@ -312,12 +312,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    static enum ScaleMode {
-        FitXY,
-        CenterCrop,
-        CenterInside
-    }
-
     ScaleMode scaleMode = ScaleMode.FitXY;
     @Override
     public IonBitmapRequestBuilder centerCrop() {
@@ -343,54 +337,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         resizeWidth = width;
         resizeHeight = height;
         return this;
-    }
-
-    private static class DefaultTransform implements Transform {
-        ScaleMode scaleMode;
-        int resizeWidth;
-        int resizeHeight;
-
-        public DefaultTransform(int width, int height, ScaleMode scaleMode) {
-            resizeWidth = width;
-            resizeHeight = height;
-            this.scaleMode = scaleMode;
-        }
-
-        @Override
-        public Bitmap transform(Bitmap b) {
-            Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, b.getConfig());
-            Canvas canvas = new Canvas(ret);
-
-            float xratio = (float)resizeWidth / (float)b.getWidth();
-            float yratio = (float)resizeHeight / (float)b.getHeight();
-            float transx = 0;
-            float transy = 0;
-            if (scaleMode != ScaleMode.FitXY) {
-                float ratio;
-                if (scaleMode == ScaleMode.CenterCrop)
-                    ratio = Math.max(xratio, yratio);
-                else
-                    ratio = Math.min(xratio, yratio);
-
-                xratio = ratio;
-                yratio = ratio;
-
-                float postx = b.getWidth() * ratio;
-                float posty = b.getHeight() * ratio;
-                transx = (resizeWidth - postx) / 2;
-                transy = (resizeHeight - posty) / 2;
-            }
-
-            canvas.scale(xratio, yratio);
-            canvas.drawBitmap(b, transx, transy, null);
-
-            return ret;
-        }
-
-        @Override
-        public String key() {
-            return scaleMode.name() + resizeWidth  + "x" + resizeHeight;
-        }
     }
 
     private boolean disableFadeIn;
