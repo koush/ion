@@ -16,7 +16,7 @@ import com.koushikdutta.ion.Ion;
 public class ImageViewSample extends Activity {
     public void loadCenterCrop() {
         Ion.with(this)
-        .load("https://lh5.googleusercontent.com/-34_lgJ3dywU/UjDLR2h1W1I/AAAAAAAALok/0bfYkzdbzaI/s144/IMG_20130911_124914.jpg")
+        .load("http://media.salon.com/2013/05/original.jpg")
         .withBitmap()
         .resize(512, 512)
         .centerCrop()
@@ -25,7 +25,7 @@ public class ImageViewSample extends Activity {
 
     public void loadCenterInside() {
         Ion.with(this)
-        .load("https://lh5.googleusercontent.com/-34_lgJ3dywU/UjDLR2h1W1I/AAAAAAAALok/0bfYkzdbzaI/s144/IMG_20130911_124914.jpg")
+        .load("http://media.salon.com/2013/05/original.jpg")
         .withBitmap()
         .resize(512, 512)
         .centerInside()
