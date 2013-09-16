@@ -293,7 +293,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                         uploadProgress.onProgress(downloaded, total);
 
                     if (uploadProgressHandler != null) {
-                        AsyncServer.post(handler, new Runnable() {
+                        AsyncServer.post(Ion.mainHandler, new Runnable() {
                             @Override
                             public void run() {
                                 if (ret.isCancelled() || ret.isDone())
@@ -427,7 +427,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                     final int percent = (int)((float)totalBytesRead / total * 100f);
 
                     if ((progressBar != null || progressDialog != null) && percent != lastPercent) {
-                        handler.post(new Runnable() {
+                        AsyncServer.post(Ion.mainHandler, new Runnable() {
                             @Override
                             public void run() {
                                 if (progressBar != null) {
@@ -449,7 +449,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                         progress.onProgress(totalBytesRead, total);
 
                     if (progressHandler != null) {
-                        AsyncServer.post(handler, new Runnable() {
+                        AsyncServer.post(Ion.mainHandler, new Runnable() {
                             @Override
                             public void run() {
                                 if (isCancelled() || isDone())
