@@ -422,6 +422,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                     assert Thread.currentThread() != Looper.getMainLooper().getThread();
                     // if the requesting context dies during the transfer... cancel
                     if (!checkContext()) {
+                        initialRequest.logd("context has died, cancelling");
                         cancel();
                         return;
                     }
