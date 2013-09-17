@@ -22,7 +22,7 @@
    * text/plain
    * application/json - both [JsonObject](https://github.com/koush/ion#post-json-and-read-json) and [POJO](https://github.com/koush/ion#seamlessly-use-your-own-java-classes-with-gson)
    * [application/x-www-form-urlencoded](https://github.com/koush/ion#post-applicationx-www-form-urlencoded-and-read-a-string)
-   * [multipart/form-data](https://github.com/koush/ion#post-multipartform-data-and-read-json)
+   * [multipart/form-data](https://github.com/koush/ion#post-multipartform-data-and-read-json-with-an-upload-progress-bar)
  * Transparent usage of HTTP features and optimizations:
    * Caching
    * Gzip/Deflate Compression
