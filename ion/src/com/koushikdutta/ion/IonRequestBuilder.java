@@ -205,13 +205,15 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return true;
     }
 
-    private <T> void postExecute(final SimpleFuture<T> future, final Exception ex, final T value) {
+    private <T> void postExecute(final EmitterTransform<T> future, final Exception ex, final T value) {
         final Runnable runner = new Runnable() {
             @Override
             public void run() {
                 // check if the context is still alive...
-                if (!checkContext())
+                if (!checkContext()) {
+                    future.initialRequest.logd("context has died");
                     return;
+                }
 
                 // unless we're invoked onto the handler/main/service thread, there's no frakking way to avoid a
                 // race condition where the service or activity dies before this callback is invoked.
@@ -506,7 +508,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                     sink.close();
             }
 
-            TransformFuture<T, LoaderEmitter> self = this;
+            EmitterTransform<T> self = this;
             @Override
             protected void transform(LoaderEmitter emitter) throws Exception {
                 super.transform(emitter);
@@ -529,7 +531,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     <T> EmitterTransform<T> execute(final AsyncParser<T> parser, Runnable cancel) {
         assert parser != null;
         EmitterTransform<T> ret = new EmitterTransform<T>(cancel) {
-            TransformFuture<T, LoaderEmitter> self = this;
+            EmitterTransform<T> self = this;
             @Override
             protected void transform(LoaderEmitter emitter) throws Exception {
                 super.transform(emitter);
