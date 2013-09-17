@@ -94,10 +94,11 @@ Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
 .setCallback(...)
 ```
 
-#### Post multipart/form-data and read JSON
+#### Post multipart/form-data and read JSON with an upload progress bar
 
 ```java
 Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
+.uploadProgressBar(uploadProgressBar)
 .setMultipartParameter("goop", "noop")
 .setMultipartFile("filename.zip", new File("/sdcard/filename.zip"))
 .asJsonObject()
