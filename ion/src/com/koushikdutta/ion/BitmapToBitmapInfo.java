@@ -33,8 +33,10 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                     try {
                         InputStream in = snapshot.getInputStream(0);
                         assert in instanceof FileInputStream;
-                        ByteBuffer b = ByteBufferList.obtain(in.available());
-                        new DataInputStream(in).readFully(b.array(), 0, in.available());
+                        int available = in.available();
+                        ByteBuffer b = ByteBufferList.obtain(available);
+                        new DataInputStream(in).readFully(b.array(), 0, available);
+                        b.limit(available);
                         callback.onCompleted(null, new ByteBufferList(b));
                     }
                     finally {
