@@ -3,6 +3,7 @@ package com.koushikdutta.ion;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
+import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
@@ -11,8 +12,11 @@ import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
 
+import java.io.DataInputStream;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<BitmapInfo> {
@@ -22,11 +26,16 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
         ion.getServer().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                final LoadBitmapStream callback = new LoadBitmapStream(ion, transformKey, true, 0, 0);
+                final LoadBitmap callback = new LoadBitmap(ion, transformKey, true, 0, 0, Loader.LoaderEmitter.LOADED_FROM_CACHE);
+
                 try {
                     DiskLruCache.Snapshot snapshot = ion.getResponseCache().getDiskLruCache().get(transformKey);
                     try {
-                        callback.loadInputStream(snapshot.getInputStream(0));
+                        InputStream in = snapshot.getInputStream(0);
+                        assert in instanceof FileInputStream;
+                        ByteBuffer b = ByteBufferList.obtain(in.available());
+                        new DataInputStream(in).readFully(b.array(), 0, in.available());
+                        callback.onCompleted(null, new ByteBufferList(b));
                     }
                     finally {
                         snapshot.close();

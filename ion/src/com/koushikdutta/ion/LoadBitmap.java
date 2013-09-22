@@ -12,13 +12,13 @@ import java.nio.ByteBuffer;
 class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList> {
     int resizeWidth;
     int resizeHeight;
-    IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform;
+    int loadedFrom;
 
-    public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
+    public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, int loadedFrom) {
         super(ion, urlKey, put);
         this.resizeWidth = resizeWidth;
         this.resizeHeight = resizeHeight;
-        this.emitterTransform = emitterTransform;
+        this.loadedFrom = loadedFrom;
     }
 
     @Override
@@ -41,7 +41,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
                     BitmapInfo info = new BitmapInfo();
                     info.key = key;
                     info.bitmap = bitmap;
-                    info.loadedFrom = emitterTransform.loadedFrom();
+                    info.loadedFrom = loadedFrom;
 
                     report(null, info);
                 } catch (Exception e) {
