@@ -1,18 +1,27 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
-import android.os.Looper;
 
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList> {
     int resizeWidth;
     int resizeHeight;
     int loadedFrom;
+    static ExecutorService singleExecutorService;
+
+    static {
+        int numProcs = Runtime.getRuntime().availableProcessors();
+        if (numProcs <= 2) {
+            singleExecutorService = Executors.newFixedThreadPool(1);
+        }
+    }
 
     public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, int loadedFrom) {
         super(ion, urlKey, put);
@@ -28,7 +37,12 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
             return;
         }
 
-        ion.getServer().getExecutorService().execute(new Runnable() {
+        ExecutorService executorService = singleExecutorService;
+        if (executorService == null) {
+            executorService = ion.getServer().getExecutorService();
+        }
+
+        executorService.execute(new Runnable() {
             @Override
             public void run() {
                 ByteBuffer bb = result.getAll();
