@@ -26,7 +26,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
         ion.getServer().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                final LoadBitmap callback = new LoadBitmap(ion, transformKey, true, 0, 0, Loader.LoaderEmitter.LOADED_FROM_CACHE);
+                final LoadBitmap callback = new LoadBitmap(ion, transformKey, true, -1, -1, Loader.LoaderEmitter.LOADED_FROM_CACHE);
 
                 try {
                     DiskLruCache.Snapshot snapshot = ion.getResponseCache().getDiskLruCache().get(transformKey);
