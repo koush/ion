@@ -34,11 +34,11 @@ class DefaultTransform implements Transform {
             else
                 ratio = Math.min(xratio, yratio);
 
-            float postx = b.getWidth() * ratio;
-            float posty = b.getHeight() * ratio;
-            float transx = (resizeWidth - postx) / 2;
-            float transy = (resizeHeight - posty) / 2;
-            destination.set(transx, transy, postx, posty);
+            float postWidth = b.getWidth() * ratio;
+            float postHeight = b.getHeight() * ratio;
+            float transx = (resizeWidth - postWidth) / 2;
+            float transy = (resizeHeight - postHeight) / 2;
+            destination.set(transx, transy, transx + postWidth, transy + postHeight);
         }
 
         canvas.drawBitmap(b, null, destination, null);
