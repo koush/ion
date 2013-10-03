@@ -2,6 +2,7 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
@@ -58,12 +59,19 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
     public BitmapToBitmapInfo(Ion ion, String transformKey, ArrayList<Transform> transforms) {
         super(ion, transformKey, true);
         this.transforms = transforms;
+
+        ion.bitmapsPending.tag(transformKey, this);
     }
 
     @Override
     public void onCompleted(Exception e, final BitmapInfo result) {
         if (e != null) {
             report(e, null);
+            return;
+        }
+
+        if (ion.bitmapsPending.tag(key) != this) {
+            Log.d("IonBitmapLoader", "Bitmap load cancelled (no longer needed)");
             return;
         }
 
