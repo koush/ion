@@ -36,7 +36,6 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
 
     @Override
     public void onCompleted(Exception e, final ByteBufferList result) {
-        assert Thread.currentThread() != Looper.getMainLooper().getThread();
         if (e != null) {
             report(e, null);
             return;
