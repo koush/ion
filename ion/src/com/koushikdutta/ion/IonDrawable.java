@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
@@ -56,6 +57,7 @@ class IonDrawable extends Drawable {
         private WeakReference<IonDrawable> ionDrawableRef;
         private WeakReference<ImageView> imageViewRef;
         private String bitmapKey;
+        private String parentKey;
         private SimpleFuture<ImageView> imageViewFuture = new SimpleFuture<ImageView>();
         private Animation inAnimation;
         private int inAnimationResource;
@@ -108,7 +110,11 @@ class IonDrawable extends Drawable {
         if (previousKey == null)
             return;
 
-        ion.bitmapsPending.removeItem(previousKey, callback);
+        Object owner = ion.bitmapsPending.removeItem(previousKey, callback);
+        if (owner instanceof BitmapToBitmapInfo) {
+            BitmapToBitmapInfo info = (BitmapToBitmapInfo)owner;
+            ion.bitmapsPending.removeItem(info.downloadKey, info);
+        }
     }
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;

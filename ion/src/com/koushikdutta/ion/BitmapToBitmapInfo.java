@@ -1,13 +1,10 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.util.Log;
 
 import com.koushikdutta.async.ByteBufferList;
-import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
@@ -56,9 +53,11 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
         });
     }
 
-    public BitmapToBitmapInfo(Ion ion, String transformKey, ArrayList<Transform> transforms) {
+    String downloadKey;
+    public BitmapToBitmapInfo(Ion ion, String transformKey, String downloadKey, ArrayList<Transform> transforms) {
         super(ion, transformKey, true);
         this.transforms = transforms;
+        this.downloadKey = downloadKey;
 
         ion.bitmapsPending.tag(transformKey, this);
     }
@@ -71,7 +70,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
         }
 
         if (ion.bitmapsPending.tag(key) != this) {
-            Log.d("IonBitmapLoader", "Bitmap load cancelled (no longer needed)");
+            Log.d("IonBitmapLoader", "Bitmap transform cancelled (no longer needed)");
             return;
         }
 
