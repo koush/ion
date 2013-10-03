@@ -108,13 +108,7 @@ class IonDrawable extends Drawable {
         if (previousKey == null)
             return;
 
-        ArrayList<FutureCallback<BitmapInfo>> cbs = ion.bitmapsPending.get(previousKey);
-        if (cbs == null)
-            return;
-
-        cbs.remove(callback);
-        if (cbs.size() == 0)
-            ion.bitmapsPending.remove(previousKey);
+        ion.bitmapsPending.removeItem(previousKey, callback);
     }
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;

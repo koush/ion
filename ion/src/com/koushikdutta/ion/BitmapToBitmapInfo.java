@@ -44,7 +44,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                     }
                 }
                 catch (Exception e) {
-                    callback.report(e, null);
+                    callback.onCompleted(e, null);
                     try {
                         ion.getResponseCache().getDiskLruCache().remove(transformKey);
                     }

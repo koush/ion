@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
@@ -28,12 +29,19 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
         this.resizeWidth = resizeWidth;
         this.resizeHeight = resizeHeight;
         this.loadedFrom = loadedFrom;
+
+        ion.bitmapsPending.tag(urlKey, this);
     }
 
     @Override
     public void onCompleted(Exception e, final ByteBufferList result) {
         if (e != null) {
             report(e, null);
+            return;
+        }
+
+        if (ion.bitmapsPending.tag(key) != this) {
+            Log.d("IonBitmapLoader", "Bitmap load cancelled (no longer needed)");
             return;
         }
 

@@ -23,7 +23,7 @@ class BitmapCallback {
         return put;
     }
 
-    void report(final Exception e, final BitmapInfo info) {
+    protected void report(final Exception e, final BitmapInfo info) {
         AsyncServer.post(Ion.mainHandler, new Runnable() {
             @Override
             public void run() {

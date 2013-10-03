@@ -31,7 +31,7 @@ public class Twitter extends Activity {
         super.onCreate(savedInstanceState);
 
         // Enable global Ion logging
-        Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
+//        Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
 
         // create a tweet adapter for our list view
         tweetAdapter = new ArrayAdapter<JsonObject>(this, 0) {
