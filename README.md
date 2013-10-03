@@ -225,7 +225,7 @@ public static class Tweet {
 
 public void getTweets() throws Exception {
     Ion.with(context, "http://example.com/api/tweets")
-    .as(new TypeToken<List<Tweet>>(){});
+    .as(new TypeToken<List<Tweet>>(){})
     .setCallback(new FutureCallback<List<Tweet>>() {
        @Override
         public void onCompleted(Exception e, List<Tweet> tweets) {
