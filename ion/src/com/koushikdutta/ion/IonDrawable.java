@@ -94,7 +94,7 @@ class IonDrawable extends Drawable {
             drawable.setBitmap(result, result.loadedFrom);
             imageView.setImageDrawable(drawable);
             IonBitmapRequestBuilder.doAnimation(imageView, inAnimation, inAnimationResource);
-            imageViewFuture.setComplete(imageView);
+            imageViewFuture.setComplete(e, imageView);
 
         }
     }
