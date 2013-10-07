@@ -3,6 +3,7 @@ package com.koushikdutta.ion;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.view.animation.Animation;
@@ -79,18 +80,27 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
+    private String getLoadKey() {
+        String key = builder.uri;
+        if (resizeWidth != Integer.MAX_VALUE && resizeHeight != Integer.MAX_VALUE)
+            key += "resize=" + resizeWidth + "x" + resizeHeight;
+        if (sourceRect != null)
+            key += "sourceRect=" + sourceRect.left + "x" + sourceRect.top + "x" + sourceRect.right + "x" + sourceRect.bottom;
+        return ResponseCacheMiddleware.toKeyString(key);
+    }
+
     String bitmapKey;
     BitmapInfo execute() {
-        final String downloadKey = ResponseCacheMiddleware.toKeyString(builder.uri);
+        final String loadKey = getLoadKey();
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-        assert downloadKey != null;
+        assert loadKey != null;
 
         if (resizeHeight != 0 || resizeWidth != 0) {
             transform(new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
         }
 
         // determine the key for this bitmap after all transformations
-        bitmapKey = downloadKey;
+        bitmapKey = loadKey;
         boolean hasTransforms = transforms != null && transforms.size() > 0;
         if (hasTransforms) {
             for (Transform transform : transforms) {
@@ -115,7 +125,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
 
         // Perform a download as necessary.
-        if (!ion.bitmapsPending.contains(downloadKey)) {
+        if (!ion.bitmapsPending.contains(loadKey)) {
             builder.setHandler(null);
             // if we cancel, gotta remove any waiters.
             IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
@@ -124,12 +134,12 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                     AsyncServer.post(Ion.mainHandler, new Runnable() {
                         @Override
                         public void run() {
-                            ion.bitmapsPending.remove(downloadKey);
+                            ion.bitmapsPending.remove(loadKey);
                         }
                     });
                 }
             });
-            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, sourceRect, resizeWidth, resizeHeight, emitterTransform.loadedFrom()));
+            emitterTransform.setCallback(new LoadBitmap(ion, loadKey, !hasTransforms, sourceRect, resizeWidth, resizeHeight, emitterTransform.loadedFrom()));
         }
 
         // if there's a transform, do it
@@ -139,8 +149,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // verify this transform isn't already pending
         // make sure that the parent download isn't cancelled (empty list)
         // and also make sure there are waiters for this transformed bitmap
-        if (!ion.bitmapsPending.contains(downloadKey) || !ion.bitmapsPending.contains(bitmapKey)) {
-            ion.bitmapsPending.add(downloadKey, new BitmapToBitmapInfo(ion, bitmapKey, downloadKey, transforms));
+        if (!ion.bitmapsPending.contains(loadKey) || !ion.bitmapsPending.contains(bitmapKey)) {
+            ion.bitmapsPending.add(loadKey, new BitmapToBitmapInfo(ion, bitmapKey, loadKey, transforms));
         }
 
         return null;
@@ -321,9 +331,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    Rect sourceRect;
+    RectF sourceRect;
     @Override
-    public BitmapBuilder<?> region(Rect sourceRect) {
+    public BitmapBuilder<?> region(RectF sourceRect) {
         this.sourceRect = sourceRect;
         return this;
     }

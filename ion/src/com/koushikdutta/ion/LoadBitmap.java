@@ -2,6 +2,7 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Looper;
 import android.util.Log;
 
@@ -17,7 +18,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
     int resizeWidth;
     int resizeHeight;
     int loadedFrom;
-    Rect sourceRect;
+    RectF sourceRect;
     static ExecutorService singleExecutorService;
 
     static {
@@ -27,7 +28,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
         }
     }
 
-    public LoadBitmap(Ion ion, String urlKey, boolean put, Rect sourceRect, int resizeWidth, int resizeHeight, int loadedFrom) {
+    public LoadBitmap(Ion ion, String urlKey, boolean put, RectF sourceRect, int resizeWidth, int resizeHeight, int loadedFrom) {
         super(ion, urlKey, put);
         this.resizeWidth = resizeWidth;
         this.resizeHeight = resizeHeight;

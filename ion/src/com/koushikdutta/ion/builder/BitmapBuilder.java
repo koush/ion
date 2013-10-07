@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.builder;
 
 import android.graphics.Rect;
+import android.graphics.RectF;
 
 import com.koushikdutta.ion.bitmap.Transform;
 
@@ -44,5 +45,5 @@ public interface BitmapBuilder<B extends BitmapBuilder<?>> {
      * @param sourceRect
      * @return
      */
-    public B region(Rect sourceRect);
+    public B region(RectF sourceRect);
 }

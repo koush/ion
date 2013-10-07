@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.sample;
 
 import android.app.Activity;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -32,6 +33,16 @@ public class ImageViewSample extends Activity {
         .intoImageView(imageView);
     }
 
+    public void loadRegion() {
+        Ion.with(this)
+        .load("http://media.salon.com/2013/05/original.jpg")
+        .withBitmap()
+        .region(new RectF(.1f, .1f, .9f, .9f))
+        .resize(512, 512)
+        .centerCrop()
+        .intoImageView(imageView);
+    }
+
     Spinner fitChoices;
     ImageView imageView;
     @Override
@@ -45,14 +56,17 @@ public class ImageViewSample extends Activity {
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item);
         adapter.add("centerCrop");
         adapter.add("centerInside");
+        adapter.add("region");
         fitChoices.setAdapter(adapter);
         fitChoices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0)
                     loadCenterCrop();
-                else
+                else if (position == 1)
                     loadCenterInside();
+                else
+                    loadRegion();
             }
 
             @Override

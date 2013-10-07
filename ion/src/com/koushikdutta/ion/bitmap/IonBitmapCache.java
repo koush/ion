@@ -1,12 +1,16 @@
 package com.koushikdutta.ion.bitmap;
 
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.BitmapRegionDecoder;
 import android.graphics.Rect;
+import android.graphics.RectF;
+import android.os.Build;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -14,6 +18,7 @@ import android.view.WindowManager;
 
 import com.koushikdutta.ion.Ion;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -78,7 +83,23 @@ public class IonBitmapCache {
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
-    public Bitmap loadBitmap(byte[] bytes, int offset, int length, Rect sourceRect, int minx, int miny) {
+    private Bitmap loadRegionLegacy(byte[] bytes, int offset, int length, Rect sourceRect, BitmapFactory.Options o) {
+        Bitmap source = BitmapFactory.decodeByteArray(bytes, offset, length, o);
+        return Bitmap.createBitmap(source, sourceRect.left, sourceRect.top, sourceRect.width(), sourceRect.height());
+    }
+
+    @SuppressLint("NewApi")
+    private Bitmap loadRegion(byte[] bytes, int offset, int length, Rect sourceRect, BitmapFactory.Options o) {
+        try {
+            return BitmapRegionDecoder.newInstance(bytes, offset, length, true)
+            .decodeRegion(sourceRect, o);
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+
+    public Bitmap loadBitmap(byte[] bytes, int offset, int length, RectF sourceRect, int minx, int miny) {
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         int targetWidth = minx;
         int targetHeight = miny;
@@ -92,17 +113,44 @@ public class IonBitmapCache {
             targetHeight = Integer.MAX_VALUE;
 
         BitmapFactory.Options o = null;
-        if (targetWidth != Integer.MAX_VALUE || targetHeight != Integer.MAX_VALUE) {
+        Rect rect = null;
+        // see if we need the bounds before loading
+        boolean needsResample = targetWidth != Integer.MAX_VALUE || targetHeight != Integer.MAX_VALUE;
+        if (needsResample || sourceRect != null) {
             o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
             BitmapFactory.decodeByteArray(bytes, offset, length, o);
             if (o.outWidth < 0 || o.outHeight < 0)
                 return null;
-            int scale = Math.max(o.outWidth / targetWidth, o.outHeight / targetHeight);
+
+            // bounds retrieved
+            int outWidth = o.outWidth;
+            int outHeight = o.outHeight;
+
+            // region decoding
+            if (sourceRect != null) {
+                rect = new Rect();
+                rect.set(
+                (int)(sourceRect.left * o.outWidth),
+                (int)(sourceRect.top * o.outHeight),
+                (int)(sourceRect.right * o.outWidth),
+                (int)(sourceRect.bottom * o.outHeight));
+
+                // the out bounds need to be adjusted to make sense for the region
+                outWidth = rect.width();
+                outHeight = rect.height();
+            }
+
+            int scale = Math.max(outWidth / targetWidth, outHeight / targetHeight);
             o = new BitmapFactory.Options();
             o.inSampleSize = scale;
         }
-        return BitmapFactory.decodeByteArray(bytes, offset, length, o);
+        if (rect == null)
+            return BitmapFactory.decodeByteArray(bytes, offset, length, o);
+
+        if (Build.VERSION.SDK_INT < 10)
+            return loadRegionLegacy(bytes, offset, length, rect, o);
+        return loadRegion(bytes, offset, length, rect, o);
     }
 
     public Bitmap loadBitmap(InputStream stream, int minx, int miny) {
@@ -121,7 +169,7 @@ public class IonBitmapCache {
             targetHeight = Integer.MAX_VALUE;
 
         BitmapFactory.Options o = null;
-        if (targetWidth != Integer.MAX_VALUE || targetHeight != Integer.MAX_VALUE) {
+        if (targetWidth != Integer.MAX_VALUE && targetHeight != Integer.MAX_VALUE) {
             o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
             stream.mark(Integer.MAX_VALUE);
