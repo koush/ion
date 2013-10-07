@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
+import android.graphics.Rect;
 import android.os.Looper;
 import android.util.Log;
 
@@ -16,6 +17,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
     int resizeWidth;
     int resizeHeight;
     int loadedFrom;
+    Rect sourceRect;
     static ExecutorService singleExecutorService;
 
     static {
@@ -25,11 +27,12 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
         }
     }
 
-    public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, int loadedFrom) {
+    public LoadBitmap(Ion ion, String urlKey, boolean put, Rect sourceRect, int resizeWidth, int resizeHeight, int loadedFrom) {
         super(ion, urlKey, put);
         this.resizeWidth = resizeWidth;
         this.resizeHeight = resizeHeight;
         this.loadedFrom = loadedFrom;
+        this.sourceRect = sourceRect;
 
         ion.bitmapsPending.tag(urlKey, this);
     }
@@ -57,7 +60,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
             public void run() {
                 ByteBuffer bb = result.getAll();
                 try {
-                    Bitmap bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
+                    Bitmap bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), sourceRect, resizeWidth, resizeHeight);
 
                     if (bitmap == null)
                         throw new Exception("bitmap failed to load");

@@ -2,6 +2,7 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.view.animation.Animation;
@@ -18,6 +19,7 @@ import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
+import com.koushikdutta.ion.builder.BitmapBuilder;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
@@ -127,7 +129,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                     });
                 }
             });
-            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, emitterTransform.loadedFrom()));
+            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, sourceRect, resizeWidth, resizeHeight, emitterTransform.loadedFrom()));
         }
 
         // if there's a transform, do it
@@ -319,6 +321,13 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
+    Rect sourceRect;
+    @Override
+    public BitmapBuilder<?> region(Rect sourceRect) {
+        this.sourceRect = sourceRect;
+        return this;
+    }
+
     int resizeWidth;
     int resizeHeight;
 
@@ -351,6 +360,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         loadAnimation = null;
         loadAnimationResource = 0;
         scaleMode = ScaleMode.FitXY;
+        sourceRect = null;
         resizeWidth = 0;
         resizeHeight = 0;
         disableFadeIn = false;

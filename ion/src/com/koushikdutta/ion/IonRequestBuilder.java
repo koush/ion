@@ -548,21 +548,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return ret;
     }
 
-    Future<InputStream> execute() {
-        URI uri = prepareURI();
-        if (uri == null)
-            return null;
-
-        AsyncHttpRequest request = prepareRequest(uri, null);
-
-        for (Loader loader: ion.config.loaders) {
-            Future<InputStream> ret = loader.load(ion, request);
-            if (ret != null)
-                return ret;
-        }
-        return null;
-    }
-
     @Override
     public ResponseFuture<JsonObject> asJsonObject() {
         return execute(new GsonParser<JsonObject>());

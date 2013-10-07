@@ -1,5 +1,7 @@
 package com.koushikdutta.ion.builder;
 
+import android.graphics.Rect;
+
 import com.koushikdutta.ion.bitmap.Transform;
 
 /**
@@ -36,4 +38,11 @@ public interface BitmapBuilder<B extends BitmapBuilder<?>> {
      * @return
      */
     public B centerInside();
+
+    /**
+     * Load only the requested region of the image as the initial bitmap.
+     * @param sourceRect
+     * @return
+     */
+    public B region(Rect sourceRect);
 }

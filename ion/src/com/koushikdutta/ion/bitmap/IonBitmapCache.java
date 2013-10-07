@@ -6,6 +6,7 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -77,7 +78,7 @@ public class IonBitmapCache {
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
-    public Bitmap loadBitmap(byte[] bytes, int offset, int length, int minx, int miny) {
+    public Bitmap loadBitmap(byte[] bytes, int offset, int length, Rect sourceRect, int minx, int miny) {
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         int targetWidth = minx;
         int targetHeight = miny;
