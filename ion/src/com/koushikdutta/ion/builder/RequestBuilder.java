@@ -229,8 +229,7 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * provided in the load call, the default HTTP method, POST, is used.
      * @param inputStream InputStream to send with the request
      * @param length length of the input stream (in bytes) to read
-     * @param contentType MIME type to declare
      * @return
      */
-    public Builders.Any.F setStreamBody(InputStream inputStream, int length, String contentType);
+    public Builders.Any.F setStreamBody(InputStream inputStream, int length);
 }

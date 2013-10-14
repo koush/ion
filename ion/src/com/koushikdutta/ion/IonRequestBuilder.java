@@ -771,7 +771,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public Builders.Any.F setStreamBody(InputStream inputStream, int length, String contentType) {
+    public Builders.Any.F setStreamBody(InputStream inputStream, int length) {
         setBody(new StreamBody(inputStream, length));
         return this;
     }
