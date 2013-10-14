@@ -36,6 +36,7 @@ import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.body.DocumentBody;
 import com.koushikdutta.async.http.body.FileBody;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
+import com.koushikdutta.async.http.body.StreamBody;
 import com.koushikdutta.async.http.body.StringBody;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.libcore.RawHeaders;
@@ -766,6 +767,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public Builders.Any.F setFileBody(File file) {
         setBody(new FileBody(file));
+        return this;
+    }
+
+    @Override
+    public Builders.Any.F setStreamBody(InputStream inputStream, int length, String contentType) {
+        setBody(new StreamBody(inputStream, length));
         return this;
     }
 }
