@@ -11,10 +11,19 @@ import java.util.concurrent.Semaphore;
  */
 public class FileTests extends AndroidTestCase {
     public void testFileLoader() throws Exception {
-        final Semaphore semaphore = new Semaphore(0);
         File f = new File("/sdcard/test.txt");
         StreamUtility.writeFile(f, "hello world");
 
         assertEquals("hello world", Ion.with(getContext(), f).asString().get());
+    }
+
+    public void testFileUpload() throws Exception {
+        File f = new File("/sdcard/test.txt");
+        StreamUtility.writeFile(f, "hello world");
+
+        Ion.with(getContext())
+        .load("POST", "http://koush.com/test/echo")
+        .asString()
+        .get();
     }
 }
