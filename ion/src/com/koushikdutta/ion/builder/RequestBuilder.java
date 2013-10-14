@@ -16,6 +16,7 @@ import com.koushikdutta.ion.ProgressCallback;
 import org.w3c.dom.Document;
 
 import java.io.File;
+import java.io.InputStream;
 
 /**
 * Created by koush on 5/30/13.
@@ -221,4 +222,21 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @return
      */
     public F setFileBody(File file);
+
+    /**
+     * Specify an InputStream to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param inputStream InputStream to send with the request
+     * @return
+     */
+    public Builders.Any.F setStreamBody(InputStream inputStream);
+
+    /**
+     * Specify an InputStream to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param inputStream InputStream to send with the request
+     * @param length length of the input stream (in bytes) to read
+     * @return
+     */
+    public Builders.Any.F setStreamBody(InputStream inputStream, int length);
 }
