@@ -13,6 +13,7 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.future.TransformFuture;
+import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.parser.ByteBufferListParser;
@@ -24,6 +25,7 @@ import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.net.URI;
 import java.util.ArrayList;
 
 /**
@@ -98,16 +100,17 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
 
         // see if this request can be fulfilled from the cache
-        BitmapInfo bitmap = builder.ion.bitmapCache.get(bitmapKey);
-        if (bitmap != null) {
-            return bitmap;
+        if (!builder.noCache) {
+            BitmapInfo bitmap = builder.ion.bitmapCache.get(bitmapKey);
+            if (bitmap != null)
+                return bitmap;
         }
 
         // bitmaps that were transformed are put into the DiskLruCache to prevent
         // subsequent retransformation. See if we can retrieve the bitmap from the disk cache.
         // See BitmapToBitmapInfo for where the cache is populated.
         DiskLruCache diskLruCache = ion.getResponseCache().getDiskLruCache();
-        if (hasTransforms && diskLruCache.containsKey(bitmapKey)) {
+        if (!builder.noCache && hasTransforms && diskLruCache.containsKey(bitmapKey)) {
             BitmapToBitmapInfo.getBitmapSnapshot(ion, bitmapKey);
             return null;
         }

@@ -116,6 +116,12 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
     public R setHeader(String name, String value);
 
     /**
+     * Disable usage of the cache for this request
+     * @return
+     */
+    public R noCache();
+
+    /**
      * Set whether this request will follow redirects
      */
     public R followRedirect(boolean follow);
