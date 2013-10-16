@@ -34,6 +34,10 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      */
     public ResponseFuture<JsonObject> asJsonObject();
 
+    /**
+     * Execute the request and get the result as an XML Document
+     * @return
+     */
     public ResponseFuture<Document> asDocument();
 
     /**
