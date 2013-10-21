@@ -308,7 +308,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                             public void run() {
                                 if (ret.isCancelled() || ret.isDone())
                                     return;
-                                progressHandler.onProgress(downloaded, total);
+                                uploadProgressHandler.onProgress(downloaded, total);
                             }
                         });
                     }
