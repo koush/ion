@@ -27,7 +27,7 @@ class LoadBitmapStream extends BitmapCallback implements FutureCallback<InputStr
 
             BitmapInfo info = new BitmapInfo();
             info.key = key;
-            info.bitmap = bitmap;
+            info.bitmaps = new Bitmap[] { bitmap };
             info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_CACHE;
 
             report(null, info);

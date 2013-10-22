@@ -60,7 +60,7 @@ public class IonBitmapCache {
             return null;
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
         BitmapInfo ret = cache.get(key);
-        if (ret == null || ret.bitmap != null)
+        if (ret == null || ret.bitmaps != null)
             return ret;
 
         // if this bitmap load previously errored out, see if it is time to retry

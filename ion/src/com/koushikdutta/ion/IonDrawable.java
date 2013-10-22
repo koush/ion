@@ -1,7 +1,11 @@
 package com.koushikdutta.ion;
 
 import android.content.res.Resources;
-import android.graphics.*;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -9,20 +13,17 @@ import android.text.TextUtils;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
-import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 
 /**
  * Created by koush on 6/8/13.
  */
 class IonDrawable extends Drawable {
     private Paint paint;
-    private Bitmap bitmap;
     private BitmapInfo info;
     private int placeholderResource;
     private Drawable placeholder;
@@ -125,7 +126,7 @@ class IonDrawable extends Drawable {
         callback = new IonDrawableCallback(this, imageView);
     }
 
-
+    int currentFrame;
     public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
         this.loadedFrom = loadedFrom;
 
@@ -135,14 +136,13 @@ class IonDrawable extends Drawable {
         invalidateSelf();
 
         this.info = info;
+        currentFrame = 0;
         if (info == null) {
             callback.bitmapKey = null;
-            bitmap = null;
             return this;
         }
 
         callback.bitmapKey = info.key;
-        this.bitmap = info.bitmap;
         return this;
     }
 
@@ -181,8 +181,8 @@ class IonDrawable extends Drawable {
 
     @Override
     public int getIntrinsicWidth() {
-        if (bitmap != null)
-            return bitmap.getScaledWidth(resources.getDisplayMetrics().densityDpi);
+        if (info != null && info.bitmaps != null)
+            return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
         if (error != null)
             return error.getIntrinsicWidth();
         if (placeholder != null)
@@ -192,8 +192,8 @@ class IonDrawable extends Drawable {
 
     @Override
     public int getIntrinsicHeight() {
-        if (bitmap != null)
-            return bitmap.getScaledHeight(resources.getDisplayMetrics().densityDpi);
+        if (info != null && info.bitmaps != null)
+            return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
         if (error != null)
             return error.getIntrinsicHeight();
         if (placeholder != null)
@@ -202,6 +202,12 @@ class IonDrawable extends Drawable {
     }
 
     public static final long FADE_DURATION = 200;
+    private Runnable invalidate = new Runnable() {
+        @Override
+        public void run() {
+            invalidateSelf();
+        }
+    };
 
     @Override
     public void draw(Canvas canvas) {
@@ -234,10 +240,15 @@ class IonDrawable extends Drawable {
             }
         }
 
-        if (bitmap != null) {
+        if (info.bitmaps != null) {
             paint.setAlpha((int)destAlpha);
-            canvas.drawBitmap(bitmap, null, getBounds(), paint);
+            canvas.drawBitmap(info.bitmaps[currentFrame % info.bitmaps.length], null, getBounds(), paint);
             paint.setAlpha(0xFF);
+            if (info.delays != null) {
+                int delay = info.delays[currentFrame++ % info.delays.length];
+                scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
+//                invalidateSelf();
+            }
         }
         else {
             if (error == null && errorResource != 0)
@@ -297,7 +308,7 @@ class IonDrawable extends Drawable {
 
     @Override
     public int getOpacity() {
-        return (bitmap == null || bitmap.hasAlpha() || paint.getAlpha() < 255) ?
+        return (info == null || info.bitmaps == null || info.bitmaps[0].hasAlpha() || paint.getAlpha() < 255) ?
                 PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
     }
 

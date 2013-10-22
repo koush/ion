@@ -78,14 +78,15 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
             @Override
             public void run() {
                 BitmapInfo info = new BitmapInfo();
+                info.bitmaps = new Bitmap[result.bitmaps.length];
                 try {
-                    Bitmap tmpBitmap = result.bitmap;
-                    for (Transform transform : transforms) {
-//                            builder.request.logd("applying transform: " + transform.key());
-                        tmpBitmap = transform.transform(tmpBitmap);
+                    for (int i = 0; i < result.bitmaps.length; i++) {
+                        for (Transform transform : transforms) {
+                            info.bitmaps[i] = transform.transform(result.bitmaps[i]);
+                        }
                     }
+                    info.delays = result.delays;
                     info.loadedFrom = result.loadedFrom;
-                    info.bitmap = tmpBitmap;
                     info.key = key;
                     report(null, info);
                 } catch (Exception e) {
@@ -94,6 +95,9 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                 }
                 // the transformed bitmap was successfully load it, let's toss it into
                 // the disk lru cache.
+                // but don't persist gifs...
+                if (info.bitmaps.length > 1)
+                    return;
                 try {
                     DiskLruCache cache = ion.getResponseCache().getDiskLruCache();
                     if (cache == null)
@@ -106,8 +110,8 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                             editor.set(i, key);
                         }
                         OutputStream out = editor.newOutputStream(0);
-                        Bitmap.CompressFormat format = info.bitmap.hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
-                        info.bitmap.compress(format, 100, out);
+                        Bitmap.CompressFormat format = info.bitmaps[0].hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
+                        info.bitmaps[0].compress(format, 100, out);
                         out.close();
                         editor.commit();
                     }

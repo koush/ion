@@ -10,5 +10,12 @@ public class BitmapInfo {
     public long drawTime;
     public String key;
     public int loadedFrom;
-    public Bitmap bitmap;
+    public Bitmap[] bitmaps;
+    public int[] delays;
+
+    public int sizeOf() {
+        if (bitmaps == null)
+            return 0;
+        return bitmaps[0].getRowBytes() * bitmaps[0].getHeight() * bitmaps.length;
+    }
 }

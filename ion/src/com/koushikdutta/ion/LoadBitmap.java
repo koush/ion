@@ -73,27 +73,34 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
             public void run() {
                 ByteBuffer bb = result.getAll();
                 try {
-                    Bitmap bitmap;
+                    Bitmap[] bitmaps;
+                    int[] delays;
                     if (!isGif()) {
-                        bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
+                        bitmaps = new Bitmap[1];
+                        bitmaps[0] = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
+                        delays = null;
                     }
                     else {
                         GifDecoder decoder = new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), new GifAction() {
                             @Override
                             public void parseOk(boolean parseStatus, int frameIndex) {
-
                             }
                         });
                         decoder.run();
-                        bitmap = decoder.getFrameImage(0);
+                        bitmaps = new Bitmap[decoder.getFrameCount()];
+                        delays = decoder.getDelays();
+                        for (int i = 0; i < decoder.getFrameCount(); i++) {
+                            bitmaps[i] = decoder.getFrameImage(i);
+                        }
                     }
 
-                    if (bitmap == null)
+                    if (bitmaps[0] == null)
                         throw new Exception("bitmap failed to load");
 
                     BitmapInfo info = new BitmapInfo();
                     info.key = key;
-                    info.bitmap = bitmap;
+                    info.bitmaps = bitmaps;
+                    info.delays = delays;
                     if (emitterTransform != null)
                         info.loadedFrom = emitterTransform.loadedFrom();
                     else

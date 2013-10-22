@@ -32,12 +32,21 @@ public class ImageViewSample extends Activity {
         .intoImageView(imageView);
     }
 
-    public void loadGif() {
+    public void loadGifCenterCrop() {
         Ion.with(this)
         .load("https://raw.github.com/koush/ion/master/mark.gif")
         .withBitmap()
         .resize(512, 512)
         .centerCrop()
+        .intoImageView(imageView);
+    }
+
+    public void loadGifCenterInside() {
+        Ion.with(this)
+        .load("https://raw.github.com/koush/ion/master/mark.gif")
+        .withBitmap()
+        .resize(512, 512)
+        .centerInside()
         .intoImageView(imageView);
     }
 
@@ -54,7 +63,8 @@ public class ImageViewSample extends Activity {
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item);
         adapter.add("centerCrop");
         adapter.add("centerInside");
-        adapter.add("gif");
+        adapter.add("gif centerCrop");
+        adapter.add("gif centerInside");
         fitChoices.setAdapter(adapter);
         fitChoices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -63,8 +73,10 @@ public class ImageViewSample extends Activity {
                     loadCenterCrop();
                 else if (position == 1)
                     loadCenterInside();
+                else if (position == 2)
+                    loadGifCenterCrop();
                 else
-                    loadGif();
+                    loadGifCenterInside();
             }
 
             @Override

@@ -31,7 +31,7 @@ class BitmapCallback {
                 if (result == null) {
                     // cache errors
                     result = new BitmapInfo();
-                    result.bitmap = null;
+                    result.bitmaps = null;
                     result.key = key;
                     ion.getBitmapCache().put(result);
                 } else if (put()) {
