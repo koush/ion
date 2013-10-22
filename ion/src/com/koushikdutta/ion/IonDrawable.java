@@ -208,6 +208,7 @@ class IonDrawable extends Drawable {
         @Override
         public void run() {
             invalidateScheduled = false;
+            currentFrame++;
             invalidateSelf();
         }
     };
@@ -248,9 +249,10 @@ class IonDrawable extends Drawable {
             canvas.drawBitmap(info.bitmaps[currentFrame % info.bitmaps.length], null, getBounds(), paint);
             paint.setAlpha(0xFF);
             if (info.delays != null) {
-                int delay = info.delays[currentFrame++ % info.delays.length];
+                int delay = info.delays[currentFrame % info.delays.length];
                 if (!invalidateScheduled) {
                     invalidateScheduled = true;
+                    unscheduleSelf(invalidate);
                     scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
                 }
             }
