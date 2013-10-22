@@ -127,6 +127,7 @@ class IonDrawable extends Drawable {
     }
 
     int currentFrame;
+    private boolean invalidateScheduled;
     public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
         this.loadedFrom = loadedFrom;
 
@@ -137,6 +138,7 @@ class IonDrawable extends Drawable {
 
         this.info = info;
         currentFrame = 0;
+        invalidateScheduled = false;
         if (info == null) {
             callback.bitmapKey = null;
             return this;
@@ -205,6 +207,7 @@ class IonDrawable extends Drawable {
     private Runnable invalidate = new Runnable() {
         @Override
         public void run() {
+            invalidateScheduled = false;
             invalidateSelf();
         }
     };
@@ -246,7 +249,10 @@ class IonDrawable extends Drawable {
             paint.setAlpha(0xFF);
             if (info.delays != null) {
                 int delay = info.delays[currentFrame++ % info.delays.length];
-                scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
+                if (!invalidateScheduled) {
+                    invalidateScheduled = true;
+                    scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
+                }
             }
         }
         else {
