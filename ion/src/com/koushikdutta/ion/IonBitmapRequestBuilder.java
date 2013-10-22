@@ -1,7 +1,6 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.view.animation.Animation;
@@ -13,7 +12,6 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.future.TransformFuture;
-import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.parser.ByteBufferListParser;
@@ -23,9 +21,7 @@ import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
-import java.net.URI;
 import java.util.ArrayList;
 
 /**
@@ -130,7 +126,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                     });
                 }
             });
-            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, emitterTransform.loadedFrom()));
+            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, emitterTransform));
         }
 
         // if there's a transform, do it

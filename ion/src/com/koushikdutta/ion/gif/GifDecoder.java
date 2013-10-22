@@ -69,11 +69,19 @@ public class GifDecoder extends Thread{
 	
 	
 	private byte[] gifData = null;
+	private int gifDataOffset;
+	private int gifDataLength;
 
-	
+
 	public GifDecoder(byte[] data,GifAction act){
+		this(data, 0, data.length, act);
+	}
+
+	public GifDecoder(byte[] data,int offset,int length,GifAction act){
 		gifData = data;
 		action = act;
+		gifDataOffset = offset;
+		gifDataLength = length;
 	}
 	
 	public GifDecoder(InputStream is,GifAction act){
@@ -292,7 +300,7 @@ public class GifDecoder extends Thread{
 	}
 
 	private int readByte(){
-		in = new ByteArrayInputStream(gifData);
+		in = new ByteArrayInputStream(gifData,gifDataOffset,gifDataLength);
 		gifData = null;
 		return readStream();
 	}
