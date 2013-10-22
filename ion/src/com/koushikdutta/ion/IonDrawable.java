@@ -247,7 +247,6 @@ class IonDrawable extends Drawable {
             if (info.delays != null) {
                 int delay = info.delays[currentFrame++ % info.delays.length];
                 scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
-//                invalidateSelf();
             }
         }
         else {
