@@ -9,7 +9,7 @@
 
 #### Features
  * Asynchronously download:
-   * [Images](https://github.com/koush/ion#load-an-image-into-an-imageview) (into ImageViews or Bitmaps)
+   * [Images](https://github.com/koush/ion#load-an-image-into-an-imageview) into ImageViews or Bitmaps (animated GIFs supported too)
    * [JSON](https://github.com/koush/ion#get-json) (via [Gson](https://code.google.com/p/google-gson/))
    * Strings
    * [Files](https://github.com/koush/ion#download-a-file-with-a-progress-bar)
