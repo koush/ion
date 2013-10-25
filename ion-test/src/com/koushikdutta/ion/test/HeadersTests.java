@@ -2,6 +2,7 @@ package com.koushikdutta.ion.test;
 
 import android.test.AndroidTestCase;
 
+import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
@@ -66,18 +67,44 @@ public class HeadersTests extends AndroidTestCase {
             final Semaphore semaphore = new Semaphore(0);
 
             Ion.with(getContext())
-            .load("http://localhost:5555/")
-            .asString()
-            .withResponse()
-            .setCallback(new FutureCallback<Response<String>>() {
-                @Override
-                public void onCompleted(Exception e, Response<String> result) {
-                    assertEquals(result.getHeaders().getResponseCode(), 200);
-                    semaphore.release();
-                }
-            });
+                    .load("http://localhost:5555/")
+                    .asString()
+                    .withResponse()
+                    .setCallback(new FutureCallback<Response<String>>() {
+                        @Override
+                        public void onCompleted(Exception e, Response<String> result) {
+                            assertEquals(result.getHeaders().getResponseCode(), 200);
+                            semaphore.release();
+                        }
+                    });
 
             assertTrue(semaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
+        }
+        finally {
+            httpServer.stop();
+            Ion.getDefault(getContext()).getServer().stop();
+        }
+    }
+
+    public void testBustedJson() throws Exception {
+        AsyncHttpServer httpServer = new AsyncHttpServer();
+        try {
+            httpServer.get("/", new HttpServerRequestCallback() {
+                @Override
+                public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
+                    response.send("hello");
+                }
+            });
+            httpServer.listen(Ion.getDefault(getContext()).getServer(), 5555);
+
+            Response<JsonObject> response = Ion.with(getContext())
+                    .load("http://localhost:5555/")
+                    .asJsonObject()
+                    .withResponse()
+                    .get();
+
+            assertNull(response.getResult());
+            assertNotNull(response.getException());
         }
         finally {
             httpServer.stop();

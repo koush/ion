@@ -12,6 +12,11 @@ public class Response<T> {
         return result;
     }
 
+    Exception exception;
+    public Exception getException() {
+        return exception;
+    }
+
     RawHeaders headers;
     public RawHeaders getHeaders() {
         return headers;

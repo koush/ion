@@ -26,6 +26,7 @@ import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
@@ -339,29 +340,24 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         RawHeaders headers;
         DataEmitter emitter;
 
-        class ResponseFutureImpl extends TransformFuture<Response<T>, T> {
-            @Override
-            protected void error(Exception e) {
-                Response<T> response = new Response<T>();
-                response.headers = headers;
-                response.request = finalRequest;
-                setComplete(e, response);
-            }
-
-            @Override
-            protected void transform(T result) throws Exception {
-                Response<T> response = new Response<T>();
-                response.headers = headers;
-                response.result = result;
-                response.request = finalRequest;
-                setComplete(response);
-            }
-        }
-
         @Override
         public Future<Response<T>> withResponse() {
-            final ResponseFutureImpl ret = new ResponseFutureImpl();
-            setCallback(ret);
+            final SimpleFuture<Response<T>> ret = new SimpleFuture<Response<T>>();
+            setCallback(new FutureCallback<T>() {
+                @Override
+                public void onCompleted(Exception e, T result) {
+                    if (emitter != null) {
+                        Response<T> response = new Response<T>();
+                        response.headers = headers;
+                        response.request = finalRequest;
+                        response.result = result;
+                        response.exception = e;
+                        ret.setComplete(response);
+                        return;
+                    }
+                    ret.setComplete(e, null);
+                }
+            });
             return ret;
         }
 
