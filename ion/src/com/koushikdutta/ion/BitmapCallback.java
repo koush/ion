@@ -15,6 +15,8 @@ class BitmapCallback {
         this.key = key;
         this.put = put;
         this.ion = ion;
+
+        ion.bitmapsPending.tag(key, this);
     }
 
     boolean put;

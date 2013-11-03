@@ -58,8 +58,6 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
         super(ion, transformKey, true);
         this.transforms = transforms;
         this.downloadKey = downloadKey;
-
-        ion.bitmapsPending.tag(transformKey, this);
     }
 
     @Override

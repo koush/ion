@@ -5,6 +5,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import android.content.Context;
 import android.os.Build;
@@ -34,12 +36,24 @@ import com.koushikdutta.ion.loader.AsyncHttpRequestFactory;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
+import com.koushikdutta.ion.loader.PackageIconLoader;
 
 /**
  * Created by koush on 5/21/13.
  */
 public class Ion {
     public static final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static ExecutorService singleExecutorService  = Runtime.getRuntime().availableProcessors() < 2 ? null : Executors.newFixedThreadPool(1);
+
+    // todo: make this static by moving the server's executor service to static
+    public ExecutorService getBitmapLoadExecutorService() {
+        ExecutorService executorService = singleExecutorService;
+        if (executorService == null) {
+            executorService = getServer().getExecutorService();
+        }
+        return executorService;
+    }
+
 
     /**
      * Get the default Ion object instance and begin building a request
@@ -323,6 +337,7 @@ public class Ion {
         bitmapCache = new IonBitmapCache(this);
 
         configure()
+        .addLoader(new PackageIconLoader())
         .addLoader(httpLoader = new HttpLoader())
         .addLoader(contentLoader = new ContentLoader())
         .addLoader(fileLoader = new FileLoader());

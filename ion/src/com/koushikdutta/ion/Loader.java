@@ -1,10 +1,13 @@
 package com.koushikdutta.ion;
 
+import android.graphics.Bitmap;
+
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.io.InputStream;
 
@@ -55,4 +58,6 @@ public interface Loader {
     // returns a Future if this loader can handle a request
     // otherwise it returns null, and Ion continues to the next loader.
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, FutureCallback<LoaderEmitter> callback);
+
+    public Future<BitmapInfo> loadBitmap(Ion ion, String uri);
 }

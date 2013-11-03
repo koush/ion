@@ -11,6 +11,7 @@ import com.koushikdutta.async.http.callback.HttpConnectCallback;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
+import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.io.InputStream;
 
@@ -18,6 +19,11 @@ import java.io.InputStream;
  * Created by koush on 5/22/13.
  */
 public class HttpLoader implements Loader {
+    @Override
+    public Future<BitmapInfo> loadBitmap(Ion ion, final String uri) {
+        return null;
+    }
+
     @Override
     public Future<InputStream> load(Ion ion, AsyncHttpRequest request) {
         return null;

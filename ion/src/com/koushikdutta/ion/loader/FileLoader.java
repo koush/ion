@@ -10,6 +10,7 @@ import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
+import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -20,6 +21,11 @@ import java.io.InputStream;
  */
 public class FileLoader implements Loader {
     private static final class FileFuture extends SimpleFuture<DataEmitter> {
+    }
+
+    @Override
+    public Future<BitmapInfo> loadBitmap(Ion ion, final String uri) {
+        return null;
     }
 
     @Override
