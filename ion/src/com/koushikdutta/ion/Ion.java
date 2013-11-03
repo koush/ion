@@ -10,6 +10,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.widget.ImageView;
@@ -261,13 +262,6 @@ public class Ion {
         return context;
     }
 
-    private static class AsyncHttpRequestFactoryImpl implements AsyncHttpRequestFactory {
-        @Override
-        public AsyncHttpRequest createAsyncHttpRequest(URI uri, String method, RawHeaders headers) {
-            return new AsyncHttpRequest(uri, method, headers);
-        }
-    }
-
     AsyncHttpClient httpClient;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
@@ -380,7 +374,14 @@ public class Ion {
             this.gson = gson;
         }
 
-        AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactoryImpl();
+        AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactory() {
+            @Override
+            public AsyncHttpRequest createAsyncHttpRequest(URI uri, String method, RawHeaders headers) {
+                if (!TextUtils.isEmpty(userAgent))
+                    headers.set("User-Agent", userAgent);
+                return new AsyncHttpRequest(uri, method, headers);
+            }
+        };
 
         public AsyncHttpRequestFactory getAsyncHttpRequestFactory() {
             return asyncHttpRequestFactory;
@@ -388,6 +389,16 @@ public class Ion {
 
         public Config setAsyncHttpRequestFactory(AsyncHttpRequestFactory asyncHttpRequestFactory) {
             this.asyncHttpRequestFactory = asyncHttpRequestFactory;
+            return this;
+        }
+
+        private String userAgent;
+        public String userAgent() {
+            return userAgent;
+        }
+
+        public Config userAgent(String userAgent) {
+            this.userAgent = userAgent;
             return this;
         }
 
