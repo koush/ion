@@ -24,7 +24,9 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
     public ResponseFuture<String> asString();
 
     /**
-     * Execute the request and get the result as an InputStream
+     * Execute the request and get the result as an InputStream.
+     * This method will load the entire response into memory
+     * and should not be used for large responses.
      * @return
      */
     public ResponseFuture<InputStream> asInputStream();
