@@ -10,6 +10,7 @@ import com.koushikdutta.ion.future.ResponseFuture;
 import org.w3c.dom.Document;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
@@ -21,6 +22,12 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @return
      */
     public ResponseFuture<String> asString();
+
+    /**
+     * Execute the request and get the result as an InputStream
+     * @return
+     */
+    public ResponseFuture<InputStream> asInputStream();
 
     /**
      * Execute the request and get the result as a (Gson) JsonArray

@@ -13,6 +13,7 @@ import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Random;
 
@@ -57,5 +58,17 @@ public class StreamTests extends AndroidTestCase {
         .get();
 
         assertEquals(Md5.createInstance().update(random).digest(), Md5.digest(getContext().getFileStreamPath("test")));
+    }
+
+
+    public void testInputStream() throws Exception {
+        new Random(39548394).nextBytes(random);
+        InputStream is = Ion.with(getContext())
+        .load("http://localhost:5555/")
+        .asInputStream()
+        .get();
+
+        assertEquals(Md5.createInstance().update(random).digest(),
+            Md5.createInstance().update(StreamUtility.readToEndAsArray(is)).digest());
     }
 }
