@@ -587,12 +587,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public <F extends OutputStream> ResponseFuture<F> write(F outputStream, boolean close) {
-        return execute(new OutputStreamDataSink(ion.getServer(), outputStream, true), close, outputStream);
+        return execute(new OutputStreamDataSink(ion.getServer(), outputStream, false), close, outputStream);
     }
 
     @Override
     public <F extends OutputStream> ResponseFuture<F> write(F outputStream) {
-        return execute(new OutputStreamDataSink(ion.getServer(), outputStream, true), true, outputStream);
+        return execute(new OutputStreamDataSink(ion.getServer(), outputStream, false), true, outputStream);
     }
 
     @Override
