@@ -54,6 +54,7 @@ import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 import com.koushikdutta.ion.gson.PojoBody;
 
+import org.apache.http.NameValuePair;
 import org.w3c.dom.Document;
 
 import java.io.File;
@@ -783,6 +784,14 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public Builders.Any.F setStreamBody(InputStream inputStream, int length) {
         setBody(new StreamBody(inputStream, length));
+        return this;
+    }
+
+    @Override
+    public Builders.Any.B setHeader(NameValuePair... header) {
+        for (NameValuePair h: header) {
+            this.headers.set(h.getName(), h.getValue());
+        }
         return this;
     }
 }
