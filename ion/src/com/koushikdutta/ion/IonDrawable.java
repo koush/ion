@@ -33,6 +33,8 @@ class IonDrawable extends Drawable {
     private int loadedFrom;
     private IonDrawableCallback callback;
     private boolean disableFadeIn;
+    private int resizeWidth;
+    private int resizeHeight;
 
     public IonDrawable cancel() {
         requestCount++;
@@ -148,6 +150,15 @@ class IonDrawable extends Drawable {
         return this;
     }
 
+    public IonDrawable setSize(int resizeWidth, int resizeHeight) {
+        if (this.resizeWidth == resizeWidth && this.resizeHeight == resizeHeight)
+            return this;
+        this.resizeWidth = resizeWidth;
+        this.resizeHeight = resizeHeight;
+        invalidateSelf();
+        return this;
+    }
+
     public IonDrawable setError(int resource, Drawable drawable) {
         if ((drawable != null && drawable == this.error) || (resource != 0 && resource == errorResource))
             return this;
@@ -185,6 +196,8 @@ class IonDrawable extends Drawable {
     public int getIntrinsicWidth() {
         if (info != null && info.bitmaps != null)
             return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
+        if (resizeWidth > 0)
+            return resizeWidth;
         if (error != null)
             return error.getIntrinsicWidth();
         if (placeholder != null)
@@ -196,6 +209,8 @@ class IonDrawable extends Drawable {
     public int getIntrinsicHeight() {
         if (info != null && info.bitmaps != null)
             return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
+        if (resizeHeight > 0)
+            return resizeHeight;
         if (error != null)
             return error.getIntrinsicHeight();
         if (placeholder != null)
