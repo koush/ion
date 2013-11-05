@@ -98,7 +98,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     String bitmapKey;
     BitmapInfo execute() {
         final String downloadKey = ResponseCacheMiddleware.toKeyString(builder.uri);
-        assert Thread.currentThread() == Looper.getMainLooper().getThread();
+        assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
         assert downloadKey != null;
 
         if (resizeHeight != 0 || resizeWidth != 0) {
