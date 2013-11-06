@@ -9,6 +9,7 @@ import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.stream.InputStreamDataEmitter;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
+import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.io.InputStream;
 
@@ -17,6 +18,11 @@ import java.io.InputStream;
  */
 public class ContentLoader implements Loader {
     private static final class InputStreamDataEmitterFuture extends SimpleFuture<DataEmitter> {
+    }
+
+    @Override
+    public Future<BitmapInfo> loadBitmap(Ion ion, final String uri) {
+        return null;
     }
 
     @Override

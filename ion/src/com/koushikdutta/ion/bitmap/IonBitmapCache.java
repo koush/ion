@@ -6,6 +6,9 @@ import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -58,7 +61,6 @@ public class IonBitmapCache {
     public BitmapInfo get(String key) {
         if (key == null)
             return null;
-        assert Thread.currentThread() == Looper.getMainLooper().getThread();
         BitmapInfo ret = cache.get(key);
         if (ret == null || ret.bitmaps != null)
             return ret;
@@ -101,7 +103,15 @@ public class IonBitmapCache {
             o = new BitmapFactory.Options();
             o.inSampleSize = scale;
         }
-        return BitmapFactory.decodeByteArray(bytes, offset, length, o);
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, offset, length, o);
+
+        int rotation = Exif.getOrientation(bytes, offset, length);
+        if (rotation == 0)
+            return bitmap;
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(rotation);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
     public Bitmap loadBitmap(InputStream stream, int minx, int miny) {

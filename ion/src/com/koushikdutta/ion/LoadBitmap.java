@@ -19,22 +19,13 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
     int resizeWidth;
     int resizeHeight;
     IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform;
-    static ExecutorService singleExecutorService;
 
-    static {
-        int numProcs = Runtime.getRuntime().availableProcessors();
-        if (numProcs <= 2) {
-            singleExecutorService = Executors.newFixedThreadPool(1);
-        }
-    }
 
     public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
         super(ion, urlKey, put);
         this.resizeWidth = resizeWidth;
         this.resizeHeight = resizeHeight;
         this.emitterTransform = emitterTransform;
-
-        ion.bitmapsPending.tag(urlKey, this);
     }
 
     private boolean isGif() {
@@ -63,10 +54,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
             return;
         }
 
-        ExecutorService executorService = singleExecutorService;
-        if (executorService == null) {
-            executorService = ion.getServer().getExecutorService();
-        }
+        ExecutorService executorService = ion.getBitmapLoadExecutorService();
 
         executorService.execute(new Runnable() {
             @Override

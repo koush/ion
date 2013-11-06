@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
+import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
@@ -75,10 +76,29 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
+    boolean fastLoad(final String downloadKey, boolean put) {
+        for (Loader loader: ion.configure().getLoaders()) {
+            Future<BitmapInfo> future = loader.loadBitmap(ion, builder.uri);
+            if (future != null) {
+                final BitmapCallback callback = new BitmapCallback(ion, downloadKey, put);
+                future.setCallback(new FutureCallback<BitmapInfo>() {
+                    @Override
+                    public void onCompleted(Exception e, BitmapInfo result) {
+                        if (result != null)
+                            result.key = downloadKey;
+                        callback.report(e, result);
+                    }
+                });
+                return true;
+            }
+        }
+        return false;
+    }
+
     String bitmapKey;
     BitmapInfo execute() {
         final String downloadKey = ResponseCacheMiddleware.toKeyString(builder.uri);
-        assert Thread.currentThread() == Looper.getMainLooper().getThread();
+        assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
         assert downloadKey != null;
 
         if (resizeHeight != 0 || resizeWidth != 0) {
@@ -112,7 +132,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
 
         // Perform a download as necessary.
-        if (!ion.bitmapsPending.contains(downloadKey)) {
+        if (!ion.bitmapsPending.contains(downloadKey) && !fastLoad(downloadKey, !hasTransforms)) {
             builder.setHandler(null);
             // if we cancel, gotta remove any waiters.
             IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {

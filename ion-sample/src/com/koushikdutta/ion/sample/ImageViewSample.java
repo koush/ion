@@ -50,6 +50,12 @@ public class ImageViewSample extends Activity {
         .intoImageView(imageView);
     }
 
+    public void loadExifRotated() {
+        Ion.with(this)
+        .load("https://raw.github.com/koush/ion/master/ion-test/testdata/exif.jpg")
+        .intoImageView(imageView);
+    }
+
     Spinner fitChoices;
     ImageView imageView;
     @Override
@@ -65,6 +71,7 @@ public class ImageViewSample extends Activity {
         adapter.add("centerInside");
         adapter.add("gif centerCrop");
         adapter.add("gif centerInside");
+        adapter.add("exif rotated");
         fitChoices.setAdapter(adapter);
         fitChoices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -75,8 +82,10 @@ public class ImageViewSample extends Activity {
                     loadCenterInside();
                 else if (position == 2)
                     loadGifCenterCrop();
-                else
+                else if (position == 3)
                     loadGifCenterInside();
+                else if (position == 4)
+                    loadExifRotated();
             }
 
             @Override

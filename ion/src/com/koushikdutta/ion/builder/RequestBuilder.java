@@ -13,6 +13,7 @@ import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.ion.HeadersCallback;
 import com.koushikdutta.ion.ProgressCallback;
 
+import org.apache.http.NameValuePair;
 import org.w3c.dom.Document;
 
 import java.io.File;
@@ -114,6 +115,13 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @return
      */
     public R setHeader(String name, String value);
+
+    /**
+     * Set HTTP headers
+     * @param header
+     * @return
+     */
+    public R setHeader(NameValuePair... header);
 
     /**
      * Disable usage of the cache for this request

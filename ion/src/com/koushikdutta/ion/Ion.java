@@ -5,11 +5,14 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.widget.ImageView;
@@ -33,12 +36,24 @@ import com.koushikdutta.ion.loader.AsyncHttpRequestFactory;
 import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
+import com.koushikdutta.ion.loader.PackageIconLoader;
 
 /**
  * Created by koush on 5/21/13.
  */
 public class Ion {
     public static final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static ExecutorService singleExecutorService  = Runtime.getRuntime().availableProcessors() < 2 ? null : Executors.newFixedThreadPool(1);
+
+    // todo: make this static by moving the server's executor service to static
+    public ExecutorService getBitmapLoadExecutorService() {
+        ExecutorService executorService = singleExecutorService;
+        if (executorService == null) {
+            executorService = getServer().getExecutorService();
+        }
+        return executorService;
+    }
+
 
     /**
      * Get the default Ion object instance and begin building a request
@@ -261,13 +276,6 @@ public class Ion {
         return context;
     }
 
-    private static class AsyncHttpRequestFactoryImpl implements AsyncHttpRequestFactory {
-        @Override
-        public AsyncHttpRequest createAsyncHttpRequest(URI uri, String method, RawHeaders headers) {
-            return new AsyncHttpRequest(uri, method, headers);
-        }
-    }
-
     AsyncHttpClient httpClient;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
@@ -329,6 +337,7 @@ public class Ion {
         bitmapCache = new IonBitmapCache(this);
 
         configure()
+        .addLoader(new PackageIconLoader())
         .addLoader(httpLoader = new HttpLoader())
         .addLoader(contentLoader = new ContentLoader())
         .addLoader(fileLoader = new FileLoader());
@@ -380,7 +389,14 @@ public class Ion {
             this.gson = gson;
         }
 
-        AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactoryImpl();
+        AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactory() {
+            @Override
+            public AsyncHttpRequest createAsyncHttpRequest(URI uri, String method, RawHeaders headers) {
+                if (!TextUtils.isEmpty(userAgent))
+                    headers.set("User-Agent", userAgent);
+                return new AsyncHttpRequest(uri, method, headers);
+            }
+        };
 
         public AsyncHttpRequestFactory getAsyncHttpRequestFactory() {
             return asyncHttpRequestFactory;
@@ -388,6 +404,16 @@ public class Ion {
 
         public Config setAsyncHttpRequestFactory(AsyncHttpRequestFactory asyncHttpRequestFactory) {
             this.asyncHttpRequestFactory = asyncHttpRequestFactory;
+            return this;
+        }
+
+        private String userAgent;
+        public String userAgent() {
+            return userAgent;
+        }
+
+        public Config userAgent(String userAgent) {
+            this.userAgent = userAgent;
             return this;
         }
 
