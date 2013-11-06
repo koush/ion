@@ -3,6 +3,7 @@ package com.koushikdutta.ion;
 import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
@@ -102,8 +103,21 @@ public class Ion {
      * @return
      */
     public static Ion getDefault(Context context) {
+        return getInstance(context, "ion");
+    }
+
+    private static HashMap<String, Ion> instances = new HashMap<String, Ion>();
+
+    /**
+     * Get the given Ion instance by name
+     * @param context
+     * @param name
+     * @return
+     */
+    public static Ion getInstance(Context context, String name) {
+        Ion instance = instances.get(name);
         if (instance == null)
-            instance = new Ion(context, "ion");
+            instances.put(name, instance = new Ion(context, name));
         return instance;
     }
 
@@ -462,6 +476,4 @@ public class Ion {
     public IonBitmapCache getBitmapCache() {
         return bitmapCache;
     }
-
-    static Ion instance;
 }
