@@ -240,7 +240,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         BitmapInfo info = execute();
         if (info != null) {
             SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
-            ret.setComplete(info.bitmaps[0]);
+            Bitmap bitmap = info.bitmaps == null ? null : info.bitmaps[0];
+            ret.setComplete(info.exception, bitmap);
             return ret;
         }
 

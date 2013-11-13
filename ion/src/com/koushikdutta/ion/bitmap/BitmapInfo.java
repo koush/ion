@@ -12,6 +12,7 @@ public class BitmapInfo {
     public int loadedFrom;
     public Bitmap[] bitmaps;
     public int[] delays;
+    public Exception exception;
 
     public int sizeOf() {
         if (bitmaps == null)
