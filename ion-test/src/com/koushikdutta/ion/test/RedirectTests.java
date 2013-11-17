@@ -16,7 +16,6 @@ import com.koushikdutta.ion.Response;
 public class RedirectTests extends AndroidTestCase {
     public void testFinalLocation() throws Exception {
         try {
-            Ion.getDefault(getContext()).setLogging("redirect", Log.VERBOSE);
             AsyncHttpServer server = new AsyncHttpServer();
             server.listen(Ion.getDefault(getContext()).getServer(), 5555);
             server.get("/", new HttpServerRequestCallback() {

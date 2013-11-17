@@ -10,8 +10,6 @@ import com.koushikdutta.ion.Ion;
  */
 public class Issue74 extends AndroidTestCase {
     public void testIssue() throws Exception {
-        Ion.getDefault(getContext()).getResponseCache().clear();
-
         String data = Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
         .setLogging("MyLogs", Log.VERBOSE)
         .asString().get();

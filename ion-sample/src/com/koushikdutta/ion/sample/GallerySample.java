@@ -60,7 +60,7 @@ public class GallerySample extends Activity {
 //        .build());
         super.onCreate(savedInstanceState);
 
-        Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
+        Ion.getDefault(this).configure().setLogging("ion-sample", Log.DEBUG);
 
         setContentView(R.layout.gallery);
 

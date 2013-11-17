@@ -32,12 +32,6 @@ import java.util.concurrent.TimeUnit;
  * Created by koush on 5/22/13.
  */
 public class HttpTests extends AndroidTestCase {
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        Ion.getDefault(getContext()).setLogging("HttpTests", Log.DEBUG);
-    }
-
     public void testString() throws Exception {
         assertNotNull(Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
                 .asString().get());
