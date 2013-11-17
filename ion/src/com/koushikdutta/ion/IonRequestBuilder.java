@@ -45,9 +45,9 @@ import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
 import com.koushikdutta.ion.Loader.LoaderEmitter;
+import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
-import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.future.ResponseFuture;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonParser;
@@ -269,7 +269,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         AsyncHttpRequest request = ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers);
         request.setFollowRedirect(followRedirect);
         request.setBody(wrappedBody);
-        request.setLogging(ion.LOGTAG, ion.logLevel);
+        request.setLogging(ion.logtag, ion.logLevel);
         if (logTag != null)
             request.setLogging(logTag, logLevel);
         request.enableProxy(proxyHost, proxyPort);
@@ -321,7 +321,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         AsyncHttpRequest request = prepareRequest(uri, wrappedBody);
         ret.initialRequest = request;
 
-        for (Loader loader: ion.config.loaders) {
+        for (Loader loader: ion.loaders) {
             Future<DataEmitter> emitter = loader.load(ion, request, ret);
             if (emitter != null) {
                 ret.setParent(emitter);
@@ -562,7 +562,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
         AsyncHttpRequest request = prepareRequest(uri, null);
 
-        for (Loader loader: ion.config.loaders) {
+        for (Loader loader: ion.loaders) {
             Future<InputStream> ret = loader.load(ion, request);
             if (ret != null)
                 return ret;

@@ -27,7 +27,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                 final LoadBitmap callback = new LoadBitmap(ion, transformKey, true, -1, -1, null);
 
                 try {
-                    DiskLruCache.Snapshot snapshot = ion.getResponseCache().getDiskLruCache().get(transformKey);
+                    DiskLruCache.Snapshot snapshot = ion.responseCache.getDiskLruCache().get(transformKey);
                     try {
                         InputStream in = snapshot.getInputStream(0);
                         assert in instanceof FileInputStream;
@@ -44,7 +44,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                 catch (Exception e) {
                     callback.onCompleted(e, null);
                     try {
-                        ion.getResponseCache().getDiskLruCache().remove(transformKey);
+                        ion.responseCache.getDiskLruCache().remove(transformKey);
                     }
                     catch (Exception ex) {
                     }
@@ -97,7 +97,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                 if (info.bitmaps.length > 1)
                     return;
                 try {
-                    DiskLruCache cache = ion.getResponseCache().getDiskLruCache();
+                    DiskLruCache cache = ion.responseCache.getDiskLruCache();
                     if (cache == null)
                         return;
                     DiskLruCache.Editor editor = cache.edit(key);
