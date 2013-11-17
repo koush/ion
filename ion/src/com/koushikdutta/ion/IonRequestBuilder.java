@@ -353,7 +353,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                         response.request = finalRequest;
                         response.result = result;
                         response.exception = e;
-                        ret.setComplete(e, response);
+                        ret.setComplete(response);
                         return;
                     }
                     ret.setComplete(e, null);
