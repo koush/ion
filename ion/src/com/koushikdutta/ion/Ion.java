@@ -15,7 +15,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.widget.ImageView;
 
 import com.google.gson.Gson;
@@ -25,6 +24,7 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.util.HashList;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
@@ -43,18 +43,9 @@ import com.koushikdutta.ion.loader.PackageIconLoader;
  * Created by koush on 5/21/13.
  */
 public class Ion {
-    public static final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private static ExecutorService singleExecutorService  = Runtime.getRuntime().availableProcessors() < 2 ? null : Executors.newFixedThreadPool(1);
-
-    // todo: make this static by moving the server's executor service to static
-    public ExecutorService getBitmapLoadExecutorService() {
-        ExecutorService executorService = singleExecutorService;
-        if (executorService == null) {
-            executorService = getServer().getExecutorService();
-        }
-        return executorService;
-    }
-
+    static final Handler mainHandler = new Handler(Looper.getMainLooper());
+    static ExecutorService singleExecutorService  = Runtime.getRuntime().availableProcessors() < 2 ? null : Executors.newFixedThreadPool(1);
+    static HashMap<String, Ion> instances = new HashMap<String, Ion>();
 
     /**
      * Get the default Ion object instance and begin building a request
@@ -86,17 +77,6 @@ public class Ion {
     public static FutureBuilder with(Context context, File file) {
         return getDefault(context).build(context, file);
     }
-
-    /**
-     * Begin building an operation on the given file
-     * @param context
-     * @param file
-     * @return
-     */
-    public FutureBuilder build(Context context, File file) {
-        return new IonRequestBuilder(context, this).load(file);
-    }
-
     /**
      * Get the default Ion instance
      * @param context
@@ -105,8 +85,6 @@ public class Ion {
     public static Ion getDefault(Context context) {
         return getInstance(context, "ion");
     }
-
-    private static HashMap<String, Ion> instances = new HashMap<String, Ion>();
 
     /**
      * Get the given Ion instance by name
@@ -131,6 +109,77 @@ public class Ion {
         return ion.build(imageView);
     }
 
+    AsyncHttpClient httpClient;
+    CookieMiddleware cookieMiddleware;
+    ResponseCacheMiddleware responseCache;
+    DiskLruCache storeCache;
+    HttpLoader httpLoader;
+    ContentLoader contentLoader;
+    FileLoader fileLoader;
+    String logtag;
+    int logLevel;
+    Gson gson = new Gson();
+    String userAgent;
+    ArrayList<Loader> loaders = new ArrayList<Loader>();
+    String name;
+    HashList<FutureCallback<BitmapInfo>> bitmapsPending = new HashList<FutureCallback<BitmapInfo>>();
+    Config config = new Config();
+    IonBitmapCache bitmapCache;
+    Context context;
+    IonBitmapRequestBuilder bitmapBuilder = new IonBitmapRequestBuilder(this);
+
+    private Ion(Context context, String name) {
+        httpClient = new AsyncHttpClient(new AsyncServer());
+        this.context = context = context.getApplicationContext();
+        this.name = name;
+
+        try {
+            responseCache = ResponseCacheMiddleware.addCache(httpClient, new File(context.getCacheDir(), name), 10L * 1024L * 1024L);
+        }
+        catch (Exception e) {
+            IonLog.w("unable to set up response cache", e);
+        }
+        try {
+            storeCache = DiskLruCache.open(new File(context.getFilesDir(), name), 1, 1, Long.MAX_VALUE);
+        }
+        catch (Exception e) {
+        }
+
+        // TODO: Support pre GB?
+        if (Build.VERSION.SDK_INT >= 9)
+            addCookieMiddleware();
+
+        httpClient.getSocketMiddleware().setConnectAllAddresses(true);
+        httpClient.getSSLSocketMiddleware().setConnectAllAddresses(true);
+
+        bitmapCache = new IonBitmapCache(this);
+
+        configure()
+                .addLoader(new PackageIconLoader())
+                .addLoader(httpLoader = new HttpLoader())
+                .addLoader(contentLoader = new ContentLoader())
+                .addLoader(fileLoader = new FileLoader());
+    }
+
+    // todo: make this static by moving the server's executor service to static
+    public ExecutorService getBitmapLoadExecutorService() {
+        ExecutorService executorService = singleExecutorService;
+        if (executorService == null) {
+            executorService = getServer().getExecutorService();
+        }
+        return executorService;
+    }
+
+    /**
+     * Begin building an operation on the given file
+     * @param context
+     * @param file
+     * @return
+     */
+    public FutureBuilder build(Context context, File file) {
+        return new IonRequestBuilder(context, this).load(file);
+    }
+
     /**
      * Begin building a request with the given uri
      * @param context
@@ -150,7 +199,6 @@ public class Ion {
         return new IonRequestBuilder(context, this);
     }
 
-    IonBitmapRequestBuilder bitmapBuilder = new IonBitmapRequestBuilder(this);
     /**
      * Create a builder that can be used to build an network request
      * @param imageView
@@ -181,44 +229,6 @@ public class Ion {
             if (future != null)
                 future.cancel();
         }
-    }
-
-    /**
-     * Route all http requests through the given proxy.
-     * @param host
-     * @param port
-     */
-    public void proxy(String host, int port) {
-        httpClient.getSocketMiddleware().enableProxy(host, port);
-    }
-
-    /**
-     * Route all https requests through the given proxy.
-     * Note that https proxying requires that the Android device has the appropriate
-     * root certificate installed to function properly.
-     * @param host
-     * @param port
-     */
-    public void proxySecure(String host, int port) {
-        httpClient.getSSLSocketMiddleware().enableProxy(host, port);
-    }
-
-    /**
-     * Disable routing of http requests through a previous provided proxy
-     */
-    public void disableProxy() {
-        httpClient.getSocketMiddleware().disableProxy();
-    }
-
-    /**
-     * Disable routing of https requests through a previous provided proxy
-     */
-    public void disableSecureProxy() {
-        httpClient.getSocketMiddleware().disableProxy();
-    }
-
-    void removeFutureInFlight(Future future, Object group) {
-
     }
 
     void addFutureInFlight(Future future, Object group) {
@@ -275,10 +285,10 @@ public class Ion {
 
     public void dump() {
         bitmapCache.dump();
-        Log.i(LOGTAG, "Pending bitmaps: " + bitmapsPending.size());
-        Log.i(LOGTAG, "Groups: " + inFlight.size());
+        Log.i(logtag, "Pending bitmaps: " + bitmapsPending.size());
+        Log.i(logtag, "Groups: " + inFlight.size());
         for (FutureSet futures: inFlight.values()) {
-            Log.i(LOGTAG, "Group size: " + futures.size());
+            Log.i(logtag, "Group size: " + futures.size());
         }
     }
 
@@ -290,10 +300,6 @@ public class Ion {
         return context;
     }
 
-    AsyncHttpClient httpClient;
-    CookieMiddleware cookieMiddleware;
-    ResponseCacheMiddleware responseCache;
-
     static class FutureSet extends WeakHashMap<Future, Boolean> {
     }
     // maintain a list of futures that are in being processed, allow for bulk cancellation
@@ -303,58 +309,26 @@ public class Ion {
         httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context, name));
     }
 
-    HttpLoader httpLoader;
-    ContentLoader contentLoader;
-    FileLoader fileLoader;
-
-    public HttpLoader getHttpLoader() {
-        return httpLoader;
+    /**
+     * Get or put an item from the cache
+     * @param key
+     * @return
+     */
+    public DiskLruCacheStore cache(String key) {
+        return new DiskLruCacheStore(this, responseCache.getDiskLruCache(), key);
     }
 
-    public ContentLoader getContentLoader() {
-        return contentLoader;
+    /**
+     * Get or put an item in the persistent store
+     * @param key
+     * @return
+     */
+    public DiskLruCacheStore store(String key) {
+        return new DiskLruCacheStore(this, responseCache.getDiskLruCache(), key);
     }
 
-    public FileLoader getFileLoader() {
-        return fileLoader;
-    }
-
-    public ResponseCacheMiddleware getResponseCache() {
-        return responseCache;
-    }
-
-    String name;
     public String getName() {
         return name;
-    }
-
-    Context context;
-    private Ion(Context context, String name) {
-        httpClient = new AsyncHttpClient(new AsyncServer());
-        this.context = context = context.getApplicationContext();
-        this.name = name;
-
-        try {
-            responseCache = ResponseCacheMiddleware.addCache(httpClient, new File(context.getCacheDir(), name), 10L * 1024L * 1024L);
-        }
-        catch (Exception e) {
-            IonLog.w("unable to set up response cache", e);
-        }
-
-        // TODO: Support pre GB?
-        if (Build.VERSION.SDK_INT >= 9)
-            addCookieMiddleware();
-
-        httpClient.getSocketMiddleware().setConnectAllAddresses(true);
-        httpClient.getSSLSocketMiddleware().setConnectAllAddresses(true);
-
-        bitmapCache = new IonBitmapCache(this);
-
-        configure()
-        .addLoader(new PackageIconLoader())
-        .addLoader(httpLoader = new HttpLoader())
-        .addLoader(contentLoader = new ContentLoader())
-        .addLoader(fileLoader = new FileLoader());
     }
 
     /**
@@ -381,8 +355,23 @@ public class Ion {
         return httpClient.getServer();
     }
 
-    public static class Config {
-        private Gson gson = new Gson();
+    public class Config {
+        public HttpLoader getHttpLoader() {
+            return httpLoader;
+        }
+
+        public ContentLoader getContentLoader() {
+            return contentLoader;
+        }
+
+        public FileLoader getFileLoader() {
+            return fileLoader;
+        }
+
+        public ResponseCacheMiddleware getResponseCache() {
+            return responseCache;
+        }
+
         /**
          * Get the Gson object in use by this Ion instance.
          * This can be used to customize serialization and deserialization
@@ -394,13 +383,59 @@ public class Ion {
         }
 
         /**
+         * Set the log level for all requests made by Ion.
+         * @param logtag
+         * @param logLevel
+         * @return
+         */
+        public Config setLogging(String logtag, int logLevel) {
+            Ion.this.logtag = logtag;
+            Ion.this.logLevel = logLevel;
+            return this;
+        }
+
+        /**
+         * Route all http requests through the given proxy.
+         * @param host
+         * @param port
+         */
+        public void proxy(String host, int port) {
+            httpClient.getSocketMiddleware().enableProxy(host, port);
+        }
+
+        /**
+         * Route all https requests through the given proxy.
+         * Note that https proxying requires that the Android device has the appropriate
+         * root certificate installed to function properly.
+         * @param host
+         * @param port
+         */
+        public void proxySecure(String host, int port) {
+            httpClient.getSSLSocketMiddleware().enableProxy(host, port);
+        }
+
+        /**
+         * Disable routing of http requests through a previous provided proxy
+         */
+        public void disableProxy() {
+            httpClient.getSocketMiddleware().disableProxy();
+        }
+
+        /**
+         * Disable routing of https requests through a previous provided proxy
+         */
+        public void disableSecureProxy() {
+            httpClient.getSocketMiddleware().disableProxy();
+        }
+
+        /**
          * Set the Gson object in use by this Ion instance.
          * This can be used to customize serialization and deserialization
          * from java objects.
          * @param gson
          */
         public void setGson(Gson gson) {
-            this.gson = gson;
+            Ion.this.gson = gson;
         }
 
         AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactory() {
@@ -421,17 +456,15 @@ public class Ion {
             return this;
         }
 
-        private String userAgent;
         public String userAgent() {
             return userAgent;
         }
 
         public Config userAgent(String userAgent) {
-            this.userAgent = userAgent;
+            Ion.this.userAgent = userAgent;
             return this;
         }
 
-        ArrayList<Loader> loaders = new ArrayList<Loader>();
         public Config addLoader(int index, Loader loader) {
             loaders.add(index, loader);
             return this;
@@ -449,26 +482,10 @@ public class Ion {
         }
     }
 
-    String LOGTAG;
-    int logLevel;
-    /**
-     * Set the log level for all requests made by Ion.
-     * @param logtag
-     * @param logLevel
-     */
-    public void setLogging(String logtag, int logLevel) {
-        LOGTAG = logtag;
-        this.logLevel = logLevel;
-    }
-
-    Config config = new Config();
     public Config configure() {
         return config;
     }
 
-    HashList<FutureCallback<BitmapInfo>> bitmapsPending = new HashList<FutureCallback<BitmapInfo>>();
-
-    IonBitmapCache bitmapCache;
     /**
      * Return the bitmap cache used by this Ion instance
      * @return

@@ -120,11 +120,11 @@ public class IonBitmapCache {
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         int targetWidth = minx;
         int targetHeight = miny;
-        if (targetWidth <= 0)
+        if (targetWidth == 0)
             targetWidth = metrics.widthPixels;
         if (targetWidth <= 0)
             targetWidth = Integer.MAX_VALUE;
-        if (targetHeight <= 0)
+        if (targetHeight == 0)
             targetHeight = metrics.heightPixels;
         if (targetHeight <= 0)
             targetHeight = Integer.MAX_VALUE;
