@@ -55,7 +55,6 @@ public class Ion {
         return executorService;
     }
 
-
     /**
      * Get the default Ion object instance and begin building a request
      * with the given uri
