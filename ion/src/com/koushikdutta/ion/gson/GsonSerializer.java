@@ -35,15 +35,15 @@ public class GsonSerializer<T> implements AsyncParser<T> {
     }
     @Override
     public Future<T> parse(DataEmitter emitter) {
-        return new TransformFuture<T, ByteBufferList>() {
+        return new ByteBufferListParser().parse(emitter)
+        .then(new TransformFuture<T, ByteBufferList>() {
             @Override
             protected void transform(ByteBufferList result) throws Exception {
                 ByteBufferListInputStream bin = new ByteBufferListInputStream(result);
                 T ret = (T)gson.fromJson(new JsonReader(new InputStreamReader(bin)), type);
                 setComplete(ret);
             }
-        }
-        .from(new ByteBufferListParser().parse(emitter));
+        });
     }
 
     @Override

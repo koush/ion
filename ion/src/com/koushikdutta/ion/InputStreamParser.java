@@ -18,13 +18,13 @@ import java.io.InputStream;
 public class InputStreamParser implements AsyncParser<InputStream> {
     @Override
     public Future<InputStream> parse(DataEmitter emitter) {
-        return new TransformFuture<InputStream, ByteBufferList>() {
+        return new ByteBufferListParser().parse(emitter)
+        .then(new TransformFuture<InputStream, ByteBufferList>() {
             @Override
             protected void transform(ByteBufferList result) throws Exception {
                 setComplete(new ByteBufferListInputStream(result));
             }
-        }
-        .from(new ByteBufferListParser().parse(emitter));
+        });
     }
 
     @Override
