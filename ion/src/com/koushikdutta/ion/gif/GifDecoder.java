@@ -623,7 +623,6 @@ public class GifDecoder extends Thread{
     		}
     		frameCount++;
     		// create new image to receive frame data
-    		image = Bitmap.createBitmap(width, height, Config.ARGB_4444);
     		// createImage(width, height);
     		setPixels(); // transfer pixel data to image
     		if (gifFrame == null) {
