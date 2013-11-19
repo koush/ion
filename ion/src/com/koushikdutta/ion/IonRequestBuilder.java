@@ -143,7 +143,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public IonRequestBuilder addQueryParams(Map<String, List<String>> params) {
+    public IonRequestBuilder addQueries(Map<String, List<String>> params) {
        if (query == null)
           query = new Multimap();
        query.putAll(params);

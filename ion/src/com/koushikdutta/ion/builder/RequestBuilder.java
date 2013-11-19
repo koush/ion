@@ -154,7 +154,7 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @param params
      * @return
      */
-    public R addQueryParams(Map<String, List<String>> params);
+    public R addQueries(Map<String, List<String>> params);
 
     /**
      * Set the user agent of this request.
