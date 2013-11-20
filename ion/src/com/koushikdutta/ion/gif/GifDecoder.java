@@ -2,6 +2,11 @@ package com.koushikdutta.ion.gif;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Array;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.IntBuffer;
+import java.util.Arrays;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -38,8 +43,6 @@ public class GifDecoder extends Thread{
 
 	private int ix, iy, iw, ih; // current image rectangle
 	private int lrx, lry, lrw, lrh;
-	private Bitmap image; // current frame
-	private Bitmap lastImage; // previous frame
 	private GifFrame currentFrame = null;
 
 	private boolean isShow = false;
@@ -115,16 +118,6 @@ public class GifDecoder extends Thread{
 			in = null;
 		}
 		gifData = null;
-		if (image != null)
-		{
-            image.recycle();
-            image = null;
-		}
-		if (lastImage != null)
-		{
-            lastImage.recycle();
-            lastImage = null;
-		}		
 	}
 	
 	public int getStatus(){
@@ -169,22 +162,29 @@ public class GifDecoder extends Thread{
 		return loopCount;
 	}
 
-	private void setPixels() {
-		int[] dest = new int[width * height];
+    int[] lastPixels;
+    int[] dest;
+	private Bitmap setPixels() {
+        if (dest == null)
+            dest = new int[width * height];
 		// fill in starting image contents based on last image's dispose code
 		if (lastDispose > 0) {
 			if (lastDispose == 3) {
 				// use image before last
 				int n = frameCount - 2;
 				if (n > 0) {
-					lastImage = getFrameImage(n - 1);
-				} else {
-					lastImage = null;
+					Bitmap lastImage = getFrameImage(n - 1);
+                    if (lastPixels == null)
+                        lastPixels = new int[width * height];
+                    lastImage.getPixels(lastPixels, 0, width, 0, 0, width, height);
 				}
-			}
-			if (lastImage != null) {
-				lastImage.getPixels(dest, 0, width, 0, 0, width, height);
-				// copy pixels
+                else {
+                    lastPixels = null;
+                }
+            }
+			if (lastPixels != null) {
+                dest = Arrays.copyOf(lastPixels, lastPixels.length);
+                // copy pixels
 				if (lastDispose == 2) {
 					// fill last image rect area with background color
 					int c = 0;
@@ -247,7 +247,7 @@ public class GifDecoder extends Thread{
 				}
 			}
 		}
-		image = Bitmap.createBitmap(dest, width, height, Config.ARGB_4444);
+		return Bitmap.createBitmap(dest, width, height, Config.ARGB_4444);
 	}
 
 	public Bitmap getFrameImage(int n) {
@@ -623,9 +623,8 @@ public class GifDecoder extends Thread{
     		}
     		frameCount++;
     		// create new image to receive frame data
-    		image = Bitmap.createBitmap(width, height, Config.ARGB_4444);
     		// createImage(width, height);
-    		setPixels(); // transfer pixel data to image
+    		Bitmap image = setPixels(); // transfer pixel data to image
     		if (gifFrame == null) {
     			gifFrame = new GifFrame(image, delay);
     			currentFrame = gifFrame;
@@ -642,7 +641,10 @@ public class GifDecoder extends Thread{
     			act[transIndex] = save;
     		}
     		resetFrame();
-    		action.parseOk(true, frameCount);
+    		if (!action.parseOk(true, frameCount)) {
+                status = STATUS_FINISH;
+                return;
+            }
         }catch (OutOfMemoryError e) {
             Log.e("GifDecoder", ">>> log  : " + e.toString());
             e.printStackTrace();
@@ -686,7 +688,7 @@ public class GifDecoder extends Thread{
 		lry = iy;
 		lrw = iw;
 		lrh = ih;
-		lastImage = image;
+        lastPixels = dest;
 		lastBgColor = bgColor;
 		dispose = 0;
 		transparency = false;

@@ -44,7 +44,8 @@ import com.koushikdutta.ion.loader.PackageIconLoader;
  */
 public class Ion {
     static final Handler mainHandler = new Handler(Looper.getMainLooper());
-    static ExecutorService singleExecutorService  = Runtime.getRuntime().availableProcessors() < 2 ? null : Executors.newFixedThreadPool(1);
+    static int availableProcessors = Runtime.getRuntime().availableProcessors();
+    static ExecutorService singleExecutorService  = availableProcessors > 2 ? null : Executors.newFixedThreadPool(1);
     static HashMap<String, Ion> instances = new HashMap<String, Ion>();
 
     /**

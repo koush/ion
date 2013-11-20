@@ -71,7 +71,8 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
                     else {
                         GifDecoder decoder = new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), new GifAction() {
                             @Override
-                            public void parseOk(boolean parseStatus, int frameIndex) {
+                            public boolean parseOk(boolean parseStatus, int frameIndex) {
+                                return frameIndex < 100;
                             }
                         });
                         decoder.run();
