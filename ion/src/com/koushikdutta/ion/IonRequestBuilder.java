@@ -65,6 +65,7 @@ import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by koush on 5/21/13.
@@ -139,6 +140,14 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             query = new Multimap();
         query.add(name, value);
         return this;
+    }
+
+    @Override
+    public IonRequestBuilder addQueries(Map<String, List<String>> params) {
+       if (query == null)
+          query = new Multimap();
+       query.putAll(params);
+       return this;
     }
 
     int timeoutMilliseconds = AsyncHttpRequest.DEFAULT_TIMEOUT;
@@ -626,6 +635,15 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         }
         bodyParameters.add(name, value);
         return this;
+    }
+
+    public IonRequestBuilder setBodyParameters(Map<String, List<String>> params) {
+       if (bodyParameters == null) {
+           bodyParameters = new Multimap();
+           setBody(new UrlEncodedFormBody(bodyParameters));
+       }
+       bodyParameters.putAll(params);
+       return this;
     }
 
     MultipartFormDataBody multipartBody;
