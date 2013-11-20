@@ -19,38 +19,41 @@ import com.koushikdutta.ion.gson.GsonSerializer;
 
 import org.w3c.dom.Document;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
  * Created by koush on 11/17/13.
  */
-public class DiskLruCacheStore extends SimpleFuture {
+public class DiskLruCacheStore {
     Ion ion;
     DiskLruCache cache;
-    String key;
-    DiskLruCacheStore(Ion ion, DiskLruCache cache, String key) {
+    DiskLruCacheStore(Ion ion, DiskLruCache cache) {
         this.ion = ion;
         this.cache = cache;
-        this.key = key;
     }
 
-    private <T> Future<T> put(final T value, final AsyncParser<T> parser) {
+    private <T> Future<T> put(final String rawKey, final T value, final AsyncParser<T> parser) {
+        final SimpleFuture<T> ret = new SimpleFuture<T>();
         ion.getServer().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 final DiskLruCache.Editor editor;
                 try {
-                    final String key = ResponseCacheMiddleware.toKeyString("ion-store:" + DiskLruCacheStore.this.key);
+                    final String key = ResponseCacheMiddleware.toKeyString("ion-store:" + rawKey);
                     editor = cache.edit(key);
                 }
                 catch (Exception e) {
-                    setComplete(e);
+                    ret.setComplete(e);
                     return;
                 }
                 final OutputStream out;
                 try {
                     out = editor.newOutputStream(0);
+                    for (int i = 1; i < cache.getValueCount(); i++) {
+                        editor.newOutputStream(i).close();
+                    }
                 }
                 catch (Exception e) {
                     try {
@@ -58,12 +61,12 @@ public class DiskLruCacheStore extends SimpleFuture {
                     }
                     catch (Exception ex) {
                     }
-                    setComplete(e);
+                    ret.setComplete(e);
                     return;
                 }
 
                 if (editor == null) {
-                    setComplete(new Exception("unable to edit"));
+                    ret.setComplete(new Exception("unable to edit"));
                     return;
                 }
                 parser.write(new OutputStreamDataSink(ion.getServer(), out), value, new CompletedCallback() {
@@ -73,7 +76,7 @@ public class DiskLruCacheStore extends SimpleFuture {
                             try {
                                 out.close();
                                 editor.commit();
-                                setComplete(value);
+                                ret.setComplete(value);
                                 return;
                             }
                             catch (Exception e) {
@@ -85,28 +88,28 @@ public class DiskLruCacheStore extends SimpleFuture {
                         }
                         catch (Exception e) {
                         }
-                        setComplete(ex);
+                        ret.setComplete(ex);
                     }
                 });
             }
         });
-        return this;
+        return ret;
     }
 
-    public Future<String> putString(String value) {
-        return put(value, new StringParser());
+    public Future<String> putString(String key, String value) {
+        return put(key, value, new StringParser());
     }
 
-    public Future<JsonObject> putJsonObject(JsonObject value) {
-        return put(value, new GsonParser<JsonObject>());
+    public Future<JsonObject> putJsonObject(String key, JsonObject value) {
+        return put(key, value, new GsonParser<JsonObject>());
     }
 
-    public Future<Document> putDocument(Document value) {
-        return put(value, new DocumentParser());
+    public Future<Document> putDocument(String key, Document value) {
+        return put(key, value, new DocumentParser());
     }
 
-    public Future<JsonArray> putJsonArray(JsonArray value) {
-        return put(value, new GsonParser<JsonArray>());
+    public Future<JsonArray> putJsonArray(String key, JsonArray value) {
+        return put(key, value, new GsonParser<JsonArray>());
     }
 
     /*
@@ -119,22 +122,22 @@ public class DiskLruCacheStore extends SimpleFuture {
     }
     */
 
-    public <T> Future<T> put(T value, Class<T> clazz) {
-        return put(value, new GsonSerializer<T>(ion.configure().getGson(), clazz));
+    public <T> Future<T> put(String key, T value, Class<T> clazz) {
+        return put(key, value, new GsonSerializer<T>(ion.configure().getGson(), clazz));
     }
 
-    public <T> Future<T> put(T value, TypeToken<T> token) {
-        return put(value, new GsonSerializer<T>(ion.configure().getGson(), token));
+    public <T> Future<T> put(String key, T value, TypeToken<T> token) {
+        return put(key, value, new GsonSerializer<T>(ion.configure().getGson(), token));
     }
     
-    private <T> Future<T> get(final AsyncParser<T> parser) {
+    private <T> Future<T> get(final String rawKey, final AsyncParser<T> parser) {
         final SimpleFuture<T> ret = new SimpleFuture<T>();
         
         ion.getServer().getExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    final String key = ResponseCacheMiddleware.toKeyString("ion-store:" + DiskLruCacheStore.this.key);
+                    final String key = ResponseCacheMiddleware.toKeyString("ion-store:" + rawKey);
                     final DiskLruCache.Snapshot snapshot = cache.get(key);
                     if (snapshot == null) {
                         ret.setComplete((T)null);
@@ -161,27 +164,44 @@ public class DiskLruCacheStore extends SimpleFuture {
         return ret;
     }
     
-    public Future<String> getString() {
-        return get(new StringParser());
+    public Future<String> getString(String key) {
+        return get(key, new StringParser());
     }
 
-    public Future<JsonObject> getJsonObject() {
-        return get(new GsonParser<JsonObject>());
+    public Future<JsonObject> getJsonObject(String key) {
+        return get(key, new GsonParser<JsonObject>());
     }
 
-    public Future<JsonArray> getJsonArray() {
-        return get(new GsonParser<JsonArray>());
+    public Future<JsonArray> getJsonArray(String key) {
+        return get(key, new GsonParser<JsonArray>());
     }
 
-    public Future<Document> getDocument() {
-        return get(new DocumentParser());
+    public Future<Document> getDocument(String key) {
+        return get(key, new DocumentParser());
     }
 
-    public <T> Future<T> get(Class<T> clazz) {
-        return get(new GsonSerializer<T>(ion.configure().getGson(), clazz));
+    public <T> Future<T> get(String key, Class<T> clazz) {
+        return get(key, new GsonSerializer<T>(ion.configure().getGson(), clazz));
     }
 
-    public <T> Future<T> get(TypeToken<T> token) {
-        return get(new GsonSerializer<T>(ion.configure().getGson(), token));
+    public <T> Future<T> get(String key, TypeToken<T> token) {
+        return get(key, new GsonSerializer<T>(ion.configure().getGson(), token));
+    }
+
+    public Future<String> remove(final String key) {
+        final SimpleFuture<String> ret = new SimpleFuture<String>();
+        ion.getServer().getExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    cache.remove(key);
+                    ret.setComplete(key);
+                }
+                catch (Exception e) {
+                    ret.setComplete(e);
+                }
+            }
+        });
+        return ret;
     }
 }
