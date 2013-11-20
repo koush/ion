@@ -35,7 +35,7 @@ public class HttpTests extends AndroidTestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        Ion.getDefault(getContext()).setLogging("HttpTests", Log.DEBUG);
+        Ion.getDefault(getContext()).configure().setLogging("HttpTests", Log.DEBUG);
     }
 
     public void testString() throws Exception {
