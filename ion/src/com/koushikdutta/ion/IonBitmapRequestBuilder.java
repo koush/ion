@@ -225,7 +225,10 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     private static class BitmapInfoToBitmap extends TransformFuture<Bitmap, BitmapInfo> {
         @Override
         protected void transform(BitmapInfo result) throws Exception {
-            setComplete(result.bitmaps[0]);
+            if (result.exception != null)
+                setComplete(result.exception);
+            else
+                setComplete(result.bitmaps[0]);
         }
     }
 

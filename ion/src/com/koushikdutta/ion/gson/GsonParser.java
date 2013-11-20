@@ -25,7 +25,8 @@ public class GsonParser<T extends JsonElement> implements AsyncParser<T> {
     }
     @Override
     public Future<T> parse(DataEmitter emitter) {
-        return new TransformFuture<T, ByteBufferList>() {
+        return new ByteBufferListParser().parse(emitter)
+        .then(new TransformFuture<T, ByteBufferList>() {
             @Override
             protected void transform(ByteBufferList result) throws Exception {
                 JsonParser parser = new JsonParser();
@@ -34,8 +35,7 @@ public class GsonParser<T extends JsonElement> implements AsyncParser<T> {
                     throw new JsonParseException("unable to parse json");
                 setComplete(null, parsed);
             }
-        }
-        .from(new ByteBufferListParser().parse(emitter));
+        });
     }
 
     @Override

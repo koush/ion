@@ -7,9 +7,6 @@ import android.widget.ProgressBar;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.http.Multimap;
-import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.ion.HeadersCallback;
 import com.koushikdutta.ion.ProgressCallback;
 
@@ -18,6 +15,8 @@ import org.w3c.dom.Document;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.List;
+import java.util.Map;
 
 /**
 * Created by koush on 5/30/13.
@@ -149,6 +148,13 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @return
      */
     public R addQuery(String name, String value);
+
+    /**
+     * Add multiple query parameters at once
+     * @param params
+     * @return
+     */
+    public R addQueries(Map<String, List<String>> params);
 
     /**
      * Set the user agent of this request.
