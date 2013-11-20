@@ -51,6 +51,12 @@ public class GsonSerializer<T> implements AsyncParser<T> {
         ByteArrayOutputStream bout = new ByteArrayOutputStream();
         OutputStreamWriter out = new OutputStreamWriter(bout);
         gson.toJson(pojo, type, out);
+        try {
+            out.flush();
+        }
+        catch (final Exception e) {
+            throw new AssertionError(e);
+        }
         Util.writeAll(sink, bout.toByteArray(), completed);
     }
 }
