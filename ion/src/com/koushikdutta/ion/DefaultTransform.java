@@ -36,8 +36,8 @@ class DefaultTransform implements Transform {
 
             float postWidth = b.getWidth() * ratio;
             float postHeight = b.getHeight() * ratio;
-            float transx = (resizeWidth - postWidth) / 2;
-            float transy = (resizeHeight - postHeight) / 2;
+            float transx = (resizeWidth - postWidth) / (2*ratio);
+            float transy = (resizeHeight - postHeight) / (2*ratio);
             destination.set(transx, transy, transx + postWidth, transy + postHeight);
         }
 
