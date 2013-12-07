@@ -23,4 +23,14 @@ public interface MultipartBodyBuilder<M extends MultipartBodyBuilder> {
      * @return
      */
     public M setMultipartFile(String name, File file);
+
+    /**
+     * Specify a multipart/form-data file to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param name Multipart name
+     * @param file Multipart Content-Type
+     * @param file Multipart file to send
+     * @return
+     */
+    public M setMultipartFile(String name, String contentType, File file);
 }

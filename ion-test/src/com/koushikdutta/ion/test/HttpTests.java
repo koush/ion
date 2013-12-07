@@ -1,5 +1,6 @@
 package com.koushikdutta.ion.test;
 
+import android.renderscript.FieldPacker;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
@@ -13,6 +14,9 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.Multimap;
+import com.koushikdutta.async.http.body.FilePart;
+import com.koushikdutta.async.http.body.MultipartFormDataBody;
+import com.koushikdutta.async.http.body.Part;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
@@ -22,6 +26,7 @@ import com.koushikdutta.ion.ProgressCallback;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.util.List;
@@ -35,6 +40,37 @@ public class HttpTests extends AndroidTestCase {
     public void testString() throws Exception {
         assertNotNull(Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
                 .asString().get());
+    }
+
+    public void testMultipartFileContentType() throws Exception {
+        File f = new File("/sdcard/ion/testdata");
+        f.getParentFile().mkdirs();
+        f.createNewFile();
+        AsyncHttpServer httpServer = new AsyncHttpServer();
+        httpServer.post("/", new HttpServerRequestCallback() {
+            @Override
+            public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
+                MultipartFormDataBody body = (MultipartFormDataBody)request.getBody();
+                body.setMultipartCallback(new MultipartFormDataBody.MultipartCallback() {
+                    @Override
+                    public void onPart(Part part) {
+                        response.send(part.getContentType());
+                    }
+                });
+            }
+        });
+        try {
+            httpServer.listen(AsyncServer.getDefault(), 6666);
+            String mime = Ion.with(getContext())
+            .load("http://localhost:6666/")
+            .setMultipartFile("foo", "test/mime", f)
+            .asString()
+            .get(1000, TimeUnit.MILLISECONDS);
+            assertEquals(mime, "test/mime");
+        }
+        finally {
+            httpServer.stop();
+        }
     }
 
     public void testStringWithCallback() throws Exception {
