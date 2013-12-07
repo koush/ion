@@ -684,6 +684,16 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public IonRequestBuilder setMultipartParameters(Map<String, List<String>> params) {
+        for (String key: params.keySet()) {
+            for (String value: params.get(key)) {
+                setMultipartParameter(key, value);
+            }
+        }
+        return this;
+    }
+
+    @Override
     public IonBitmapRequestBuilder withBitmap() {
         return new IonBitmapRequestBuilder(this);
     }
