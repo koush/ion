@@ -69,10 +69,12 @@ public class IonBitmapCache {
 
         // see if the the bitmap got evicted and put into a weak ref
         if (ret.bitmapsRef != null) {
-            ret.bitmaps = ret.bitmapsRef.get();
+            Bitmap[] bitmaps = ret.bitmapsRef.get();
             // see if we successfully repopulated from the weak ref
             if (ret.bitmaps != null) {
                 cache.remove(key);
+                ret.bitmaps = bitmaps;
+                ret.bitmapsRef = null;
                 cache.put(key, ret);
                 System.out.println("===== SUCCESSFULLY GRABBED FROM WEAK REF CACHE! ====");
                 return ret;
