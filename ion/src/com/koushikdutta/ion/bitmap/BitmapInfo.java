@@ -2,6 +2,8 @@ package com.koushikdutta.ion.bitmap;
 
 import android.graphics.Bitmap;
 
+import java.lang.ref.WeakReference;
+
 /**
  * Created by koush on 6/12/13.
  */
@@ -13,6 +15,7 @@ public class BitmapInfo {
     public Bitmap[] bitmaps;
     public int[] delays;
     public Exception exception;
+    public WeakReference<Bitmap[]> bitmapsRef;
 
     public int sizeOf() {
         if (bitmaps == null)

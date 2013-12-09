@@ -61,15 +61,29 @@ public class IonBitmapCache {
     public BitmapInfo get(String key) {
         if (key == null)
             return null;
+
+        // see if this thing has an immediate cache hit
         BitmapInfo ret = cache.get(key);
         if (ret == null || ret.bitmaps != null)
             return ret;
 
-        // if this bitmap load previously errored out, see if it is time to retry
-        // the fetch. connectivity error, server failure, etc, shouldn't be
-        // cached indefinitely...
-        if (ret.loadTime + errorCacheDuration > System.currentTimeMillis())
-            return ret;
+        // see if the the bitmap got evicted and put into a weak ref
+        if (ret.bitmapsRef != null) {
+            ret.bitmaps = ret.bitmapsRef.get();
+            // see if we successfully repopulated from the weak ref
+            if (ret.bitmaps != null) {
+                System.out.println("===== SUCCESSFULLY GRABBED FROM WEAK REF CACHE! ====");
+                return ret;
+            }
+            // ok, fall through and toss this, it's useless.
+        }
+        else {
+            // if this bitmap load previously errored out, see if it is time to retry
+            // the fetch. connectivity error, server failure, etc, shouldn't be
+            // cached indefinitely...
+            if (ret.loadTime + errorCacheDuration > System.currentTimeMillis())
+                return ret;
+        }
         cache.remove(key);
         return null;
     }
