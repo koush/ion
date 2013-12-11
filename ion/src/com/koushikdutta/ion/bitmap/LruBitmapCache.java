@@ -27,8 +27,12 @@ class LruBitmapCache extends LruCache<String, BitmapInfo> {
             return;
         if (oldValue.bitmaps == null)
             return;
+        // don't try to weak ref on gifs, because only one bitmap
+        // ref total will be held.
+        if (oldValue.bitmaps.length > 1)
+            return;
 
-        oldValue.bitmapsRef = new WeakReference<Bitmap[]>(oldValue.bitmaps);
+        oldValue.bitmapRef = new WeakReference<Bitmap>(oldValue.bitmaps[0]);
         oldValue.bitmaps = null;
         put(key, oldValue);
     }

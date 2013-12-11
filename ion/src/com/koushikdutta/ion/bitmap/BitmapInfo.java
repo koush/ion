@@ -15,7 +15,7 @@ public class BitmapInfo {
     public Bitmap[] bitmaps;
     public int[] delays;
     public Exception exception;
-    public WeakReference<Bitmap[]> bitmapsRef;
+    public WeakReference<Bitmap> bitmapRef;
 
     public int sizeOf() {
         if (bitmaps == null)
