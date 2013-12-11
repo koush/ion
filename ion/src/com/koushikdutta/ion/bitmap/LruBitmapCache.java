@@ -18,6 +18,10 @@ class LruBitmapCache extends LruCache<String, BitmapInfo> {
     protected void entryRemoved(boolean evicted, String key, BitmapInfo oldValue, BitmapInfo newValue) {
         super.entryRemoved(evicted, key, oldValue, newValue);
 
+        // this shit is broken
+        if (true)
+            return;
+
         // on eviction, put the bitmaps into a weak ref
         if (!evicted)
             return;
