@@ -35,11 +35,13 @@ import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
 import com.koushikdutta.async.http.body.DocumentBody;
 import com.koushikdutta.async.http.body.FileBody;
+import com.koushikdutta.async.http.body.FilePart;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
 import com.koushikdutta.async.http.body.StreamBody;
 import com.koushikdutta.async.http.body.StringBody;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.async.parser.StringParser;
@@ -650,11 +652,25 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     MultipartFormDataBody multipartBody;
     @Override
     public IonRequestBuilder setMultipartFile(String name, File file) {
+        return setMultipartFile(name, null, file);
+    }
+
+    @Override
+    public IonRequestBuilder setMultipartFile(String name, String contentType, File file) {
         if (multipartBody == null) {
             multipartBody = new MultipartFormDataBody();
             setBody(multipartBody);
         }
-        multipartBody.addFilePart(name, file);
+
+        FilePart part = new FilePart(name, file);
+
+        if (contentType == null)
+            contentType = AsyncHttpServer.tryGetContentType(file.getAbsolutePath());
+
+        if (contentType != null)
+            part.setContentType(contentType);
+
+        multipartBody.addPart(part);
         return this;
     }
 
@@ -665,6 +681,16 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             setBody(multipartBody);
         }
         multipartBody.addStringPart(name, value);
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilder setMultipartParameters(Map<String, List<String>> params) {
+        for (String key: params.keySet()) {
+            for (String value: params.get(key)) {
+                setMultipartParameter(key, value);
+            }
+        }
         return this;
     }
 

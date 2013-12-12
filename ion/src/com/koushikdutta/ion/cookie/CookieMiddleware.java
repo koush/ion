@@ -67,7 +67,7 @@ public class CookieMiddleware extends SimpleMiddleware {
     @Override
     public void onSocket(OnSocketData data) {
         try {
-            Map<String, List<String>> cookies =  manager.get (data.request.getUri(), data.request.getHeaders().getHeaders().toMultimap());
+            Map<String, List<String>> cookies = manager.get (data.request.getUri(), data.request.getHeaders().getHeaders().toMultimap());
             data.request.getHeaders().addCookies(cookies);
         }
         catch (Exception e) {

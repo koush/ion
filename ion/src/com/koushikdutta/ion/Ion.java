@@ -442,9 +442,10 @@ public class Ion {
         AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactory() {
             @Override
             public AsyncHttpRequest createAsyncHttpRequest(URI uri, String method, RawHeaders headers) {
+                AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
                 if (!TextUtils.isEmpty(userAgent))
-                    headers.set("User-Agent", userAgent);
-                return new AsyncHttpRequest(uri, method, headers);
+                    request.getHeaders().setUserAgent(userAgent);
+                return request;
             }
         };
 
