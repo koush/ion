@@ -55,6 +55,8 @@ public class IonBitmapCache {
 
     public void put(BitmapInfo info) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
+        if (getHeapSize(ion.getContext()) != cache.maxSize())
+            cache.setMaxSize(getHeapSize(ion.getContext()) / 7);
         cache.put(info.key, info);
     }
 

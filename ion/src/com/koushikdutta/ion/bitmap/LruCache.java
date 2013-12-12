@@ -261,6 +261,10 @@ class LruCache<K, V> {
         return size;
     }
 
+    public void setMaxSize(int maxSize) {
+        this.maxSize = maxSize;
+    }
+
     /**
      * For caches that do not override {@link #sizeOf}, this returns the maximum
      * number of entries in the cache. For all other caches, this returns the

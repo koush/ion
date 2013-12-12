@@ -32,9 +32,10 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     IonRequestBuilder builder;
     Ion ion;
 
-    private void ensureBuilder() {
+    private IonRequestBuilder ensureBuilder() {
         if (builder == null)
             builder = new IonRequestBuilder(imageViewPostRef.get().getContext(), ion);
+        return builder;
     }
 
     @Override
@@ -350,6 +351,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     public IonBitmapRequestBuilder resize(int width, int height) {
         resizeWidth = width;
         resizeHeight = height;
+        ensureBuilder().setHeader("X-Ion-Width", String.valueOf(width));
+        ensureBuilder().setHeader("X-Ion-Height", String.valueOf(height));
         return this;
     }
 
