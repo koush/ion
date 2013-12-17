@@ -378,7 +378,7 @@ dependencies {
 git clone git://github.com/koush/AndroidAsync.git
 git clone git://github.com/koush/ion.git
 cd ion/ion
-ant -sdk.dir=$ANDROID_HOME release install
+ant -Dsdk.dir=$ANDROID_HOME release install
 ```
 Jars are at
  * ion/ion/bin/classes.jar
