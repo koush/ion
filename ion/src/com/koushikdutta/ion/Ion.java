@@ -38,7 +38,6 @@ import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
-import com.koushikdutta.ion.loader.VideoLoader;
 
 /**
  * Created by koush on 5/21/13.
@@ -117,8 +116,6 @@ public class Ion {
     DiskLruCache storeCache;
     HttpLoader httpLoader;
     ContentLoader contentLoader;
-    VideoLoader videoLoader;
-    PackageIconLoader packageIconLoader;
     FileLoader fileLoader;
     String logtag;
     int logLevel;
@@ -159,8 +156,7 @@ public class Ion {
         bitmapCache = new IonBitmapCache(this);
 
         configure()
-                .addLoader(videoLoader = new VideoLoader())
-                .addLoader(packageIconLoader = new PackageIconLoader())
+                .addLoader(new PackageIconLoader())
                 .addLoader(httpLoader = new HttpLoader())
                 .addLoader(contentLoader = new ContentLoader())
                 .addLoader(fileLoader = new FileLoader());
@@ -316,6 +312,7 @@ public class Ion {
 
     /**
      * Get or put an item from the cache
+     * @param key
      * @return
      */
     public DiskLruCacheStore cache() {
@@ -324,6 +321,7 @@ public class Ion {
 
     /**
      * Get or put an item in the persistent store
+     * @param key
      * @return
      */
     public DiskLruCacheStore store() {
@@ -361,14 +359,6 @@ public class Ion {
     public class Config {
         public HttpLoader getHttpLoader() {
             return httpLoader;
-        }
-
-        public VideoLoader getVideoLoader() {
-            return videoLoader;
-        }
-
-        public PackageIconLoader getPackageIconLoader() {
-            return packageIconLoader;
         }
 
         public ContentLoader getContentLoader() {
