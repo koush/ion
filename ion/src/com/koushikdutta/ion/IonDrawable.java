@@ -191,6 +191,14 @@ class IonDrawable extends Drawable {
         invalidateSelf();
     }
 
+    private Drawable tryGetErrorResource() {
+        if (error != null)
+            return error;
+        if (errorResource == 0)
+            return null;
+        return error = resources.getDrawable(errorResource);
+    }
+
     @Override
     public int getIntrinsicWidth() {
         if (info != null && info.bitmaps != null)
@@ -198,13 +206,9 @@ class IonDrawable extends Drawable {
         if (resizeWidth > 0)
             return resizeWidth;
         if (info != null) {
-            if (error != null) {
+            Drawable error = tryGetErrorResource();
+            if (error != null)
                 return error.getIntrinsicWidth();
-            } else if (errorResource != 0) {
-                Drawable d = resources.getDrawable(errorResource);
-                assert d != null;
-                return d.getIntrinsicWidth();
-            }
         }
         if (placeholder != null) {
             return placeholder.getIntrinsicWidth();
@@ -296,8 +300,7 @@ class IonDrawable extends Drawable {
             }
         }
         else {
-            if (error == null && errorResource != 0)
-                error = resources.getDrawable(errorResource);
+            Drawable error = tryGetErrorResource();
             if (error != null) {
                 error.setAlpha((int)destAlpha);
                 error.setBounds(getBounds());
