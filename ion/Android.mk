@@ -21,7 +21,7 @@ include $(CLEAR_VARS)
 LOCAL_STATIC_JAVA_LIBRARIES := AndroidAsync gson
 
 LOCAL_MODULE := ion
-LOCAL_SDK_VERSION := 9
+LOCAL_SDK_VERSION := 19
 LOCAL_SRC_FILES := $(call all-java-files-under, src)
 
 include $(BUILD_STATIC_JAVA_LIBRARY)
