@@ -191,16 +191,32 @@ class IonDrawable extends Drawable {
         invalidateSelf();
     }
 
+    private Drawable tryGetErrorResource() {
+        if (error != null)
+            return error;
+        if (errorResource == 0)
+            return null;
+        return error = resources.getDrawable(errorResource);
+    }
+
     @Override
     public int getIntrinsicWidth() {
         if (info != null && info.bitmaps != null)
             return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
         if (resizeWidth > 0)
             return resizeWidth;
-        if (error != null)
-            return error.getIntrinsicWidth();
-        if (placeholder != null)
+        if (info != null) {
+            Drawable error = tryGetErrorResource();
+            if (error != null)
+                return error.getIntrinsicWidth();
+        }
+        if (placeholder != null) {
             return placeholder.getIntrinsicWidth();
+        } else if (placeholderResource != 0) {
+            Drawable d = resources.getDrawable(placeholderResource);
+            assert d != null;
+            return d.getIntrinsicWidth();
+        }
         return -1;
     }
 
@@ -210,10 +226,22 @@ class IonDrawable extends Drawable {
             return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
         if (resizeHeight > 0)
             return resizeHeight;
-        if (error != null)
-            return error.getIntrinsicHeight();
-        if (placeholder != null)
+        if (info != null) {
+            if (error != null) {
+                return error.getIntrinsicHeight();
+            } else if (errorResource != 0) {
+                Drawable d = resources.getDrawable(errorResource);
+                assert d != null;
+                return d.getIntrinsicHeight();
+            }
+        }
+        if (placeholder != null) {
             return placeholder.getIntrinsicHeight();
+        } else if (placeholderResource != 0) {
+            Drawable d = resources.getDrawable(placeholderResource);
+            assert d != null;
+            return d.getIntrinsicHeight();
+        }
         return -1;
     }
 
@@ -272,8 +300,7 @@ class IonDrawable extends Drawable {
             }
         }
         else {
-            if (error == null && errorResource != 0)
-                error = resources.getDrawable(errorResource);
+            Drawable error = tryGetErrorResource();
             if (error != null) {
                 error.setAlpha((int)destAlpha);
                 error.setBounds(getBounds());
