@@ -66,4 +66,21 @@ public class BitmapTests extends AndroidTestCase {
             AsyncServer.getDefault().stop();
         }
     }
+
+    public void testCropping() throws Exception {
+        Bitmap result = Ion.with(getContext())
+        .load("https://raw.github.com/koush/ion/master/ion-test/testdata/exif.jpg")
+        .withBitmap()
+        .resize(1080, 1845)
+        .centerCrop()
+        .asBitmap()
+        .get();
+
+        assertEquals(result.getWidth(), 1080);
+        assertEquals(result.getHeight(), 1845);
+        // pixel should not be clear
+        int pixel = result.getPixel(1079, 1844);
+        System.out.println(String.format("%x", pixel));
+        assertFalse(0 == pixel);
+    }
 }
