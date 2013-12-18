@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:gravity="center"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+
+    <TextView
+            style="@android:style/TextAppearance.Large"
+            android:layout_gravity="center"
+            android:text="File Upload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+
+    <ProgressBar
+            android:minHeight="20dp"
+            android:maxHeight="20dp"
+            android:id="@+id/progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"/>
+
+    <TextView
+            android:layout_gravity="center"
+            android:id="@+id/upload_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+
+    <Button
+            android:layout_gravity="center"
+            android:id="@+id/upload"
+            android:text="Upload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            />
+</LinearLayout>

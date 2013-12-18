@@ -40,6 +40,14 @@ public class Samples extends Activity {
             }
         });
 
+        Button fileUpload = (Button)findViewById(R.id.upload);
+        fileUpload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, ProgressBarUpload.class));
+            }
+        });
+
         Button googleImageSearch = (Button)findViewById(R.id.google_image_search);
         googleImageSearch.setOnClickListener(new View.OnClickListener() {
             @Override

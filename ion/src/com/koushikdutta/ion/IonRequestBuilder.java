@@ -304,7 +304,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 public void onProgress(final int downloaded, final int total) {
                     assert Thread.currentThread() != Looper.getMainLooper().getThread();
 
-                    int percent = (int)((float)total / total * 100f);
+                    final int percent = (int)((float)downloaded / total * 100f);
 
                     if (uploadProgressBar != null)
                         uploadProgressBar.setProgress(percent);
