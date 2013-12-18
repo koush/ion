@@ -38,7 +38,7 @@ class DefaultTransform implements Transform {
             float postHeight = b.getHeight() * ratio;
             float transx = (resizeWidth - postWidth) / 2;
             float transy = (resizeHeight - postHeight) / 2;
-            destination.set(transx, transy, transx + postWidth, transy + postHeight);
+            destination.set(transx, transy, resizeWidth - transx, resizeHeight - transy);
         }
 
         canvas.drawBitmap(b, null, destination, null);
