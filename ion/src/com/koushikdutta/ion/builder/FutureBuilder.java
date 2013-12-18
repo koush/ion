@@ -5,6 +5,7 @@ import android.util.Xml;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.ion.future.ResponseFuture;
 
 import org.w3c.dom.Document;
@@ -93,6 +94,14 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @return
      */
     public <T> ResponseFuture<T> as(TypeToken<T> token);
+
+    /**
+     * Deserialize a response into an object given a custom parser.
+     * @param parser
+     * @param <T>
+     * @return
+     */
+    public <T> ResponseFuture<T> as(AsyncParser<T> parser);
 
     /**
      * Add this request to a group specified by groupKey. This key can be used in a later call to

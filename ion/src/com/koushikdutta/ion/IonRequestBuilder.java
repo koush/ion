@@ -603,6 +603,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public <T> ResponseFuture<T> as(AsyncParser<T> parser) {
+        return execute(parser);
+    }
+
+    @Override
     public <F extends OutputStream> ResponseFuture<F> write(F outputStream, boolean close) {
         return execute(new OutputStreamDataSink(ion.getServer(), outputStream, false), close, outputStream);
     }
