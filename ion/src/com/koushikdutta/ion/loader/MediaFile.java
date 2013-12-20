@@ -138,6 +138,8 @@ public class MediaFile {
     // maps MTP format code to mime type
     private static final HashMap<Integer, String> sFormatToMimeTypeMap
             = new HashMap<Integer, String>();
+    private static final HashMap<String, String> sMimeTypeToExtensionMap
+            = new HashMap<String, String>();
 
     static void addFileType(String extension, int fileType, String mimeType) {
         sFileTypeMap.put(extension, new MediaFileType(fileType, mimeType));
@@ -149,6 +151,7 @@ public class MediaFile {
         sFileTypeToFormatMap.put(extension, Integer.valueOf(mtpFormatCode));
         sMimeTypeToFormatMap.put(mimeType, Integer.valueOf(mtpFormatCode));
         sFormatToMimeTypeMap.put(mtpFormatCode, mimeType);
+        sMimeTypeToExtensionMap.put(mimeType, extension);
     }
 
     /*
@@ -213,7 +216,7 @@ public class MediaFile {
         addFileType("MPEG", FILE_TYPE_MP4, "video/mpeg", MtpConstants.FORMAT_MPEG);
         addFileType("MPG", FILE_TYPE_MP4, "video/mpeg", MtpConstants.FORMAT_MPEG);
         addFileType("MP4", FILE_TYPE_MP4, "video/mp4", MtpConstants.FORMAT_MPEG);
-        addFileType("M4V", FILE_TYPE_M4V, "video/mp4", MtpConstants.FORMAT_MPEG);
+        addFileType("M4V", FILE_TYPE_M4V, "video/m4v", MtpConstants.FORMAT_MPEG);
         addFileType("3GP", FILE_TYPE_3GPP, "video/3gpp",  MtpConstants.FORMAT_3GP_CONTAINER);
         addFileType("3GPP", FILE_TYPE_3GPP, "video/3gpp", MtpConstants.FORMAT_3GP_CONTAINER);
         addFileType("3G2", FILE_TYPE_3GPP2, "video/3gpp2", MtpConstants.FORMAT_3GP_CONTAINER);
@@ -305,6 +308,10 @@ public class MediaFile {
         int fileType = getFileTypeForMimeType(mimeType);
         return isAudioFileType(fileType) || isVideoFileType(fileType)
                 || isImageFileType(fileType) || isPlayListFileType(fileType);
+    }
+
+    public static String getExtensionForMimeType(String mimeType) {
+        return sMimeTypeToExtensionMap.get(mimeType).toLowerCase();
     }
 
     // generates a title based on file name
