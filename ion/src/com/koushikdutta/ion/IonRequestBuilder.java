@@ -208,10 +208,14 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return false;
     }
 
-    private boolean checkContext() {
-        Context context = IonRequestBuilder.this.context.get();
+    static boolean checkContext(WeakReference<Context> contextWeakReference) {
+        Context context = contextWeakReference.get();
         if (context == null)
             return false;
+        return checkContext(context);
+    }
+
+    static boolean checkContext(Context context) {
         if (context instanceof Activity) {
             Activity activity = (Activity)context;
             if (activity.isFinishing())
@@ -224,6 +228,10 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         }
 
         return true;
+    }
+
+    private boolean checkContext() {
+        return checkContext(context);
     }
 
     private <T> void postExecute(final EmitterTransform<T> future, final Exception ex, final T value) {

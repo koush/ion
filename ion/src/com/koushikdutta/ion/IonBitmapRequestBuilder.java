@@ -1,5 +1,6 @@
 package com.koushikdutta.ion;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
@@ -224,8 +225,17 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     }
 
     private static class BitmapInfoToBitmap extends TransformFuture<Bitmap, BitmapInfo> {
+        WeakReference<Context> context;
+        public BitmapInfoToBitmap(WeakReference<Context> context) {
+            this.context = context;
+        }
         @Override
         protected void transform(BitmapInfo result) throws Exception {
+            if (!IonRequestBuilder.checkContext(context)) {
+                cancel();
+                return;
+            }
+
             if (result.exception != null)
                 setComplete(result.exception);
             else
@@ -250,7 +260,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
 
         // we're loading, so let's register for the result.
-        BitmapInfoToBitmap ret = new BitmapInfoToBitmap();
+        BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.context);
         ion.bitmapsPending.add(bitmapKey, ret);
         return ret;
     }
