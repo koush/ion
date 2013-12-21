@@ -76,14 +76,21 @@ public class GallerySample extends Activity {
     Cursor mediaCursor;
     public void loadMore() {
         if (mediaCursor == null) {
-            mediaCursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, null, null, null, null);
+            mediaCursor = getContentResolver().query(MediaStore.Files.getContentUri("external"), null, null, null, null);
         }
 
         int loaded = 0;
         while (mediaCursor.moveToNext() && loaded < 10) {
+            // get the media type. ion can show images for both regular images AND video.
+            int mediaType = mediaCursor.getInt(mediaCursor.getColumnIndex(MediaStore.Files.FileColumns.MEDIA_TYPE));
+            if (mediaType != MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
+                && mediaType != MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO) {
+                continue;
+            }
+
             loaded++;
 
-            String uri = mediaCursor.getString(mediaCursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA));
+            String uri = mediaCursor.getString(mediaCursor.getColumnIndex(MediaStore.Files.FileColumns.DATA));
             File file = new File(uri);
             // turn this into a file uri if necessary/possible
             if (file.exists())
