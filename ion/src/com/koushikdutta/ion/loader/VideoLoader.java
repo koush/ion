@@ -86,9 +86,6 @@ public class VideoLoader implements Loader {
 
     @Override
     public Future<BitmapInfo> loadBitmap(Ion ion, String uri) {
-        if (Build.VERSION.SDK_INT < 12)
-            return null;
-
         if (!uri.startsWith(ContentResolver.SCHEME_FILE))
             return null;
 

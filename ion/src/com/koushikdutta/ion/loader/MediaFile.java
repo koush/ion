@@ -17,8 +17,6 @@
 
 package com.koushikdutta.ion.loader;
 
-import android.mtp.MtpConstants;
-
 import java.util.HashMap;
 import java.util.Locale;
 
