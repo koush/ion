@@ -92,7 +92,7 @@ public class VideoLoader implements Loader {
         final File file = new File(URI.create(uri));
 
         MediaFile.MediaFileType type = MediaFile.getFileType(file.getAbsolutePath());
-        if (!MediaFile.isVideoFileType(type.fileType))
+        if (type == null || !MediaFile.isVideoFileType(type.fileType))
             return null;
 
         final SimpleFuture<BitmapInfo> ret = new SimpleFuture<BitmapInfo>();
