@@ -60,7 +60,7 @@ public class FileLoader extends SimpleLoader {
         if (!request.getUri().getScheme().startsWith("file"))
             return null;
         final SimpleFuture<InputStream> ret = new SimpleFuture<InputStream>();
-        ion.getServer().getExecutorService().execute(new Runnable() {
+        Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
