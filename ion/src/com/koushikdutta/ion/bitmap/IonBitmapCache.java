@@ -140,7 +140,7 @@ public class IonBitmapCache {
         if (targetHeight <= 0)
             targetHeight = Integer.MAX_VALUE;
 
-        int rotation = 0;
+        int rotation;
         try {
             byte[] bytes = new byte[50000];
             stream.mark(Integer.MAX_VALUE);
@@ -149,7 +149,7 @@ public class IonBitmapCache {
             stream.reset();
         }
         catch (Exception e) {
-            return null;
+            rotation = 0;
         }
 
         BitmapFactory.Options o = null;
