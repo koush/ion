@@ -1,7 +1,5 @@
 package com.koushikdutta.ion;
 
-import android.graphics.Bitmap;
-
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
@@ -59,5 +57,5 @@ public interface Loader {
     // otherwise it returns null, and Ion continues to the next loader.
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, FutureCallback<LoaderEmitter> callback);
 
-    public Future<BitmapInfo> loadBitmap(Ion ion, String uri);
+    public Future<BitmapInfo> loadBitmap(Ion ion, String uri, int resizeWidth, int resizeHeight);
 }

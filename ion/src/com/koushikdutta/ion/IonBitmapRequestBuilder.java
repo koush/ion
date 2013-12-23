@@ -80,7 +80,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     boolean fastLoad(final String downloadKey, boolean put) {
         for (Loader loader: ion.configure().getLoaders()) {
-            Future<BitmapInfo> future = loader.loadBitmap(ion, builder.uri);
+            Future<BitmapInfo> future = loader.loadBitmap(ion, builder.uri, resizeWidth, resizeHeight);
             if (future != null) {
                 final BitmapCallback callback = new BitmapCallback(ion, downloadKey, put);
                 future.setCallback(new FutureCallback<BitmapInfo>() {

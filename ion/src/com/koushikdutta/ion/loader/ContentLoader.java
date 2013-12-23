@@ -16,18 +16,8 @@ import java.io.InputStream;
 /**
  * Created by koush on 5/22/13.
  */
-public class ContentLoader implements Loader {
+public class ContentLoader extends SimpleLoader {
     private static final class InputStreamDataEmitterFuture extends SimpleFuture<DataEmitter> {
-    }
-
-    @Override
-    public Future<BitmapInfo> loadBitmap(Ion ion, final String uri) {
-        return null;
-    }
-
-    @Override
-    public Future<InputStream> load(final Ion ion, final AsyncHttpRequest request) {
-        return null;
     }
 
     @Override
