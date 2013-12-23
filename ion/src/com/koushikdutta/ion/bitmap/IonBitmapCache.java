@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.os.Looper;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -88,8 +89,7 @@ public class IonBitmapCache {
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
-    public Bitmap loadBitmap(byte[] bytes, int offset, int length, int minx, int miny) {
-        assert Thread.currentThread() != Looper.getMainLooper().getThread();
+    private Point computeTarget(int minx, int miny) {
         int targetWidth = minx;
         int targetHeight = miny;
         if (targetWidth == 0)
@@ -100,15 +100,21 @@ public class IonBitmapCache {
             targetHeight = metrics.heightPixels;
         if (targetHeight <= 0)
             targetHeight = Integer.MAX_VALUE;
+        return new Point(targetWidth, targetHeight);
+    }
+
+    public Bitmap loadBitmap(byte[] bytes, int offset, int length, int minx, int miny) {
+        assert Thread.currentThread() != Looper.getMainLooper().getThread();
+        Point target = computeTarget(minx, miny);
 
         BitmapFactory.Options o = null;
-        if (targetWidth != Integer.MAX_VALUE || targetHeight != Integer.MAX_VALUE) {
+        if (target.x != Integer.MAX_VALUE || target.y != Integer.MAX_VALUE) {
             o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
             BitmapFactory.decodeByteArray(bytes, offset, length, o);
             if (o.outWidth < 0 || o.outHeight < 0)
                 return null;
-            int scale = Math.max(o.outWidth / targetWidth, o.outHeight / targetHeight);
+            int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
             o = new BitmapFactory.Options();
             o.inSampleSize = scale;
         }
@@ -129,16 +135,7 @@ public class IonBitmapCache {
         if (!stream.markSupported())
             stream = new MarkableInputStream(stream);
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
-        int targetWidth = minx;
-        int targetHeight = miny;
-        if (targetWidth == 0)
-            targetWidth = metrics.widthPixels;
-        if (targetWidth <= 0)
-            targetWidth = Integer.MAX_VALUE;
-        if (targetHeight == 0)
-            targetHeight = metrics.heightPixels;
-        if (targetHeight <= 0)
-            targetHeight = Integer.MAX_VALUE;
+        Point target = computeTarget(minx, miny);
 
         int rotation;
         try {
@@ -153,7 +150,7 @@ public class IonBitmapCache {
         }
 
         BitmapFactory.Options o = null;
-        if (targetWidth != Integer.MAX_VALUE || targetHeight != Integer.MAX_VALUE) {
+        if (target.x != Integer.MAX_VALUE || target.y != Integer.MAX_VALUE) {
             o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
             stream.mark(Integer.MAX_VALUE);
@@ -166,7 +163,7 @@ public class IonBitmapCache {
             catch (Exception e) {
                 return null;
             }
-            int scale = Math.max(o.outWidth / targetWidth, o.outHeight / targetHeight);
+            int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
             o = new BitmapFactory.Options();
             o.inSampleSize = scale;
         }
