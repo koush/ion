@@ -15,6 +15,7 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
@@ -39,7 +40,7 @@ public class FileLoader extends SimpleLoader {
                     FileInputStream fin = new FileInputStream(new File(URI.create(uri)));
                     Bitmap bitmap = ion.getBitmapCache().loadBitmap(new BufferedInputStream(fin, 1024 * 64), resizeWidth, resizeHeight);
                     if (bitmap == null)
-                        throw new Exception("bitmap load failed");
+                        throw new Exception("Bitmap failed to load");
                     BitmapInfo info = new BitmapInfo();
                     info.bitmaps = new Bitmap[] { bitmap };
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
@@ -60,14 +61,13 @@ public class FileLoader extends SimpleLoader {
         if (!request.getUri().getScheme().startsWith("file"))
             return null;
         final SimpleFuture<InputStream> ret = new SimpleFuture<InputStream>();
-        Ion.getBitmapLoadExecutorService().execute(new Runnable() {
+        Ion.getIoExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     InputStream stream = new FileInputStream(new File(request.getUri()));
                     ret.setComplete(stream);
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     ret.setComplete(e);
                 }
             }

@@ -36,7 +36,7 @@ public class DiskLruCacheStore {
 
     private <T> Future<T> put(final String rawKey, final T value, final AsyncParser<T> parser) {
         final SimpleFuture<T> ret = new SimpleFuture<T>();
-        ion.getServer().getExecutorService().execute(new Runnable() {
+        Ion.getIoExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 final DiskLruCache.Editor editor;
@@ -132,8 +132,8 @@ public class DiskLruCacheStore {
     
     private <T> Future<T> get(final String rawKey, final AsyncParser<T> parser) {
         final SimpleFuture<T> ret = new SimpleFuture<T>();
-        
-        ion.getServer().getExecutorService().execute(new Runnable() {
+
+        Ion.getIoExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -190,7 +190,7 @@ public class DiskLruCacheStore {
 
     public Future<String> remove(final String key) {
         final SimpleFuture<String> ret = new SimpleFuture<String>();
-        ion.getServer().getExecutorService().execute(new Runnable() {
+        Ion.getIoExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {

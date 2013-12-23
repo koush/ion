@@ -9,7 +9,9 @@ import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
+import com.koushikdutta.ion.loader.FileLoader;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -21,32 +23,33 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
     ArrayList<Transform> transforms;
 
     public static void getBitmapSnapshot(final Ion ion, final String transformKey) {
-        ion.getServer().getExecutorService().execute(new Runnable() {
+        Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                final LoadBitmap callback = new LoadBitmap(ion, transformKey, true, -1, -1, null);
-
+                final BitmapCallback callback = new BitmapCallback(ion, transformKey, true);
                 try {
                     DiskLruCache.Snapshot snapshot = ion.responseCache.getDiskLruCache().get(transformKey);
                     try {
                         InputStream in = snapshot.getInputStream(0);
                         assert in instanceof FileInputStream;
-                        int available = in.available();
-                        ByteBuffer b = ByteBufferList.obtain(available);
-                        new DataInputStream(in).readFully(b.array(), 0, available);
-                        b.limit(available);
-                        callback.onCompleted(null, new ByteBufferList(b));
-                    }
-                    finally {
+                        Bitmap bitmap = ion.getBitmapCache().loadBitmap(new BufferedInputStream((FileInputStream)in, 1024 * 64), -1, -1);
+                        in.close();
+                        if (bitmap == null)
+                            throw new Exception("Bitmap failed to load");
+
+                        BitmapInfo info = new BitmapInfo();
+                        info.bitmaps = new Bitmap[] { bitmap };
+                        info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
+                        info.key = transformKey;
+                        callback.report(null, info);
+                    } finally {
                         snapshot.close();
                     }
-                }
-                catch (Exception e) {
-                    callback.onCompleted(e, null);
+                } catch (Exception e) {
+                    callback.report(e, null);
                     try {
                         ion.responseCache.getDiskLruCache().remove(transformKey);
-                    }
-                    catch (Exception ex) {
+                    } catch (Exception ex) {
                     }
                 }
             }
@@ -72,7 +75,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
             return;
         }
 
-        ion.getServer().getExecutorService().execute(new Runnable() {
+        Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 BitmapInfo info = new BitmapInfo();
@@ -112,12 +115,10 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                         info.bitmaps[0].compress(format, 100, out);
                         out.close();
                         editor.commit();
-                    }
-                    catch (Exception ex) {
+                    } catch (Exception ex) {
                         editor.abort();
                     }
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                 }
             }
         });

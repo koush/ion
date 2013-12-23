@@ -46,6 +46,7 @@ import com.koushikdutta.ion.loader.VideoLoader;
 public class Ion {
     static final Handler mainHandler = new Handler(Looper.getMainLooper());
     static int availableProcessors = Runtime.getRuntime().availableProcessors();
+    static ExecutorService ioExecutorService = Executors.newFixedThreadPool(4);
     static ExecutorService bitmapExecutorService  = availableProcessors > 2 ? Executors.newFixedThreadPool(availableProcessors - 1) : Executors.newFixedThreadPool(1);
     static HashMap<String, Ion> instances = new HashMap<String, Ion>();
 
@@ -168,6 +169,10 @@ public class Ion {
 
     public static ExecutorService getBitmapLoadExecutorService() {
         return bitmapExecutorService;
+    }
+
+    public static ExecutorService getIoExecutorService() {
+        return ioExecutorService;
     }
 
     /**

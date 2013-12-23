@@ -43,7 +43,7 @@ class LoadBitmapStream extends BitmapCallback implements FutureCallback<InputStr
             return;
         }
 
-        ion.getServer().getExecutorService().execute(new Runnable() {
+        Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 loadInputStream(result);
