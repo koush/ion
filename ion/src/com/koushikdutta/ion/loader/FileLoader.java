@@ -32,7 +32,7 @@ public class FileLoader extends SimpleLoader {
 
         final SimpleFuture<BitmapInfo> ret = new SimpleFuture<BitmapInfo>();
 
-        ion.getBitmapLoadExecutorService().execute(new Runnable() {
+        Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 try {

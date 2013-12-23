@@ -54,9 +54,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
             return;
         }
 
-        ExecutorService executorService = ion.getBitmapLoadExecutorService();
-
-        executorService.execute(new Runnable() {
+        Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 ByteBuffer bb = result.getAll();
