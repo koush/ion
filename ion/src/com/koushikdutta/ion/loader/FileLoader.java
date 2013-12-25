@@ -47,6 +47,9 @@ public class FileLoader extends SimpleLoader {
                     fin.close();
                     ret.setComplete(info);
                 }
+                catch (OutOfMemoryError e) {
+                    ret.setComplete(new Exception(e), null);
+                }
                 catch (Exception e) {
                     ret.setComplete(e);
                 }

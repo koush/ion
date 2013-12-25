@@ -45,7 +45,11 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                     } finally {
                         snapshot.close();
                     }
-                } catch (Exception e) {
+                }
+                catch (OutOfMemoryError e) {
+                    callback.report(new Exception(e), null);
+                }
+                catch (Exception e) {
                     callback.report(e, null);
                     try {
                         ion.responseCache.getDiskLruCache().remove(transformKey);
@@ -90,7 +94,12 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                     info.loadedFrom = result.loadedFrom;
                     info.key = key;
                     report(null, info);
-                } catch (Exception e) {
+                }
+                catch (OutOfMemoryError e) {
+                    report(new Exception(e), null);
+                    return;
+                }
+                catch (Exception e) {
                     report(e, null);
                     return;
                 }

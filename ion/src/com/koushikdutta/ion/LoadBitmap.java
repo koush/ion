@@ -94,7 +94,11 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
                         info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_CACHE;
 
                     report(null, info);
-                } catch (Exception e) {
+                }
+                catch (OutOfMemoryError e) {
+                    report(new Exception(e), null);
+                }
+                catch (Exception e) {
                     report(e, null);
                 }
                 finally {
