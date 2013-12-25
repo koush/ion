@@ -116,7 +116,14 @@ public class IonBitmapCache {
             o = new BitmapFactory.Options();
             o.inSampleSize = scale;
         }
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, offset, length, o);
+
+        Bitmap bitmap;
+        try {
+            bitmap = BitmapFactory.decodeByteArray(bytes, offset, length, o);
+        }
+        catch (OutOfMemoryError e) {
+            return null;
+        }
         if (bitmap == null)
             return null;
 
@@ -166,7 +173,13 @@ public class IonBitmapCache {
             o.inSampleSize = scale;
         }
 
-        Bitmap bitmap = BitmapFactory.decodeStream(stream, null, o);
+        Bitmap bitmap;
+        try {
+            bitmap = BitmapFactory.decodeStream(stream, null, o);
+        }
+        catch (OutOfMemoryError e) {
+            return null;
+        }
         if (bitmap == null)
             return null;
 
