@@ -19,12 +19,13 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
     int resizeWidth;
     int resizeHeight;
     IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform;
+    boolean animateGif;
 
-
-    public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
+    public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, boolean animateGif, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
         super(ion, urlKey, put);
         this.resizeWidth = resizeWidth;
         this.resizeHeight = resizeHeight;
+        this.animateGif = animateGif;
         this.emitterTransform = emitterTransform;
     }
 
@@ -70,7 +71,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
                         GifDecoder decoder = new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), new GifAction() {
                             @Override
                             public boolean parseOk(boolean parseStatus, int frameIndex) {
-                                return frameIndex < 100;
+                                return animateGif;
                             }
                         });
                         decoder.run();

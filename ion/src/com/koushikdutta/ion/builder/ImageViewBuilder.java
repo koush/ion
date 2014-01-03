@@ -78,4 +78,11 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      */
     public I disableFadeIn();
 
+
+    /**
+     * Flag to enable or disable animation of GIFs
+     * @param animateGif
+     * @return
+     */
+    public I animateGif(boolean animateGif);
 }
