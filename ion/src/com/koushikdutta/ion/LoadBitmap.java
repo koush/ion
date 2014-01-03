@@ -50,7 +50,7 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
         }
 
         if (ion.bitmapsPending.tag(key) != this) {
-            Log.d("IonBitmapLoader", "Bitmap load cancelled (no longer needed)");
+//            Log.d("IonBitmapLoader", "Bitmap load cancelled (no longer needed)");
             result.recycle();
             return;
         }

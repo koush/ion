@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.loader;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.FileDataEmitter;
@@ -36,6 +37,10 @@ public class FileLoader extends SimpleLoader {
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
+                if (ret.isCancelled()) {
+//                    Log.d("FileLoader", "Bitmap load cancelled (no longer needed)");
+                    return;
+                }
                 try {
                     FileInputStream fin = new FileInputStream(new File(URI.create(uri)));
                     Bitmap bitmap = ion.getBitmapCache().loadBitmap(fin, resizeWidth, resizeHeight);

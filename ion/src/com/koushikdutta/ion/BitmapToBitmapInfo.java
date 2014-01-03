@@ -23,10 +23,15 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
     ArrayList<Transform> transforms;
 
     public static void getBitmapSnapshot(final Ion ion, final String transformKey) {
+        final BitmapCallback callback = new BitmapCallback(ion, transformKey, true);
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                final BitmapCallback callback = new BitmapCallback(ion, transformKey, true);
+                if (ion.bitmapsPending.tag(transformKey) != callback) {
+                    Log.d("IonBitmapLoader", "Bitmap cache load cancelled (no longer needed)");
+                    return;
+                }
+
                 try {
                     DiskLruCache.Snapshot snapshot = ion.responseCache.getDiskLruCache().get(transformKey);
                     try {
