@@ -32,7 +32,7 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                     try {
                         InputStream in = snapshot.getInputStream(0);
                         assert in instanceof FileInputStream;
-                        Bitmap bitmap = ion.getBitmapCache().loadBitmap(new BufferedInputStream((FileInputStream)in, 1024 * 64), -1, -1);
+                        Bitmap bitmap = ion.getBitmapCache().loadBitmap(in, -1, -1);
                         in.close();
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");

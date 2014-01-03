@@ -38,7 +38,7 @@ public class FileLoader extends SimpleLoader {
             public void run() {
                 try {
                     FileInputStream fin = new FileInputStream(new File(URI.create(uri)));
-                    Bitmap bitmap = ion.getBitmapCache().loadBitmap(new BufferedInputStream(fin, 1024 * 64), resizeWidth, resizeHeight);
+                    Bitmap bitmap = ion.getBitmapCache().loadBitmap(fin, resizeWidth, resizeHeight);
                     if (bitmap == null)
                         throw new Exception("Bitmap failed to load");
                     BitmapInfo info = new BitmapInfo();

@@ -15,6 +15,7 @@ import android.view.WindowManager;
 
 import com.koushikdutta.ion.Ion;
 
+import java.io.BufferedInputStream;
 import java.io.InputStream;
 
 /**
@@ -56,10 +57,20 @@ public class IonBitmapCache {
         cache.evictAllBitmapInfo();
     }
 
+    double heapRatio = 1d / 7d;
+    public double getHeapRatio() {
+        return heapRatio;
+    }
+
+    public void setHeapRatio(double heapRatio) {
+        this.heapRatio = heapRatio;
+    }
+
     public void put(BitmapInfo info) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-        if (getHeapSize(ion.getContext()) != cache.maxSize())
-            cache.setMaxSize(getHeapSize(ion.getContext()) / 7);
+        int maxSize = (int)(getHeapSize(ion.getContext()) * heapRatio);
+        if (maxSize != cache.maxSize())
+            cache.setMaxSize(maxSize);
         cache.put(info.key, info);
     }
 
@@ -131,8 +142,7 @@ public class IonBitmapCache {
     }
 
     public Bitmap loadBitmap(InputStream stream, int minx, int miny) {
-        if (!stream.markSupported())
-            stream = new MarkableInputStream(stream);
+        stream = new BufferedInputStream(stream, 64 * 1024);
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         Point target = computeTarget(minx, miny);
 
