@@ -30,8 +30,79 @@ import java.util.ArrayList;
  * Created by koush on 5/23/13.
  */
 class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBuilder, BitmapFutureBuilder, Builders.Any.BF {
+    private static final SimpleFuture<ImageView> FUTURE_IMAGEVIEW_NULL_URI = new SimpleFuture<ImageView>() {
+        {
+            setComplete(new NullPointerException("uri"));
+        }
+    };
+    private static final SimpleFuture<Bitmap> FUTURE_BITMAP_NULL_URI = new SimpleFuture<Bitmap>() {
+        {
+            setComplete(new NullPointerException("uri"));
+        }
+    };
+
     IonRequestBuilder builder;
     Ion ion;
+    WeakReference<ImageView> imageViewPostRef;
+    ArrayList<Transform> transforms;
+    String bitmapKey;
+    Drawable placeholderDrawable;
+    int placeholderResource;
+    Drawable errorDrawable;
+    int errorResource;
+    Animation inAnimation;
+    Animation loadAnimation;
+    int loadAnimationResource;
+    int inAnimationResource;
+    ScaleMode scaleMode = ScaleMode.FitXY;
+    int resizeWidth;
+    int resizeHeight;
+    boolean disableFadeIn;
+    boolean animate = true;
+
+
+    void reset() {
+        placeholderDrawable = null;
+        placeholderResource = 0;
+        errorDrawable = null;
+        errorResource = 0;
+        ion = null;
+        imageViewPostRef = null;
+        transforms = null;
+        bitmapKey = null;
+        inAnimation = null;
+        inAnimationResource = 0;
+        loadAnimation = null;
+        loadAnimationResource = 0;
+        scaleMode = ScaleMode.FitXY;
+        resizeWidth = 0;
+        resizeHeight = 0;
+        disableFadeIn = false;
+        animate = true;
+        builder = null;
+    }
+
+    public IonBitmapRequestBuilder(IonRequestBuilder builder) {
+        this.builder = builder;
+        ion = builder.ion;
+    }
+
+    public IonBitmapRequestBuilder(Ion ion) {
+        this.ion = ion;
+    }
+
+    static void doAnimation(ImageView imageView, Animation animation, int animationResource) {
+        if (imageView == null)
+            return;
+        if (animation == null && animationResource != 0)
+            animation = AnimationUtils.loadAnimation(imageView.getContext(), animationResource);
+        if (animation == null) {
+            imageView.setAnimation(null);
+            return;
+        }
+
+        imageView.startAnimation(animation);
+    }
 
     private IonRequestBuilder ensureBuilder() {
         if (builder == null)
@@ -53,22 +124,10 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return intoImageView(imageViewPostRef.get());
     }
 
-    WeakReference<ImageView> imageViewPostRef;
     IonBitmapRequestBuilder withImageView(ImageView imageView) {
         imageViewPostRef = new WeakReference<ImageView>(imageView);
         return this;
     }
-
-    public IonBitmapRequestBuilder(IonRequestBuilder builder) {
-        this.builder = builder;
-        ion = builder.ion;
-    }
-
-    public IonBitmapRequestBuilder(Ion ion) {
-        this.ion = ion;
-    }
-
-    ArrayList<Transform> transforms;
 
     @Override
     public IonBitmapRequestBuilder transform(Transform transform) {
@@ -97,7 +156,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return false;
     }
 
-    String bitmapKey;
     BitmapInfo execute() {
         final String downloadKey = ResponseCacheMiddleware.toKeyString(builder.uri);
         assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
@@ -165,18 +223,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return null;
     }
 
-    private static final SimpleFuture<ImageView> FUTURE_IMAGEVIEW_NULL_URI = new SimpleFuture<ImageView>() {
-        {
-            setComplete(new NullPointerException("uri"));
-        }
-    };
-
-    private static final SimpleFuture<Bitmap> FUTURE_BITMAP_NULL_URI = new SimpleFuture<Bitmap>() {
-        {
-            setComplete(new NullPointerException("uri"));
-        }
-    };
-
     private IonDrawable setIonDrawable(ImageView imageView, BitmapInfo info, int loadedFrom) {
         IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView);
         ret.setBitmap(info, loadedFrom);
@@ -224,25 +270,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return imageViewFuture;
     }
 
-    private static class BitmapInfoToBitmap extends TransformFuture<Bitmap, BitmapInfo> {
-        WeakReference<Context> context;
-        public BitmapInfoToBitmap(WeakReference<Context> context) {
-            this.context = context;
-        }
-        @Override
-        protected void transform(BitmapInfo result) throws Exception {
-            if (!IonRequestBuilder.checkContext(context)) {
-                cancel();
-                return;
-            }
-
-            if (result.exception != null)
-                setComplete(result.exception);
-            else
-                setComplete(result.bitmaps[0]);
-        }
-    }
-
     @Override
     public Future<Bitmap> asBitmap() {
         // no uri? just set a placeholder and bail
@@ -265,36 +292,29 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return ret;
     }
 
-    Drawable placeholderDrawable;
-
     @Override
     public IonBitmapRequestBuilder placeholder(Drawable drawable) {
         placeholderDrawable = drawable;
         return this;
     }
 
-    int placeholderResource;
     @Override
     public IonBitmapRequestBuilder placeholder(int resourceId) {
         placeholderResource = resourceId;
         return this;
     }
 
-    Drawable errorDrawable;
     @Override
     public IonBitmapRequestBuilder error(Drawable drawable) {
         errorDrawable = drawable;
         return this;
     }
 
-    int errorResource;
     @Override
     public IonBitmapRequestBuilder error(int resourceId) {
         errorResource = resourceId;
         return this;
     }
-
-    Animation inAnimation;
 
     @Override
     public IonBitmapRequestBuilder animateIn(Animation in) {
@@ -302,42 +322,24 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    Animation loadAnimation;
-
     @Override
     public IonBitmapRequestBuilder animateLoad(Animation load) {
         loadAnimation = load;
         return this;
     }
 
-    static void doAnimation(ImageView imageView, Animation animation, int animationResource) {
-        if (imageView == null)
-            return;
-        if (animation == null && animationResource != 0)
-            animation = AnimationUtils.loadAnimation(imageView.getContext(), animationResource);
-        if (animation == null) {
-            imageView.setAnimation(null);
-            return;
-        }
-
-        imageView.startAnimation(animation);
-    }
-
-    int loadAnimationResource;
     @Override
     public IonBitmapRequestBuilder animateLoad(int animationResource) {
         loadAnimationResource = animationResource;
         return this;
     }
 
-    int inAnimationResource;
     @Override
     public IonBitmapRequestBuilder animateIn(int animationResource) {
         inAnimationResource = animationResource;
         return this;
     }
 
-    ScaleMode scaleMode = ScaleMode.FitXY;
     @Override
     public IonBitmapRequestBuilder centerCrop() {
         if (resizeWidth == 0 || resizeHeight == 0)
@@ -354,9 +356,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    int resizeWidth;
-    int resizeHeight;
-
     @Override
     public IonBitmapRequestBuilder resize(int width, int height) {
         resizeWidth = width;
@@ -366,31 +365,30 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    private boolean disableFadeIn;
-
     @Override
     public IonBitmapRequestBuilder disableFadeIn() {
         this.disableFadeIn = true;
         return this;
     }
 
-    void reset() {
-        placeholderDrawable = null;
-        placeholderResource = 0;
-        errorDrawable = null;
-        errorResource = 0;
-        ion = null;
-        imageViewPostRef = null;
-        transforms = null;
-        bitmapKey = null;
-        inAnimation = null;
-        inAnimationResource = 0;
-        loadAnimation = null;
-        loadAnimationResource = 0;
-        scaleMode = ScaleMode.FitXY;
-        resizeWidth = 0;
-        resizeHeight = 0;
-        disableFadeIn = false;
-        builder = null;
+
+    private static class BitmapInfoToBitmap extends TransformFuture<Bitmap, BitmapInfo> {
+        WeakReference<Context> context;
+        public BitmapInfoToBitmap(WeakReference<Context> context) {
+            this.context = context;
+        }
+
+        @Override
+        protected void transform(BitmapInfo result) throws Exception {
+            if (!IonRequestBuilder.checkContext(context)) {
+                cancel();
+                return;
+            }
+
+            if (result.exception != null)
+                setComplete(result.exception);
+            else
+                setComplete(result.bitmaps[0]);
+        }
     }
 }
