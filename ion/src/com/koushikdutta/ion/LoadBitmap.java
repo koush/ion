@@ -63,8 +63,10 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
                     Bitmap[] bitmaps;
                     int[] delays;
                     if (!isGif()) {
-                        bitmaps = new Bitmap[1];
-                        bitmaps[0] = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
+                        Bitmap bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
+                        if (bitmap == null)
+                            throw new Exception("failed to transform bitmap");
+                        bitmaps = new Bitmap[] { bitmap };
                         delays = null;
                     }
                     else {
@@ -78,12 +80,12 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
                         bitmaps = new Bitmap[decoder.getFrameCount()];
                         delays = decoder.getDelays();
                         for (int i = 0; i < decoder.getFrameCount(); i++) {
-                            bitmaps[i] = decoder.getFrameImage(i);
+                            Bitmap bitmap = decoder.getFrameImage(i);
+                            if (bitmap == null)
+                                throw new Exception("failed to transform bitmap");
+                            bitmaps[i] = bitmap;
                         }
                     }
-
-                    if (bitmaps[0] == null)
-                        throw new Exception("bitmap failed to load");
 
                     BitmapInfo info = new BitmapInfo();
                     info.key = key;

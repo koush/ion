@@ -31,6 +31,8 @@ public class PackageIconLoader extends SimpleLoader {
                     String pkg = request.getHost();
                     PackageManager pm = ion.getContext().getPackageManager();
                     Bitmap bmp = ((BitmapDrawable)pm.getPackageInfo(pkg, 0).applicationInfo.loadIcon(pm)).getBitmap();
+                    if (bmp == null)
+                        throw new Exception("package icon failed to load");
                     BitmapInfo info = new BitmapInfo();
                     info.bitmaps = new Bitmap[] { bmp };
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;

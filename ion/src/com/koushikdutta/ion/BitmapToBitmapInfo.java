@@ -92,7 +92,10 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                 try {
                     for (int i = 0; i < result.bitmaps.length; i++) {
                         for (Transform transform : transforms) {
-                            info.bitmaps[i] = transform.transform(result.bitmaps[i]);
+                            Bitmap bitmap = transform.transform(result.bitmaps[i]);
+                            if (bitmap == null)
+                                throw new Exception("failed to transform bitmap");
+                            info.bitmaps[i] = bitmap;
                         }
                     }
                     info.delays = result.delays;
