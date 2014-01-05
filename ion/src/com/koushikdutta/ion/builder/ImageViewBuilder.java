@@ -77,6 +77,12 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      * @return
      */
     public I disableFadeIn();
+	
+	/**
+     * Disable resize to the dimensions of the device when loading the image.
+     * @return
+     */
+    public I disableDeviceResize();
 
 
     /**

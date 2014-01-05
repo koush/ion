@@ -169,7 +169,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
         assert downloadKey != null;
 
-        if (resizeHeight != 0 || resizeWidth != 0) {
+        if (resizeHeight > 0 || resizeWidth > 0) {
             transform(new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
         }
 
@@ -351,7 +351,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     @Override
     public IonBitmapRequestBuilder centerCrop() {
-        if (resizeWidth == 0 || resizeHeight == 0)
+        if (resizeWidth <= 0 || resizeHeight <= 0)
             throw new IllegalStateException("must call resize first");
         scaleMode = ScaleMode.CenterCrop;
         return this;
@@ -359,7 +359,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     @Override
     public IonBitmapRequestBuilder centerInside() {
-        if (resizeWidth == 0 || resizeHeight == 0)
+        if (resizeWidth <= 0 || resizeHeight <= 0)
             throw new IllegalStateException("must call resize first");
         scaleMode = ScaleMode.CenterInside;
         return this;
@@ -379,6 +379,14 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         this.disableFadeIn = true;
         return this;
     }
+	
+	public IonBitmapRequestBuilder disableDeviceResize() {
+		if(resizeWidth == 0 && resizeHeight == 0) { //don't want to disable device resize if user has already resized the Bitmap.
+			resizeWidth = -1;
+			resizeHeight = -1;
+		}
+		return this;
+	}
 
     @Override
     public IonBitmapRequestBuilder animateGif(boolean animateGif) {
