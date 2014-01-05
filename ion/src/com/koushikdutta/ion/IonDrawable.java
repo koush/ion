@@ -60,7 +60,6 @@ class IonDrawable extends Drawable {
         private WeakReference<IonDrawable> ionDrawableRef;
         private WeakReference<ImageView> imageViewRef;
         private String bitmapKey;
-        private String parentKey;
         private SimpleFuture<ImageView> imageViewFuture = new SimpleFuture<ImageView>();
         private Animation inAnimation;
         private int inAnimationResource;
