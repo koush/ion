@@ -380,11 +380,19 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 	
-	public IonBitmapRequestBuilder disableDeviceResize() {
-		if(resizeWidth == 0 && resizeHeight == 0) { //don't want to disable device resize if user has already resized the Bitmap.
+	public IonBitmapRequestBuilder smartSize(boolean smartSize) {
+        //don't want to disable device resize if user has already resized the Bitmap.
+        if (resizeWidth > 0 || resizeHeight > 0)
+            throw new IllegalStateException("Can't change smart size after resize has been called.");
+
+        if (!smartSize) {
 			resizeWidth = -1;
 			resizeHeight = -1;
 		}
+        else {
+            resizeWidth = 0;
+            resizeHeight = 0;
+        }
 		return this;
 	}
 

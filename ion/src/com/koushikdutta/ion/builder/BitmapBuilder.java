@@ -36,4 +36,11 @@ public interface BitmapBuilder<B extends BitmapBuilder<?>> {
      * @return
      */
     public B centerInside();
+
+    /**
+     * Enable/disable automatic resizing to the dimensions of the device when loading the image.
+     * @param smartSize
+     * @return
+     */
+    public B smartSize(boolean smartSize);
 }
