@@ -1,5 +1,7 @@
 package com.koushikdutta.ion;
 
+import android.graphics.Point;
+
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
@@ -32,8 +34,7 @@ class BitmapCallback {
                 BitmapInfo result = info;
                 if (result == null) {
                     // cache errors
-                    result = new BitmapInfo();
-                    result.bitmaps = null;
+                    result = new BitmapInfo(null, new Point());
                     result.key = key;
                     result.exception = e;
                     ion.getBitmapCache().put(result);

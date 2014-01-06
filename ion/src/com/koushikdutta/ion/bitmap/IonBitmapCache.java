@@ -112,15 +112,18 @@ public class IonBitmapCache {
         return new Point(targetWidth, targetHeight);
     }
 
-    public Bitmap loadBitmap(byte[] bytes, int offset, int length, int minx, int miny) {
+    public Bitmap loadBitmap(byte[] bytes, int offset, int length, int minx, int miny, Point outSize) {
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         Point target = computeTarget(minx, miny);
 
-        BitmapFactory.Options o = null;
+        boolean decodedBounds = false;
+        BitmapFactory.Options o = new BitmapFactory.Options();
         if (target.x != Integer.MAX_VALUE || target.y != Integer.MAX_VALUE) {
-            o = new BitmapFactory.Options();
+            decodedBounds = true;
             o.inJustDecodeBounds = true;
             BitmapFactory.decodeByteArray(bytes, offset, length, o);
+            outSize.x = o.outWidth;
+            outSize.y = o.outHeight;
             if (o.outWidth < 0 || o.outHeight < 0)
                 return null;
             int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
@@ -129,6 +132,10 @@ public class IonBitmapCache {
         }
 
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, offset, length, o);
+        if (!decodedBounds) {
+            outSize.x = o.outWidth;
+            outSize.y = o.outHeight;
+        }
         if (bitmap == null)
             return null;
 
@@ -141,7 +148,7 @@ public class IonBitmapCache {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
-    public Bitmap loadBitmap(InputStream stream, int minx, int miny) {
+    public Bitmap loadBitmap(InputStream stream, int minx, int miny, Point outSize) {
         stream = new BufferedInputStream(stream, 64 * 1024);
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
         Point target = computeTarget(minx, miny);
@@ -158,12 +165,15 @@ public class IonBitmapCache {
             rotation = 0;
         }
 
-        BitmapFactory.Options o = null;
+        boolean decodedBounds = false;
+        BitmapFactory.Options o = new BitmapFactory.Options();
         if (target.x != Integer.MAX_VALUE || target.y != Integer.MAX_VALUE) {
-            o = new BitmapFactory.Options();
+            decodedBounds = true;
             o.inJustDecodeBounds = true;
             stream.mark(Integer.MAX_VALUE);
             BitmapFactory.decodeStream(stream, null, o);
+            outSize.x = o.outWidth;
+            outSize.y = o.outHeight;
             if (o.outWidth < 0 || o.outHeight < 0)
                 return null;
             try {
@@ -178,6 +188,10 @@ public class IonBitmapCache {
         }
 
         Bitmap bitmap = BitmapFactory.decodeStream(stream, null, o);
+        if (!decodedBounds) {
+            outSize.x = o.outWidth;
+            outSize.y = o.outHeight;
+        }
         if (bitmap == null)
             return null;
 

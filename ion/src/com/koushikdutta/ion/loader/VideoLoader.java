@@ -3,6 +3,7 @@ package com.koushikdutta.ion.loader;
 import android.content.ContentResolver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.os.Build;
 import android.util.Log;
 
@@ -98,8 +99,7 @@ public class VideoLoader extends SimpleLoader {
                     Bitmap bmp = createVideoThumbnail(file.getAbsolutePath());
                     if (bmp == null)
                         throw new Exception("video bitmap failed to load");
-                    BitmapInfo info = new BitmapInfo();
-                    info.bitmaps = new Bitmap[] {bmp};
+                    BitmapInfo info = new BitmapInfo(new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));
                     info.loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 } catch (Exception e) {
