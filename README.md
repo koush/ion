@@ -242,7 +242,7 @@ Wondering why your app is slow? Ion lets you do both global and request level lo
 To enable it globally:
 
 ```java
-Ion.getDefault(getContext()).setLogging("MyLogs", Log.DEBUG);
+Ion.getDefault(getContext()).configure().setLogging("MyLogs", Log.DEBUG);
 ```
 
 Or to enable it on just a single request:
@@ -362,14 +362,14 @@ Ion.with(getContext())
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
-   <version>1.2.0</version>
+   <version>1.2.1</version>
 </dependency>
 ```
 
 ##### Gradle
 ```groovy
 dependencies {
-   compile 'com.koushikdutta.ion:ion:1.2.0'
+   compile 'com.koushikdutta.ion:ion:1.2.1'
 }
 ````
 
