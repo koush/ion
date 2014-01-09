@@ -379,6 +379,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                     ret.setComplete(e, null);
                 }
             });
+            ret.setParent(this);
             return ret;
         }
 
