@@ -316,7 +316,7 @@ Proxy server settings can be enabled all Ion requests, or on a per request basis
 
 ```java
 // proxy all requests
-Ion.getDefault(context).proxy("mycomputer", 8888);
+Ion.getDefault(context).configure().proxy("mycomputer", 8888);
 
 // or... to proxy specific requests
 Ion.with(context, "http://example.com/proxied.html")
