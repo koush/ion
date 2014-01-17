@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.util.Log;
 
 import com.koushikdutta.async.ByteBufferList;
@@ -37,13 +38,13 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                     try {
                         InputStream in = snapshot.getInputStream(0);
                         assert in instanceof FileInputStream;
-                        Bitmap bitmap = ion.getBitmapCache().loadBitmap(in, -1, -1);
+                        Point size = new Point();
+                        Bitmap bitmap = ion.getBitmapCache().loadBitmap(in, -1, -1, size);
                         in.close();
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");
 
-                        BitmapInfo info = new BitmapInfo();
-                        info.bitmaps = new Bitmap[] { bitmap };
+                        BitmapInfo info = new BitmapInfo(new Bitmap[] { bitmap }, size);
                         info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                         info.key = transformKey;
                         callback.report(null, info);
@@ -87,17 +88,21 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                BitmapInfo info = new BitmapInfo();
-                info.bitmaps = new Bitmap[result.bitmaps.length];
+                BitmapInfo info;
                 try {
+                    Point size = null;
+                    Bitmap bitmaps[] = new Bitmap[result.bitmaps.length];
                     for (int i = 0; i < result.bitmaps.length; i++) {
                         for (Transform transform : transforms) {
                             Bitmap bitmap = transform.transform(result.bitmaps[i]);
                             if (bitmap == null)
                                 throw new Exception("failed to transform bitmap");
-                            info.bitmaps[i] = bitmap;
+                            bitmaps[i] = bitmap;
+                            if (size == null)
+                                size = new Point(bitmap.getWidth(), bitmap.getHeight());
                         }
                     }
+                    info = new BitmapInfo(bitmaps, size);
                     info.delays = result.delays;
                     info.loadedFrom = result.loadedFrom;
                     info.key = key;
@@ -135,7 +140,8 @@ class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<Bitmap
                     } catch (Exception ex) {
                         editor.abort();
                     }
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                 }
             }
         });

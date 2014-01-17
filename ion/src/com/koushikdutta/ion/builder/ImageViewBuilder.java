@@ -84,4 +84,13 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      * @return
      */
     public I animateGif(boolean animateGif);
+
+    /**
+     * Load the image view as a mipmap image. This allows extremely large images
+     * to be loaded, at full fidelity. Only portions of the image will be decoded,
+     * on an as needed basis when rendering.
+     * This only works on API level 10+, where BitmapRegionDecoder is available.
+     * @return
+     */
+    public I mipmap();
 }
