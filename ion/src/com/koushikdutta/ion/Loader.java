@@ -48,14 +48,34 @@ public interface Loader {
         }
     }
 
-    // returns a Future if this loader can handle a request as a stream.
-    // this implies that the stream is essentially non blocking...
-    // ie file or memory based.
+    /**
+     * returns a Future if this loader can handle a request as a stream.
+     * this implies that the stream is essentially non blocking...
+     * ie file or memory based.
+     * @param ion
+     * @param request
+     * @return
+     */
     public Future<InputStream> load(Ion ion, AsyncHttpRequest request);
 
-    // returns a Future if this loader can handle a request
-    // otherwise it returns null, and Ion continues to the next loader.
+    /**
+     * returns a Future if this loader can handle a request
+     * otherwise it returns null, and Ion continues to the next loader.
+     * @param ion
+     * @param request
+     * @param callback
+     * @return
+     */
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, FutureCallback<LoaderEmitter> callback);
 
+    /**
+     * returns a future if the laoder can handle the request as a bitmap
+     * otherwise it returns null
+     * @param ion
+     * @param uri
+     * @param resizeWidth
+     * @param resizeHeight
+     * @return
+     */
     public Future<BitmapInfo> loadBitmap(Ion ion, String uri, int resizeWidth, int resizeHeight);
 }

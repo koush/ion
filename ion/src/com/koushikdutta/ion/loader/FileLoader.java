@@ -94,7 +94,7 @@ public class FileLoader extends SimpleLoader {
                 File file = new File(request.getUri());
                 FileDataEmitter emitter = new FileDataEmitter(ion.getHttpClient().getServer(), file);
                 ret.setComplete(emitter);
-                callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length(), LoaderEmitter.LOADED_FROM_CACHE, null, null));
+                callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length(), LoaderEmitter.LOADED_FROM_CACHE, null, request));
             }
         });
         return ret;
