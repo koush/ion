@@ -4,20 +4,15 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.util.Log;
 
-import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
-import com.koushikdutta.ion.loader.FileLoader;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 class BitmapToBitmapInfo extends BitmapCallback implements FutureCallback<BitmapInfo> {
