@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
-import android.util.Pair;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -22,9 +21,11 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
-import com.koushikdutta.ion.builder.ImageViewBuilder;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -60,7 +61,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     int resizeHeight;
     boolean disableFadeIn;
     boolean animateGif = true;
-
+    boolean mipmap;
 
     void reset() {
         placeholderDrawable = null;
@@ -80,6 +81,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         disableFadeIn = false;
         animateGif = true;
         builder = null;
+        mipmap = false;
     }
 
     public IonBitmapRequestBuilder(IonRequestBuilder builder) {
@@ -161,10 +163,19 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // although a gif is always same download, the initial decode is different
         if (!animateGif)
             downloadKey += ":!animateGif";
+        if (mipmap)
+            downloadKey += ":mipmap";
         return ResponseCacheMiddleware.toKeyString(downloadKey);
     }
 
-    Pair<String, BitmapInfo> execute() {
+    private static class ExecuteResult {
+        String downloadKey;
+        String bitmapKey;
+        BitmapInfo info;
+        boolean hasTransforms;
+    }
+
+    ExecuteResult executeCache() {
         final String downloadKey = computeDownloadKey();
         assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
         assert downloadKey != null;
@@ -183,26 +194,35 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             bitmapKey = ResponseCacheMiddleware.toKeyString(bitmapKey);
         }
 
+        ExecuteResult ret = new ExecuteResult();
+        ret.downloadKey = downloadKey;
+        ret.bitmapKey = bitmapKey;
+        ret.hasTransforms = hasTransforms;
+
         // see if this request can be fulfilled from the cache
         if (!builder.noCache) {
             BitmapInfo bitmap = builder.ion.bitmapCache.get(bitmapKey);
-            if (bitmap != null)
-                return new Pair<String, BitmapInfo>(bitmapKey, bitmap);
+            if (bitmap != null) {
+                ret.info = bitmap;
+                return ret;
+            }
         }
 
-        Pair<String, BitmapInfo> ret = new Pair<String, BitmapInfo>(bitmapKey, null);
+        return ret;
+    }
 
+    void executeNetwork(final ExecuteResult ret) {
         // bitmaps that were transformed are put into the DiskLruCache to prevent
         // subsequent retransformation. See if we can retrieve the bitmap from the disk cache.
         // See BitmapToBitmapInfo for where the cache is populated.
         DiskLruCache diskLruCache = ion.responseCache.getDiskLruCache();
-        if (!builder.noCache && hasTransforms && diskLruCache.containsKey(bitmapKey)) {
-            BitmapToBitmapInfo.getBitmapSnapshot(ion, bitmapKey);
-            return ret;
+        if (!builder.noCache && ret.hasTransforms && diskLruCache.containsKey(ret.bitmapKey)) {
+            BitmapToBitmapInfo.getBitmapSnapshot(ion, ret.bitmapKey);
+            return;
         }
 
         // Perform a download as necessary.
-        if (!ion.bitmapsPending.contains(downloadKey) && !fastLoad(downloadKey, !hasTransforms)) {
+        if (!ion.bitmapsPending.contains(ret.downloadKey) && !fastLoad(ret.downloadKey, !ret.hasTransforms)) {
             builder.setHandler(null);
             // if we cancel, gotta remove any waiters.
             IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
@@ -211,36 +231,82 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                     AsyncServer.post(Ion.mainHandler, new Runnable() {
                         @Override
                         public void run() {
-                            ion.bitmapsPending.remove(downloadKey);
+                            ion.bitmapsPending.remove(ret.downloadKey);
                         }
                     });
                 }
             });
-            emitterTransform.setCallback(new LoadBitmap(ion, downloadKey, !hasTransforms, resizeWidth, resizeHeight, animateGif, emitterTransform));
+            emitterTransform.setCallback(new LoadBitmap(ion, ret.downloadKey, !ret.hasTransforms, resizeWidth, resizeHeight, animateGif, emitterTransform));
         }
 
         // if there's a transform, do it
-        if (!hasTransforms)
-            return ret;
+        if (!ret.hasTransforms)
+            return;
 
         // verify this transform isn't already pending
         // make sure that the parent download isn't cancelled (empty list)
         // and also make sure there are waiters for this transformed bitmap
-        if (!ion.bitmapsPending.contains(downloadKey) || !ion.bitmapsPending.contains(bitmapKey)) {
-            ion.bitmapsPending.add(downloadKey, new BitmapToBitmapInfo(ion, bitmapKey, downloadKey, transforms));
+        if (!ion.bitmapsPending.contains(ret.downloadKey) || !ion.bitmapsPending.contains(ret.bitmapKey)) {
+            ion.bitmapsPending.add(ret.downloadKey, new BitmapToBitmapInfo(ion, ret.bitmapKey, ret.downloadKey, transforms));
+        }
+    }
+
+    Future<ImageView> executeMipmap(ImageView imageView) {
+        final String downloadKey = computeDownloadKey();
+
+        // try to grab the master tile
+        BitmapInfo bitmap = builder.ion.bitmapCache.get(downloadKey);
+        if (bitmap != null) {
+            doAnimation(imageView, null, 0);
+            IonDrawable drawable = setIonDrawable(imageView, bitmap, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
+            drawable.cancel();
+            SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
+            imageViewFuture.reset();
+            imageViewFuture.setComplete(imageView);
+            return imageViewFuture;
         }
 
-        return ret;
+        // see if something is downloading this
+        if (!ion.bitmapsPending.contains(downloadKey)) {
+            final LoadMipmap loadMipmap = new LoadMipmap(ion, downloadKey);
+            // nothing downloading, see if a file already exists
+            DiskLruCache diskLruCache = ion.responseCache.getDiskLruCache();
+            File file = diskLruCache.getFile(downloadKey, 0);
+            if (diskLruCache.containsKey(downloadKey)) {
+                if (file != null && file.exists()) {
+                    loadMipmap.onCompleted(null, file);
+                    IonDrawable drawable = setIonDrawable(imageView, null, 0);
+                    doAnimation(imageView, loadAnimation, loadAnimationResource);
+                    SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
+                    imageViewFuture.reset();
+                    drawable.register(ion, downloadKey);
+                    return imageViewFuture;
+                }
+            }
+
+            // ok, now we gotta download it.
+            builder.setHandler(null);
+            builder.write(file)
+            .setCallback(loadMipmap);
+        }
+
+        IonDrawable drawable = setIonDrawable(imageView, null, 0);
+        doAnimation(imageView, loadAnimation, loadAnimationResource);
+        SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
+        imageViewFuture.reset();
+        drawable.register(ion, downloadKey);
+        return imageViewFuture;
     }
 
     private IonDrawable setIonDrawable(ImageView imageView, BitmapInfo info, int loadedFrom) {
-        IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView);
-        ret.setBitmap(info, loadedFrom);
-        ret.setSize(resizeWidth, resizeHeight);
-        ret.setError(errorResource, errorDrawable);
-        ret.setPlaceholder(placeholderResource, placeholderDrawable);
-        ret.setInAnimation(inAnimation, inAnimationResource);
-        ret.setDisableFadeIn(disableFadeIn);
+        IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView)
+        .setMipmap(mipmap)
+        .setBitmap(info, loadedFrom)
+        .setSize(resizeWidth, resizeHeight)
+        .setError(errorResource, errorDrawable)
+        .setPlaceholder(placeholderResource, placeholderDrawable)
+        .setInAnimation(inAnimation, inAnimationResource)
+        .setDisableFadeIn(disableFadeIn);
         imageView.setImageDrawable(ret);
         return ret;
     }
@@ -257,11 +323,17 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             return FUTURE_IMAGEVIEW_NULL_URI;
         }
 
-        // execute the request, see if we get a bitmap from cache.
-        Pair<String, BitmapInfo> pair = execute();
-        if (pair.second != null) {
+        // if we're mip mapping this image, let's download the image to a file first
+        // then we'll talk.
+        if (mipmap) {
+            return executeMipmap(imageView);
+        }
+
+        // executeCache the request, see if we get a bitmap from cache.
+        ExecuteResult executeResult = executeCache();
+        if (executeResult.info != null) {
             doAnimation(imageView, null, 0);
-            IonDrawable drawable = setIonDrawable(imageView, pair.second, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
+            IonDrawable drawable = setIonDrawable(imageView, executeResult.info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
             drawable.cancel();
             SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
             imageViewFuture.reset();
@@ -269,35 +341,38 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             return imageViewFuture;
         }
 
+        // nothing from cache, do we want to
+
+        executeNetwork(executeResult);
         IonDrawable drawable = setIonDrawable(imageView, null, 0);
         doAnimation(imageView, loadAnimation, loadAnimationResource);
         SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
         imageViewFuture.reset();
 
-        drawable.register(ion, pair.first);
+        drawable.register(ion, executeResult.bitmapKey);
 
         return imageViewFuture;
     }
 
     @Override
     public Future<Bitmap> asBitmap() {
-        // no uri? just set a placeholder and bail
         if (builder.uri == null) {
             return FUTURE_BITMAP_NULL_URI;
         }
 
         // see if we get something back synchronously
-        Pair<String, BitmapInfo> pair = execute();
-        if (pair.second != null) {
+        ExecuteResult executeResult = executeCache();
+        if (executeResult.info != null) {
             SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
-            Bitmap bitmap = pair.second.bitmaps == null ? null : pair.second.bitmaps[0];
-            ret.setComplete(pair.second.exception, bitmap);
+            Bitmap bitmap = executeResult.info.bitmaps == null ? null : executeResult.info.bitmaps[0];
+            ret.setComplete(executeResult.info.exception, bitmap);
             return ret;
         }
 
+        executeNetwork(executeResult);
         // we're loading, so let's register for the result.
         BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.context);
-        ion.bitmapsPending.add(pair.first, ret);
+        ion.bitmapsPending.add(executeResult.bitmapKey, ret);
         return ret;
     }
 
@@ -369,8 +444,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     public IonBitmapRequestBuilder resize(int width, int height) {
         resizeWidth = width;
         resizeHeight = height;
-        ensureBuilder().setHeader("X-Ion-Width", String.valueOf(width));
-        ensureBuilder().setHeader("X-Ion-Height", String.valueOf(height));
         return this;
     }
 
@@ -402,23 +475,13 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return this;
     }
 
-    private static class BitmapInfoToBitmap extends TransformFuture<Bitmap, BitmapInfo> {
-        WeakReference<Context> context;
-        public BitmapInfoToBitmap(WeakReference<Context> context) {
-            this.context = context;
-        }
-
-        @Override
-        protected void transform(BitmapInfo result) throws Exception {
-            if (!IonRequestBuilder.checkContext(context)) {
-                cancel();
-                return;
-            }
-
-            if (result.exception != null)
-                setComplete(result.exception);
-            else
-                setComplete(result.bitmaps[0]);
-        }
+    @Override
+    public IonBitmapRequestBuilder mipmap() {
+        if (resizeWidth > 0 || resizeHeight > 0)
+            throw new IllegalStateException("Can't mipmap after resize has been called.");
+        mipmap = true;
+        resizeWidth = 0;
+        resizeHeight = 0;
+        return this;
     }
 }

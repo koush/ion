@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
+import android.graphics.Point;
 
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
@@ -20,14 +21,14 @@ class LoadBitmapStream extends BitmapCallback implements FutureCallback<InputStr
 
     public void loadInputStream(InputStream result) {
         try {
-            Bitmap bitmap = ion.bitmapCache.loadBitmap(result, resizeWidth, resizeHeight);
+            Point size = new Point();
+            Bitmap bitmap = ion.bitmapCache.loadBitmap(result, resizeWidth, resizeHeight, size);
 
             if (bitmap == null)
                 throw new Exception("bitmap failed to load");
 
-            BitmapInfo info = new BitmapInfo();
+            BitmapInfo info = new BitmapInfo(new Bitmap[] { bitmap }, size);
             info.key = key;
-            info.bitmaps = new Bitmap[] { bitmap };
             info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_CACHE;
 
             report(null, info);
