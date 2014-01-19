@@ -27,6 +27,10 @@ class BitmapCallback {
         return put;
     }
 
+    protected void onReported() {
+        BitmapFetcher.processDeferred(ion);
+    }
+
     protected void report(final Exception e, final BitmapInfo info) {
         AsyncServer.post(Ion.mainHandler, new Runnable() {
             @Override
@@ -43,12 +47,15 @@ class BitmapCallback {
                 }
 
                 final ArrayList<FutureCallback<BitmapInfo>> callbacks = ion.bitmapsPending.remove(key);
-                if (callbacks == null || callbacks.size() == 0)
+                if (callbacks == null || callbacks.size() == 0) {
+                    onReported();
                     return;
+                }
 
                 for (FutureCallback<BitmapInfo> callback : callbacks) {
                     callback.onCompleted(e, result);
                 }
+                onReported();
             }
         });
     }

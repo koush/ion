@@ -138,8 +138,9 @@ class IonDrawable extends Drawable {
 
         // cancel the load
         if (owner instanceof LoadBitmap) {
-            LoadBitmap load = (LoadBitmap)owner;
-            load.emitterTransform.cancel();
+//            LoadBitmap load = (LoadBitmap)owner;
+//            load.emitterTransform.cancel();
+            BitmapFetcher.processDeferred(ion);
         }
     }
 

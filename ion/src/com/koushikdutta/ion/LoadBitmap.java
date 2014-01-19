@@ -51,7 +51,6 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
         }
 
         if (ion.bitmapsPending.tag(key) != this) {
-//            Log.d("IonBitmapLoader", "Bitmap load cancelled (no longer needed)");
             result.recycle();
             return;
         }
@@ -59,6 +58,11 @@ class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
+                if (ion.bitmapsPending.tag(key) != LoadBitmap.this) {
+                    result.recycle();
+                    return;
+                }
+
                 ByteBuffer bb = result.getAll();
                 try {
                     Bitmap[] bitmaps;

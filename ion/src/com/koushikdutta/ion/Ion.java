@@ -217,6 +217,18 @@ public class Ion {
         return bitmapBuilder.withImageView(imageView);
     }
 
+    int groupCount(Object group) {
+        FutureSet members;
+        synchronized (this) {
+            members = inFlight.get(group);
+        }
+
+        if (members == null)
+            return 0;
+
+        return members.size();
+    }
+
     /**
      * Cancel all pending requests associated with the request group
      * @param group

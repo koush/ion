@@ -1,5 +1,6 @@
 package com.koushikdutta.ion;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
@@ -246,11 +247,15 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return ret;
     }
 
+    static final String IMAGEVIEW_GROUP = "ImageView";
+
     @Override
     public Future<ImageView> intoImageView(ImageView imageView) {
         if (imageView == null)
             throw new IllegalArgumentException("imageView");
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
+
+        builder.group(IMAGEVIEW_GROUP);
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
@@ -276,9 +281,16 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             return imageViewFuture;
         }
 
-        // nothing from cache, do we want to
+        // nothing from cache, check to see if there's too many imageview loads
+        // already in progress
+        if (BitmapFetcher.shouldDeferImageView(ion)) {
+            System.out.println("SHIT IS TOO DAMN HIGH");
+            bitmapFetcher.executeDeferred();
+        }
+        else {
+            bitmapFetcher.executeNetwork();
+        }
 
-        bitmapFetcher.executeNetwork();
         IonDrawable drawable = setIonDrawable(imageView, null, 0);
         doAnimation(imageView, loadAnimation, loadAnimationResource);
         SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();

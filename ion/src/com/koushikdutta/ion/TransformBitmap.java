@@ -19,12 +19,15 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
     ArrayList<Transform> transforms;
 
     public static void getBitmapSnapshot(final Ion ion, final String transformKey) {
+        // don't do this if this is already loading
+        if (ion.bitmapsPending.tag(transformKey) != null)
+            return;
         final BitmapCallback callback = new BitmapCallback(ion, transformKey, true);
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
                 if (ion.bitmapsPending.tag(transformKey) != callback) {
-                    Log.d("IonBitmapLoader", "Bitmap cache load cancelled (no longer needed)");
+//                    Log.d("IonBitmapLoader", "Bitmap cache load cancelled (no longer needed)");
                     return;
                 }
 
@@ -76,13 +79,18 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
         }
 
         if (ion.bitmapsPending.tag(key) != this) {
-            Log.d("IonBitmapLoader", "Bitmap transform cancelled (no longer needed)");
+//            Log.d("IonBitmapLoader", "Bitmap transform cancelled (no longer needed)");
             return;
         }
 
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
+                if (ion.bitmapsPending.tag(key) != TransformBitmap.this) {
+//            Log.d("IonBitmapLoader", "Bitmap transform cancelled (no longer needed)");
+                    return;
+                }
+
                 BitmapInfo info;
                 try {
                     Point size = null;
