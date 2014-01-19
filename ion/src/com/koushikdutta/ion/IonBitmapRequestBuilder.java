@@ -284,7 +284,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // nothing from cache, check to see if there's too many imageview loads
         // already in progress
         if (BitmapFetcher.shouldDeferImageView(ion)) {
-            System.out.println("SHIT IS TOO DAMN HIGH");
             bitmapFetcher.executeDeferred();
         }
         else {
