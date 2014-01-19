@@ -44,7 +44,7 @@ class BitmapFetcher {
         return false;
     }
 
-    private static final int MAX_IMAGEVIEW_LOAD = 20;
+    private static final int MAX_IMAGEVIEW_LOAD = 5;
 
     static boolean shouldDeferImageView(Ion ion) {
         if (ion.bitmapsPending.keySet().size() <= MAX_IMAGEVIEW_LOAD)
