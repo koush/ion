@@ -125,12 +125,12 @@ class IonDrawable extends Drawable {
         Object owner = ion.bitmapsPending.removeItem(previousKey, callback);
 
         // if this drawable was the only thing waiting for this bitmap,
-        // then the removeItem call will return the BitmapToBitmapInfo/LoadBitmap instance
+        // then the removeItem call will return the TransformBitmap/LoadBitmap instance
         // that was providing the result.
 
         // cancel/remove the transform
-        if (owner instanceof BitmapToBitmapInfo) {
-            BitmapToBitmapInfo info = (BitmapToBitmapInfo)owner;
+        if (owner instanceof TransformBitmap) {
+            TransformBitmap info = (TransformBitmap)owner;
             // this transform is also backed by a LoadBitmap, grab that
             // if it is the only waiter
             owner = ion.bitmapsPending.removeItem(info.downloadKey, info);

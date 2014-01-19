@@ -1,6 +1,5 @@
 package com.koushikdutta.ion;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
@@ -13,7 +12,6 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.parser.ByteBufferListParser;
@@ -24,8 +22,6 @@ import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileInputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -214,10 +210,10 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     void executeNetwork(final ExecuteResult ret) {
         // bitmaps that were transformed are put into the DiskLruCache to prevent
         // subsequent retransformation. See if we can retrieve the bitmap from the disk cache.
-        // See BitmapToBitmapInfo for where the cache is populated.
+        // See TransformBitmap for where the cache is populated.
         DiskLruCache diskLruCache = ion.responseCache.getDiskLruCache();
         if (!builder.noCache && ret.hasTransforms && diskLruCache.containsKey(ret.bitmapKey)) {
-            BitmapToBitmapInfo.getBitmapSnapshot(ion, ret.bitmapKey);
+            TransformBitmap.getBitmapSnapshot(ion, ret.bitmapKey);
             return;
         }
 
@@ -247,7 +243,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // make sure that the parent download isn't cancelled (empty list)
         // and also make sure there are waiters for this transformed bitmap
         if (!ion.bitmapsPending.contains(ret.downloadKey) || !ion.bitmapsPending.contains(ret.bitmapKey)) {
-            ion.bitmapsPending.add(ret.downloadKey, new BitmapToBitmapInfo(ion, ret.bitmapKey, ret.downloadKey, transforms));
+            ion.bitmapsPending.add(ret.downloadKey, new TransformBitmap(ion, ret.bitmapKey, ret.downloadKey, transforms));
         }
     }
 
