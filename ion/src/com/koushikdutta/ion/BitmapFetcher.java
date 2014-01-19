@@ -29,7 +29,7 @@ class BitmapFetcher {
         for (Loader loader: ion.configure().getLoaders()) {
             Future<BitmapInfo> future = loader.loadBitmap(ion, builder.uri, resizeWidth, resizeHeight);
             if (future != null) {
-                final BitmapCallback callback = new BitmapCallback(ion, downloadKey, put);
+                final BitmapCallback callback = new LoadBitmapBase(ion, downloadKey, put);
                 future.setCallback(new FutureCallback<BitmapInfo>() {
                     @Override
                     public void onCompleted(Exception e, BitmapInfo result) {
@@ -44,13 +44,25 @@ class BitmapFetcher {
         return false;
     }
 
+    private static final int MAX_IMAGEVIEW_LOAD = 20;
+
     static boolean shouldDeferImageView(Ion ion) {
-        return ion.groupCount(IonBitmapRequestBuilder.IMAGEVIEW_GROUP) > 20;
+        if (ion.bitmapsPending.keySet().size() <= MAX_IMAGEVIEW_LOAD)
+            return false;
+        int loadCount = 0;
+        for (String key: ion.bitmapsPending.keySet()) {
+            Object owner = ion.bitmapsPending.tag(key);
+            if (owner instanceof LoadBitmapBase) {
+                loadCount++;
+                if (loadCount > MAX_IMAGEVIEW_LOAD)
+                    return true;
+            }
+        }
+        return false;
     }
 
     static void processDeferred(Ion ion) {
-        int pendingCount = ion.groupCount(IonBitmapRequestBuilder.IMAGEVIEW_GROUP);
-        if (pendingCount > 20)
+        if (shouldDeferImageView(ion))
             return;
         ArrayList<DeferredLoadBitmap> deferred = null;
         for (String key: ion.bitmapsPending.keySet()) {
@@ -65,10 +77,14 @@ class BitmapFetcher {
 
         if (deferred == null)
             return;
+        int count = 0;
         for (DeferredLoadBitmap deferredLoadBitmap: deferred) {
             ion.bitmapsPending.tag(deferredLoadBitmap.key, null);
+            ion.bitmapsPending.tag(deferredLoadBitmap.fetcher.bitmapKey, null);
             deferredLoadBitmap.fetcher.executeNetwork();
-            if (++pendingCount > 20)
+            count++;
+            // do MAX_IMAGEVIEW_LOAD max. this may end up going over the MAX_IMAGEVIEW_LOAD threshhold
+            if (count > MAX_IMAGEVIEW_LOAD)
                 return;
         }
     }
@@ -87,7 +103,7 @@ class BitmapFetcher {
         // verify this transform isn't already pending
         // make sure that the parent download isn't cancelled (empty list)
         // and also make sure there are waiters for this transformed bitmap
-        if (!ion.bitmapsPending.contains(bitmapKey)) {
+        if (ion.bitmapsPending.tag(bitmapKey) == null) {
             ion.bitmapsPending.add(downloadKey, new TransformBitmap(ion, bitmapKey, downloadKey, transforms));
         }
     }

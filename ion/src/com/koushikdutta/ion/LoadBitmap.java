@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-class LoadBitmap extends BitmapCallback implements FutureCallback<ByteBufferList> {
+class LoadBitmap extends LoadBitmapBase implements FutureCallback<ByteBufferList> {
     int resizeWidth;
     int resizeHeight;
     IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform;

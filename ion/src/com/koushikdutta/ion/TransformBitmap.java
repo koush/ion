@@ -22,7 +22,7 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
         // don't do this if this is already loading
         if (ion.bitmapsPending.tag(transformKey) != null)
             return;
-        final BitmapCallback callback = new BitmapCallback(ion, transformKey, true);
+        final BitmapCallback callback = new LoadBitmapBase(ion, transformKey, true);
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {

@@ -247,15 +247,11 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return ret;
     }
 
-    static final String IMAGEVIEW_GROUP = "ImageView";
-
     @Override
     public Future<ImageView> intoImageView(ImageView imageView) {
         if (imageView == null)
             throw new IllegalArgumentException("imageView");
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
-
-        builder.group(IMAGEVIEW_GROUP);
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {

@@ -9,11 +9,11 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.util.ArrayList;
 
-class BitmapCallback {
+abstract class BitmapCallback {
     String key;
     Ion ion;
 
-    public BitmapCallback(Ion ion, String key, boolean put) {
+    protected BitmapCallback(Ion ion, String key, boolean put) {
         this.key = key;
         this.put = put;
         this.ion = ion;
