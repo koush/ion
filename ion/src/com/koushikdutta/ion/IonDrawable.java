@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -15,9 +17,11 @@ import android.widget.ImageView;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
+import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.lang.ref.WeakReference;
+import java.net.ResponseCache;
 
 /**
  * Created by koush on 6/8/13.
@@ -35,10 +39,15 @@ class IonDrawable extends Drawable {
     private boolean disableFadeIn;
     private int resizeWidth;
     private int resizeHeight;
-    private boolean mipmap;
+    private Ion ion;
 
     public IonDrawable cancel() {
         requestCount++;
+        return this;
+    }
+
+    public IonDrawable ion(Ion ion) {
+        this.ion = ion;
         return this;
     }
 
@@ -92,8 +101,6 @@ class IonDrawable extends Drawable {
             // see if the ImageView is still waiting for the same request
             if (drawable.requestCount != requestId)
                 return;
-
-            drawable.requestCount++;
 
             imageView.setImageDrawable(null);
             drawable.setBitmap(result, result.loadedFrom);
@@ -149,8 +156,10 @@ class IonDrawable extends Drawable {
 
     int currentFrame;
     private boolean invalidateScheduled;
+    private int textureDim;
     public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
         this.loadedFrom = loadedFrom;
+        requestCount++;
 
         if (this.info == info)
             return this;
@@ -163,6 +172,23 @@ class IonDrawable extends Drawable {
         if (info == null) {
             callback.bitmapKey = null;
             return this;
+        }
+
+        if (info.mipmap != null) {
+            // find number of tiles across to fit
+            double wlevel = (double)info.originalSize.x / TILE_DIM;
+            double hlevel = (double)info.originalSize.y / TILE_DIM;
+
+            // find the level: find how many power of 2 tiles are necessary
+            // to fit the entire image. ie, fit it into a square.
+            double level = Math.max(wlevel, hlevel);
+            level = Math.log(level) / LOG_2;
+
+            int l = (int)Math.ceil(level);
+
+            // now, we know the entire image will fit in a square image of
+            // this dimension:
+            textureDim = TILE_DIM << l;
         }
 
         callback.bitmapKey = info.key;
@@ -221,10 +247,11 @@ class IonDrawable extends Drawable {
 
     @Override
     public int getIntrinsicWidth() {
-        if (info != null && info.bitmaps != null) {
-            if (!mipmap)
+        if (info != null) {
+            if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
-            return info.originalSize.x;
+            if (info.mipmap != null)
+                return info.originalSize.x;
         }
         if (resizeWidth > 0)
             return resizeWidth;
@@ -245,10 +272,11 @@ class IonDrawable extends Drawable {
 
     @Override
     public int getIntrinsicHeight() {
-        if (info != null && info.bitmaps != null) {
-            if (!mipmap)
+        if (info != null) {
+            if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
-            return info.originalSize.y;
+            if (info.mipmap != null)
+                return info.originalSize.y;
         }
         if (resizeHeight > 0)
             return resizeHeight;
@@ -281,10 +309,15 @@ class IonDrawable extends Drawable {
         }
     };
 
-    public IonDrawable setMipmap(boolean mipmap) {
-        this.mipmap = mipmap;
-        return this;
-    }
+    private static final double LOG_2 = Math.log(2);
+    private static final int TILE_DIM = 512;
+
+    FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
+        @Override
+        public void onCompleted(Exception e, BitmapInfo result) {
+            invalidateSelf();
+        }
+    };
 
     @Override
     public void draw(Canvas canvas) {
@@ -329,6 +362,100 @@ class IonDrawable extends Drawable {
                     scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
                 }
             }
+        }
+        else if (info.mipmap != null) {
+            // zoom 0: entire image fits in a TILE_DIMxTILE_DIM square
+
+
+            // figure out zoom level
+            // figure out which tiles need rendering
+            // fetch anything that needs fetching
+            // draw stuff that needs drawing
+            // use parent level tiles for tiles that do not exist
+            // crossfading?
+//            System.out.println(info.mipmap);
+
+            Rect clip = canvas.getClipBounds();
+            Rect bounds = getBounds();
+
+            float zoom = (float)canvas.getWidth() / (float)clip.width();
+//            double level = Math.abs(Math.round(Math.log(zoom) / Math.log(2)));
+
+            float zoomWidth = zoom * bounds.width();
+            float zoomHeight = zoom * bounds.height();
+
+            double wlevel = Math.log(zoomWidth / TILE_DIM) / LOG_2;
+            double hlevel = Math.log(zoomHeight/ TILE_DIM) / LOG_2;
+            double maxLevel = Math.max(wlevel, hlevel);
+
+//            System.out.println("clip: " + clip);
+//            System.out.println("zoomWidth: " + zoomWidth);
+//            System.out.println("zoomHeight: " + zoomHeight);
+//            System.out.println("level: " + maxLevel);
+
+            int visibleLeft = Math.max(0, clip.left);
+            int visibleRight = Math.min(bounds.width(), clip.right);
+            int visibleTop = Math.max(0, clip.top);
+            int visibleBottom = Math.min(bounds.height(), clip.bottom);
+            int level = (int)Math.ceil(maxLevel);
+            int levelTiles = 1 << level;
+            int levelDim = levelTiles * TILE_DIM;
+            Rect visible = new Rect(visibleLeft, visibleTop, visibleRight, visibleBottom);
+//            System.out.println("visible: " + visible);
+
+            int textureTileDim = textureDim / levelTiles;
+
+            paint.setColor(Color.BLACK);
+            canvas.drawRect(getBounds(), paint);
+
+            int sampleSize = 1;
+            while (textureTileDim / sampleSize > TILE_DIM)
+                sampleSize <<= 1;
+
+            for (int y = 0; y < levelTiles; y++) {
+                int top = textureTileDim * y;
+                int bottom = textureTileDim * (y + 1);
+                bottom = Math.min(bottom, bounds.bottom);
+                if (bottom < visibleTop)
+                    continue;
+                if (top > visibleBottom)
+                    continue;
+                for (int x = 0; x < levelTiles; x++) {
+                    int left = textureTileDim * x;
+                    int right = textureTileDim * (x + 1);
+                    right = Math.min(right, bounds.right);
+                    if (right < visibleLeft)
+                        continue;
+                    if (left > visibleRight)
+                        continue;
+
+                    Rect texRect = new Rect(left, top, right, bottom);
+
+                    // find, render/fetch
+//                    System.out.println("rendering: " + texRect + " for: " + bounds);
+                    String tileKey = ResponseCacheMiddleware.toKeyString(info.key + "," + level + "," + x + "," + y);
+                    BitmapInfo tile = ion.bitmapCache.get(tileKey);
+                    if (tile != null) {
+                        // render it
+                        if (tile.bitmaps != null) {
+//                            System.out.println("bitmap is: " + tile.bitmaps[0].getWidth() + "x" + tile.bitmaps[0].getHeight());
+                            canvas.drawBitmap(tile.bitmaps[0], null, texRect, paint);
+                        }
+                        continue;
+                    }
+
+                    if (ion.bitmapsPending.tag(tileKey) == null) {
+                        // fetch it
+                        LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.mipmap, texRect, sampleSize);
+                    }
+                    ion.bitmapsPending.add(tileKey, tileCallback);
+                }
+            }
+
+
+//            paint.setColor(Color.RED);
+//            canvas.drawRect(getBounds(), paint);
+//            paint.reset();
         }
         else {
             Drawable error = tryGetErrorResource();

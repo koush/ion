@@ -1,8 +1,10 @@
 package com.koushikdutta.ion.bitmap;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapRegionDecoder;
 import android.graphics.Point;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 
 /**
@@ -22,6 +24,7 @@ public class BitmapInfo {
     final public Bitmap[] bitmaps;
     public int[] delays;
     public Exception exception;
+    public BitmapRegionDecoder mipmap;
 
     public int sizeOf() {
         if (bitmaps == null)
