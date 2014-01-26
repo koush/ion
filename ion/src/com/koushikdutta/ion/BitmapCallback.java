@@ -28,7 +28,7 @@ abstract class BitmapCallback {
     }
 
     protected void onReported() {
-        BitmapFetcher.processDeferred(ion);
+        ion.processDeferred();
     }
 
     protected void report(final Exception e, final BitmapInfo info) {

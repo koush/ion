@@ -229,6 +229,42 @@ public class Ion {
         return members.size();
     }
 
+    private Runnable processDeferred = new Runnable() {
+        @Override
+        public void run() {
+            if (BitmapFetcher.shouldDeferImageView(Ion.this))
+                return;
+            ArrayList<DeferredLoadBitmap> deferred = null;
+            for (String key: bitmapsPending.keySet()) {
+                Object owner = bitmapsPending.tag(key);
+                if (owner instanceof DeferredLoadBitmap) {
+                    DeferredLoadBitmap deferredLoadBitmap = (DeferredLoadBitmap)owner;
+                    if (deferred == null)
+                        deferred = new ArrayList<DeferredLoadBitmap>();
+                    deferred.add(deferredLoadBitmap);
+                }
+            }
+
+            if (deferred == null)
+                return;
+            int count = 0;
+            for (DeferredLoadBitmap deferredLoadBitmap: deferred) {
+                bitmapsPending.tag(deferredLoadBitmap.key, null);
+                bitmapsPending.tag(deferredLoadBitmap.fetcher.bitmapKey, null);
+                deferredLoadBitmap.fetcher.executeNetwork();
+                count++;
+                // do MAX_IMAGEVIEW_LOAD max. this may end up going over the MAX_IMAGEVIEW_LOAD threshhold
+                if (count > BitmapFetcher.MAX_IMAGEVIEW_LOAD)
+                    return;
+            }
+        }
+    };
+
+    void processDeferred() {
+        mainHandler.removeCallbacks(processDeferred);
+        mainHandler.post(processDeferred);
+    }
+
     /**
      * Cancel all pending requests associated with the request group
      * @param group

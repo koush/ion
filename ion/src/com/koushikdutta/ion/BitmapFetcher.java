@@ -44,7 +44,7 @@ class BitmapFetcher {
         return false;
     }
 
-    private static final int MAX_IMAGEVIEW_LOAD = 5;
+    static final int MAX_IMAGEVIEW_LOAD = 5;
 
     static boolean shouldDeferImageView(Ion ion) {
         if (ion.bitmapsPending.keySet().size() <= MAX_IMAGEVIEW_LOAD)
@@ -59,34 +59,6 @@ class BitmapFetcher {
             }
         }
         return false;
-    }
-
-    static void processDeferred(Ion ion) {
-        if (shouldDeferImageView(ion))
-            return;
-        ArrayList<DeferredLoadBitmap> deferred = null;
-        for (String key: ion.bitmapsPending.keySet()) {
-            Object owner = ion.bitmapsPending.tag(key);
-            if (owner instanceof DeferredLoadBitmap) {
-                DeferredLoadBitmap deferredLoadBitmap = (DeferredLoadBitmap)owner;
-                if (deferred == null)
-                    deferred = new ArrayList<DeferredLoadBitmap>();
-                deferred.add(deferredLoadBitmap);
-            }
-        }
-
-        if (deferred == null)
-            return;
-        int count = 0;
-        for (DeferredLoadBitmap deferredLoadBitmap: deferred) {
-            ion.bitmapsPending.tag(deferredLoadBitmap.key, null);
-            ion.bitmapsPending.tag(deferredLoadBitmap.fetcher.bitmapKey, null);
-            deferredLoadBitmap.fetcher.executeNetwork();
-            count++;
-            // do MAX_IMAGEVIEW_LOAD max. this may end up going over the MAX_IMAGEVIEW_LOAD threshhold
-            if (count > MAX_IMAGEVIEW_LOAD)
-                return;
-        }
     }
 
     DeferredLoadBitmap executeDeferred() {

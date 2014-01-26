@@ -133,15 +133,10 @@ class IonDrawable extends Drawable {
             TransformBitmap info = (TransformBitmap)owner;
             // this transform is also backed by a LoadBitmap, grab that
             // if it is the only waiter
-            owner = ion.bitmapsPending.removeItem(info.downloadKey, info);
+            ion.bitmapsPending.removeItem(info.downloadKey, info);
         }
 
-        // cancel the load
-        if (owner instanceof LoadBitmap) {
-//            LoadBitmap load = (LoadBitmap)owner;
-//            load.emitterTransform.cancel();
-            BitmapFetcher.processDeferred(ion);
-        }
+        ion.processDeferred();
     }
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
