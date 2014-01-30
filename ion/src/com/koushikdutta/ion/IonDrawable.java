@@ -404,6 +404,7 @@ class IonDrawable extends Drawable {
 //            System.out.println("visible: " + visible);
 
             int textureTileDim = textureDim / levelTiles;
+            System.out.println("textureTileDim: " + textureTileDim);
 
             paint.setColor(Color.BLACK);
             canvas.drawRect(getBounds(), paint);
