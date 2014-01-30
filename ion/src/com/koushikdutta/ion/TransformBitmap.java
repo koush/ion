@@ -42,9 +42,8 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");
 
-                        BitmapInfo info = new BitmapInfo(new Bitmap[] { bitmap }, size);
+                        BitmapInfo info = new BitmapInfo(transformKey, new Bitmap[] { bitmap }, size);
                         info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
-                        info.key = transformKey;
                         callback.report(null, info);
                     } finally {
                         snapshot.close();
@@ -105,10 +104,9 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                                 size = new Point(bitmap.getWidth(), bitmap.getHeight());
                         }
                     }
-                    info = new BitmapInfo(bitmaps, size);
+                    info = new BitmapInfo(key, bitmaps, size);
                     info.delays = result.delays;
                     info.loadedFrom = result.loadedFrom;
-                    info.key = key;
                     report(null, info);
                 }
                 catch (OutOfMemoryError e) {

@@ -27,14 +27,12 @@ class BitmapFetcher {
         boolean put = !hasTransforms;
 
         for (Loader loader: ion.configure().getLoaders()) {
-            Future<BitmapInfo> future = loader.loadBitmap(ion, builder.uri, resizeWidth, resizeHeight);
+            Future<BitmapInfo> future = loader.loadBitmap(ion, downloadKey, builder.uri, resizeWidth, resizeHeight);
             if (future != null) {
                 final BitmapCallback callback = new LoadBitmapBase(ion, downloadKey, put);
                 future.setCallback(new FutureCallback<BitmapInfo>() {
                     @Override
                     public void onCompleted(Exception e, BitmapInfo result) {
-                        if (result != null)
-                            result.key = downloadKey;
                         callback.report(e, result);
                     }
                 });

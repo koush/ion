@@ -77,7 +77,7 @@ public class VideoLoader extends SimpleLoader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(Ion ion, String uri, int resizeWidth, int resizeHeight) {
+    public Future<BitmapInfo> loadBitmap(Ion ion, final String key, String uri, int resizeWidth, int resizeHeight) {
         if (!uri.startsWith(ContentResolver.SCHEME_FILE))
             return null;
 
@@ -99,7 +99,7 @@ public class VideoLoader extends SimpleLoader {
                     Bitmap bmp = createVideoThumbnail(file.getAbsolutePath());
                     if (bmp == null)
                         throw new Exception("video bitmap failed to load");
-                    BitmapInfo info = new BitmapInfo(new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));
+                    BitmapInfo info = new BitmapInfo(key, new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));
                     info.loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 } catch (Exception e) {

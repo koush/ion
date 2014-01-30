@@ -72,10 +72,11 @@ public interface Loader {
      * returns a future if the laoder can handle the request as a bitmap
      * otherwise it returns null
      * @param ion
+     * @param key
      * @param uri
      * @param resizeWidth
      * @param resizeHeight
      * @return
      */
-    public Future<BitmapInfo> loadBitmap(Ion ion, String uri, int resizeWidth, int resizeHeight);
+    public Future<BitmapInfo> loadBitmap(Ion ion, String key, String uri, int resizeWidth, int resizeHeight);
 }

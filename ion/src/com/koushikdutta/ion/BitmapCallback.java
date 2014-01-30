@@ -38,8 +38,7 @@ abstract class BitmapCallback {
                 BitmapInfo result = info;
                 if (result == null) {
                     // cache errors
-                    result = new BitmapInfo(null, new Point());
-                    result.key = key;
+                    result = new BitmapInfo(key, null, new Point());
                     result.exception = e;
                     ion.getBitmapCache().put(result);
                 } else if (put()) {

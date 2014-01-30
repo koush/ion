@@ -99,8 +99,7 @@ class LoadBitmap extends LoadBitmapBase implements FutureCallback<ByteBufferList
                         }
                     }
 
-                    BitmapInfo info = new BitmapInfo(bitmaps, size);
-                    info.key = key;
+                    BitmapInfo info = new BitmapInfo(key, bitmaps, size);
                     info.delays = delays;
                     if (emitterTransform != null)
                         info.loadedFrom = emitterTransform.loadedFrom();

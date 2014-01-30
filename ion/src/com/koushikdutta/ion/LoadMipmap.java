@@ -37,10 +37,9 @@ public class LoadMipmap extends BitmapCallback implements FutureCallback<File> {
                 try {
                     BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(file.toString(), false);
                     Point size = new Point(decoder.getWidth(), decoder.getHeight());
-                    BitmapInfo info = new BitmapInfo(null, size);
+                    BitmapInfo info = new BitmapInfo(key, null, size);
                     info.mipmap = decoder;
                     info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_NETWORK;
-                    info.key = key;
                     report(null, info);
                 } catch (Exception e) {
                     report(e, null);

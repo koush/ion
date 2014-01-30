@@ -29,7 +29,7 @@ public class FileLoader extends SimpleLoader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(final Ion ion, final String uri, final int resizeWidth, final int resizeHeight) {
+    public Future<BitmapInfo> loadBitmap(final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight) {
         if (uri == null || !uri.startsWith("file:/"))
             return null;
 
@@ -48,7 +48,7 @@ public class FileLoader extends SimpleLoader {
                     Bitmap bitmap = ion.getBitmapCache().loadBitmap(fin, resizeWidth, resizeHeight, size);
                     if (bitmap == null)
                         throw new Exception("Bitmap failed to load");
-                    BitmapInfo info = new BitmapInfo(new Bitmap[] { bitmap }, size);
+                    BitmapInfo info = new BitmapInfo(key, new Bitmap[] { bitmap }, size);
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     fin.close();
                     ret.setComplete(info);
