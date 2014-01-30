@@ -204,10 +204,17 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
         // see if something is downloading this
         if (ion.bitmapsPending.tag(downloadKey) == null) {
-            final LoadMipmap loadMipmap = new LoadMipmap(ion, downloadKey);
-            // nothing downloading, see if a file already exists
+            // ok, now we gotta download it.
             DiskLruCache diskLruCache = ion.responseCache.getDiskLruCache();
             File file = diskLruCache.getFile(downloadKey, 0);
+
+            builder.setHandler(null);
+            IonRequestBuilder.EmitterTransform<File> emitterTransform = builder.write(file);
+
+            LoadMipmap loadMipmap = new LoadMipmap(ion, downloadKey, animateGif, emitterTransform);
+            emitterTransform.setCallback(loadMipmap);
+
+            // nothing downloading, see if a file already exists
             if (diskLruCache.containsKey(downloadKey)) {
                 if (file != null && file.exists()) {
                     loadMipmap.onCompleted(null, file);
@@ -219,11 +226,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
                     return imageViewFuture;
                 }
             }
-
-            // ok, now we gotta download it.
-            builder.setHandler(null);
-            builder.write(file)
-            .setCallback(loadMipmap);
         }
 
         IonDrawable drawable = setIonDrawable(imageView, null, 0);

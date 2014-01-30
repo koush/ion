@@ -16,31 +16,16 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-class LoadBitmap extends LoadBitmapBase implements FutureCallback<ByteBufferList> {
+class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferList> {
     int resizeWidth;
     int resizeHeight;
-    IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform;
-    boolean animateGif;
 
     public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, boolean animateGif, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
-        super(ion, urlKey, put);
+        super(ion, urlKey, put, animateGif, emitterTransform);
         this.resizeWidth = resizeWidth;
         this.resizeHeight = resizeHeight;
         this.animateGif = animateGif;
         this.emitterTransform = emitterTransform;
-    }
-
-    private boolean isGif() {
-        if (emitterTransform == null)
-            return false;
-        if (emitterTransform.finalRequest != null) {
-            URI uri = emitterTransform.finalRequest.getUri();
-            if (uri != null && uri.toString().endsWith(".gif"))
-                return true;
-        }
-        if (emitterTransform.headers == null)
-            return false;
-        return "image/gif".equals(emitterTransform.headers.get("Content-Type"));
     }
 
     @Override

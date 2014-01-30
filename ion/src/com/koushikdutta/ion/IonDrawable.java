@@ -416,18 +416,20 @@ class IonDrawable extends Drawable {
                 int top = textureTileDim * y;
                 int bottom = textureTileDim * (y + 1);
                 bottom = Math.min(bottom, bounds.bottom);
+                // TODO: start at visible pos
                 if (bottom < visibleTop)
                     continue;
                 if (top > visibleBottom)
-                    continue;
+                    break;
                 for (int x = 0; x < levelTiles; x++) {
                     int left = textureTileDim * x;
                     int right = textureTileDim * (x + 1);
                     right = Math.min(right, bounds.right);
+                    // TODO: start at visible pos
                     if (right < visibleLeft)
                         continue;
                     if (left > visibleRight)
-                        continue;
+                        break;
 
                     Rect texRect = new Rect(left, top, right, bottom);
 
@@ -444,6 +446,7 @@ class IonDrawable extends Drawable {
                         continue;
                     }
 
+                    // TODO: cancellation of unnecessary regions when fast pan/zooming
                     if (ion.bitmapsPending.tag(tileKey) == null) {
                         // fetch it
                         LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.mipmap, texRect, sampleSize);

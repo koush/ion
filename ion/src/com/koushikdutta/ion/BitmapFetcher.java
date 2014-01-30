@@ -93,7 +93,6 @@ class BitmapFetcher {
         // Perform a download as necessary.
         if (ion.bitmapsPending.tag(downloadKey) == null && !fastLoad()) {
             builder.setHandler(null);
-            // if we cancel, gotta remove any waiters.
             IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
                 @Override
                 public void run() {
