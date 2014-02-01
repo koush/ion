@@ -153,7 +153,7 @@ public class IonBitmapCache {
     }
 
     @TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
-    public Bitmap loadRegion(BitmapRegionDecoder decoder, Rect sourceRect, int inSampleSize) {
+    public Bitmap loadRegion(final BitmapRegionDecoder decoder, Rect sourceRect, int inSampleSize) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = inSampleSize;
         return decoder.decodeRegion(sourceRect, options);

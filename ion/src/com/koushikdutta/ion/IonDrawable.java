@@ -366,7 +366,6 @@ class IonDrawable extends Drawable {
         else if (info.mipmap != null) {
             // zoom 0: entire image fits in a TILE_DIMxTILE_DIM square
 
-
             // figure out zoom level
             // figure out which tiles need rendering
             // fetch anything that needs fetching
@@ -404,7 +403,7 @@ class IonDrawable extends Drawable {
 //            System.out.println("visible: " + visible);
 
             int textureTileDim = textureDim / levelTiles;
-            System.out.println("textureTileDim: " + textureTileDim);
+//            System.out.println("textureTileDim: " + textureTileDim);
 
             paint.setColor(Color.BLACK);
             canvas.drawRect(getBounds(), paint);
@@ -438,12 +437,10 @@ class IonDrawable extends Drawable {
 //                    System.out.println("rendering: " + texRect + " for: " + bounds);
                     String tileKey = ResponseCacheMiddleware.toKeyString(info.key + "," + level + "," + x + "," + y);
                     BitmapInfo tile = ion.bitmapCache.get(tileKey);
-                    if (tile != null) {
+                    if (tile != null && tile.bitmaps != null) {
                         // render it
-                        if (tile.bitmaps != null) {
 //                            System.out.println("bitmap is: " + tile.bitmaps[0].getWidth() + "x" + tile.bitmaps[0].getHeight());
-                            canvas.drawBitmap(tile.bitmaps[0], null, texRect, paint);
-                        }
+                        canvas.drawBitmap(tile.bitmaps[0], null, texRect, paint);
                         continue;
                     }
 
@@ -453,13 +450,54 @@ class IonDrawable extends Drawable {
                         LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.mipmap, texRect, sampleSize);
                     }
                     ion.bitmapsPending.add(tileKey, tileCallback);
+
+                    // TODO: render a sample from another tile
+                    if (true) return;
+                    int parentLeft = 0;
+                    int parentTop = 0;
+                    int parentUp = 1;
+                    int parentLevel = level - parentUp;
+                    if (x % 2 == 1)
+                        parentLeft++;
+                    if (y % 2 == 1)
+                        parentTop++;
+                    int parentX = x >> 1;
+                    int parentY = y >> 1;
+
+                    while (parentLevel >= 0) {
+                        tileKey = ResponseCacheMiddleware.toKeyString(info.key + "," + parentLevel + "," + parentX + "," + parentY);
+                        tile = ion.bitmapCache.get(tileKey);
+                        if (tile != null && tile.bitmaps != null)
+                            break;
+                        parentUp++;
+                        parentLevel--;
+                        parentLeft <<= 1;
+                        parentTop <<= 1;
+                        if (parentX % 2 == 1)
+                            parentLeft++;
+                        if (parentY % 2 == 1)
+                            parentTop++;
+                        parentX >>= 1;
+                        parentY >>= 1;
+                    }
+
+                    // well, i give up
+                    if (tile == null || tile.bitmaps == null)
+                        return;
+
+                    int subLevelTiles = 1 << parentLevel;
+                    int subtileDim = textureDim / subLevelTiles;
+                    int subSampleSize = 1;
+                    while (subtileDim / subSampleSize > TILE_DIM)
+                        subSampleSize <<= 1;
+                    int subTextureDim = subtileDim / subSampleSize;
+                    subTextureDim >>= parentUp;
+                    int sourceLeft = subTextureDim * parentLeft;
+                    int sourceTop = subTextureDim * parentTop;
+                    Rect sourceRect = new Rect(sourceLeft, sourceTop, sourceLeft + subTextureDim, sourceTop + subTextureDim);
+                    canvas.drawBitmap(tile.bitmaps[0], sourceRect, texRect, paint);
                 }
             }
-
-
-//            paint.setColor(Color.RED);
-//            canvas.drawRect(getBounds(), paint);
-//            paint.reset();
         }
         else {
             Drawable error = tryGetErrorResource();
