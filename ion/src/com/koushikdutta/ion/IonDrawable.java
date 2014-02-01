@@ -157,6 +157,7 @@ class IonDrawable extends Drawable {
     int currentFrame;
     private boolean invalidateScheduled;
     private int textureDim;
+    private int maxLevel;
     public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
         this.loadedFrom = loadedFrom;
         requestCount++;
@@ -184,11 +185,11 @@ class IonDrawable extends Drawable {
             double level = Math.max(wlevel, hlevel);
             level = Math.log(level) / LOG_2;
 
-            int l = (int)Math.ceil(level);
+            maxLevel = (int)Math.ceil(level);
 
             // now, we know the entire image will fit in a square image of
             // this dimension:
-            textureDim = TILE_DIM << l;
+            textureDim = TILE_DIM << maxLevel;
         }
 
         callback.bitmapKey = info.key;
@@ -397,12 +398,15 @@ class IonDrawable extends Drawable {
             int visibleTop = Math.max(0, clip.top);
             int visibleBottom = Math.min(bounds.height(), clip.bottom);
             int level = (int)Math.ceil(maxLevel);
+            level = Math.min(this.maxLevel, level);
             int levelTiles = 1 << level;
-            int levelDim = levelTiles * TILE_DIM;
-            Rect visible = new Rect(visibleLeft, visibleTop, visibleRight, visibleBottom);
+            int textureTileDim = textureDim / levelTiles;
+
+
+//            int levelDim = levelTiles * TILE_DIM;
+//            Rect visible = new Rect(visibleLeft, visibleTop, visibleRight, visibleBottom);
 //            System.out.println("visible: " + visible);
 
-            int textureTileDim = textureDim / levelTiles;
 //            System.out.println("textureTileDim: " + textureTileDim);
 
             paint.setColor(Color.BLACK);
@@ -439,7 +443,7 @@ class IonDrawable extends Drawable {
                     BitmapInfo tile = ion.bitmapCache.get(tileKey);
                     if (tile != null && tile.bitmaps != null) {
                         // render it
-//                            System.out.println("bitmap is: " + tile.bitmaps[0].getWidth() + "x" + tile.bitmaps[0].getHeight());
+//                        System.out.println("bitmap is: " + tile.bitmaps[0].getWidth() + "x" + tile.bitmaps[0].getHeight());
                         canvas.drawBitmap(tile.bitmaps[0], null, texRect, paint);
                         continue;
                     }
