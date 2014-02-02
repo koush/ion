@@ -25,7 +25,7 @@ public class BitmapInfo {
     final public Bitmap[] bitmaps;
     public int[] delays;
     public Exception exception;
-    public BitmapRegionDecoder mipmap;
+    public BitmapRegionDecoder decoder;
 
     public int sizeOf() {
         if (bitmaps == null)

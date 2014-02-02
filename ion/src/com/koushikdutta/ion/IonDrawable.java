@@ -6,7 +6,6 @@ import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
@@ -21,7 +20,6 @@ import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.lang.ref.WeakReference;
-import java.net.ResponseCache;
 
 /**
  * Created by koush on 6/8/13.
@@ -175,7 +173,7 @@ class IonDrawable extends Drawable {
             return this;
         }
 
-        if (info.mipmap != null) {
+        if (info.decoder != null) {
             // find number of tiles across to fit
             double wlevel = (double)info.originalSize.x / TILE_DIM;
             double hlevel = (double)info.originalSize.y / TILE_DIM;
@@ -249,7 +247,7 @@ class IonDrawable extends Drawable {
     @Override
     public int getIntrinsicWidth() {
         if (info != null) {
-            if (info.mipmap != null)
+            if (info.decoder != null)
                 return info.originalSize.x;
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
@@ -274,7 +272,7 @@ class IonDrawable extends Drawable {
     @Override
     public int getIntrinsicHeight() {
         if (info != null) {
-            if (info.mipmap != null)
+            if (info.decoder != null)
                 return info.originalSize.y;
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
@@ -351,7 +349,7 @@ class IonDrawable extends Drawable {
             }
         }
 
-        if (info.mipmap != null) {
+        if (info.decoder != null) {
             // zoom 0: entire image fits in a TILE_DIMxTILE_DIM square
 
             // draw base bitmap for empty tiles
@@ -439,7 +437,7 @@ class IonDrawable extends Drawable {
                     if (ion.bitmapsPending.tag(tileKey) == null) {
                         // fetch it
 //                        System.out.println(info.key + ": fetching region: " + texRect + " sample size: " + sampleSize);
-                        LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.mipmap, texRect, sampleSize);
+                        LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.decoder, texRect, sampleSize);
                     }
                     ion.bitmapsPending.add(tileKey, tileCallback);
 
