@@ -35,6 +35,7 @@ public class FileLoader extends SimpleLoader {
 
         final SimpleFuture<BitmapInfo> ret = new SimpleFuture<BitmapInfo>();
 
+        Log.d("FileLoader", "Loading file bitmap");
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {

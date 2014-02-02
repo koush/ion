@@ -4,6 +4,7 @@ import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
@@ -11,7 +12,7 @@ import com.koushikdutta.ion.bitmap.Transform;
 
 import java.util.ArrayList;
 
-class BitmapFetcher {
+class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
     String downloadKey;
     String bitmapKey;
     BitmapInfo info;
@@ -22,7 +23,7 @@ class BitmapFetcher {
     int resizeHeight;
     boolean animateGif;
 
-    boolean fastLoad() {
+    private boolean fastLoad() {
         Ion ion = builder.ion;
         boolean put = !hasTransforms;
 
@@ -42,9 +43,9 @@ class BitmapFetcher {
         return false;
     }
 
-    static final int MAX_IMAGEVIEW_LOAD = 5;
+    public static final int MAX_IMAGEVIEW_LOAD = 5;
 
-    static boolean shouldDeferImageView(Ion ion) {
+    public static boolean shouldDeferImageView(Ion ion) {
         if (ion.bitmapsPending.keySet().size() <= MAX_IMAGEVIEW_LOAD)
             return false;
         int loadCount = 0;
@@ -59,7 +60,7 @@ class BitmapFetcher {
         return false;
     }
 
-    DeferredLoadBitmap executeDeferred() {
+    public DeferredLoadBitmap defer() {
         DeferredLoadBitmap ret = new DeferredLoadBitmap(builder.ion, downloadKey, this);
         executeTransforms(builder.ion);
         return ret;
@@ -78,7 +79,12 @@ class BitmapFetcher {
         }
     }
 
-    void executeNetwork() {
+    @Override
+    public boolean loadRequest(AsyncHttpRequest request) {
+        return false;
+    }
+
+    public void execute() {
         final Ion ion = builder.ion;
 
         // bitmaps that were transformed are put into the DiskLruCache to prevent
@@ -93,6 +99,7 @@ class BitmapFetcher {
         // Perform a download as necessary.
         if (ion.bitmapsPending.tag(downloadKey) == null && !fastLoad()) {
             builder.setHandler(null);
+            builder.loadRequestCallback = this;
             IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
                 @Override
                 public void run() {

@@ -21,6 +21,8 @@ import com.google.gson.Gson;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.future.SimpleFuture;
+import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
@@ -251,7 +253,7 @@ public class Ion {
             for (DeferredLoadBitmap deferredLoadBitmap: deferred) {
                 bitmapsPending.tag(deferredLoadBitmap.key, null);
                 bitmapsPending.tag(deferredLoadBitmap.fetcher.bitmapKey, null);
-                deferredLoadBitmap.fetcher.executeNetwork();
+                deferredLoadBitmap.fetcher.execute();
                 count++;
                 // do MAX_IMAGEVIEW_LOAD max. this may end up going over the MAX_IMAGEVIEW_LOAD threshhold
                 if (count > BitmapFetcher.MAX_IMAGEVIEW_LOAD)
@@ -552,5 +554,35 @@ public class Ion {
      */
     public IonBitmapCache getBitmapCache() {
         return bitmapCache;
+    }
+
+    Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request) {
+        return resolveRequest(request, null);
+    }
+
+    Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request, SimpleFuture<AsyncHttpRequest> ret) {
+        // first attempt to resolve the url
+        for (Loader loader: loaders) {
+            Future<AsyncHttpRequest> resolved = loader.resolve(this, request);
+            if (resolved != null) {
+                if (ret == null)
+                    ret = new SimpleFuture<AsyncHttpRequest>();
+                final SimpleFuture<AsyncHttpRequest> future = ret;
+                resolved.setCallback(new FutureCallback<AsyncHttpRequest>() {
+                    @Override
+                    public void onCompleted(Exception e, AsyncHttpRequest result) {
+                        if (e != null) {
+                            future.setComplete(e);
+                            return;
+                        }
+                        resolveRequest(result, future);
+                    }
+                });
+                return ret;
+            }
+        }
+        if (ret != null)
+            ret.setComplete(request);
+        return ret;
     }
 }

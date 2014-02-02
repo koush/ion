@@ -79,4 +79,12 @@ public interface Loader {
      * @return
      */
     public Future<BitmapInfo> loadBitmap(Ion ion, String key, String uri, int resizeWidth, int resizeHeight);
+
+    /**
+     * Resolve a request into another request.
+     * @param ion
+     * @param request
+     * @return
+     */
+    public Future<AsyncHttpRequest> resolve(Ion ion, AsyncHttpRequest request);
 }

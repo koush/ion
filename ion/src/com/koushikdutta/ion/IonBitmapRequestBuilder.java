@@ -160,6 +160,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             bitmapKey = ResponseCacheMiddleware.toKeyString(bitmapKey);
         }
 
+        // TODO: eliminate this allocation?
         BitmapFetcher ret = new BitmapFetcher();
         ret.downloadKey = downloadKey;
         ret.bitmapKey = bitmapKey;
@@ -277,10 +278,10 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         // nothing from cache, check to see if there's too many imageview loads
         // already in progress
         if (BitmapFetcher.shouldDeferImageView(ion)) {
-            bitmapFetcher.executeDeferred();
+            bitmapFetcher.defer();
         }
         else {
-            bitmapFetcher.executeNetwork();
+            bitmapFetcher.execute();
         }
 
         IonDrawable drawable = setIonDrawable(imageView, null, 0);
@@ -308,7 +309,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             return ret;
         }
 
-        bitmapFetcher.executeNetwork();
+        bitmapFetcher.execute();
         // we're loading, so let's register for the result.
         BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.context);
         ion.bitmapsPending.add(bitmapFetcher.bitmapKey, ret);

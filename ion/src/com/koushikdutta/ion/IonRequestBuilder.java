@@ -298,6 +298,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return request;
     }
 
+    static interface LoadRequestCallback {
+        boolean loadRequest(AsyncHttpRequest request);
+    }
+
+    LoadRequestCallback loadRequestCallback;
+
     private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
         URI uri = prepareURI();
         if (uri == null) {
@@ -339,7 +345,31 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
         AsyncHttpRequest request = prepareRequest(uri, wrappedBody);
         ret.initialRequest = request;
+        resolveAndLoadRequest(request, ret);
+    }
 
+    <T> void resolveAndLoadRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
+        Future<AsyncHttpRequest> resolved = resolveRequest(request, ret);
+        if (resolved != null) {
+            resolved.setCallback(new FutureCallback<AsyncHttpRequest>() {
+                @Override
+                public void onCompleted(Exception e, AsyncHttpRequest result) {
+                    if (e != null) {
+                        ret.setComplete(e);
+                        return;
+                    }
+                    ret.finalRequest = result;
+                    resolveAndLoadRequest(result, ret);
+                }
+            });
+            return;
+        }
+        if (loadRequestCallback == null || !loadRequestCallback.loadRequest(request))
+            loadRequest(request, ret);
+    }
+
+    <T> void loadRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
+        // now attempt to fetch it directly
         for (Loader loader: ion.loaders) {
             Future<DataEmitter> emitter = loader.load(ion, request, ret);
             if (emitter != null) {
@@ -349,6 +379,17 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             }
         }
         ret.setComplete(new Exception("Unknown uri scheme"));
+    }
+
+    <T> Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
+        // first attempt to resolve the url
+        for (Loader loader: ion.loaders) {
+            Future<AsyncHttpRequest> resolved = loader.resolve(ion, request);
+            if (resolved != null)
+                return resolved;
+
+        }
+        return null;
     }
 
     // transforms a LoaderEmitter, which is a DataEmitter and all associated properties about the data source
