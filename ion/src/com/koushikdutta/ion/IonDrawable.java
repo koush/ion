@@ -249,10 +249,10 @@ class IonDrawable extends Drawable {
     @Override
     public int getIntrinsicWidth() {
         if (info != null) {
-            if (info.bitmaps != null)
-                return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
             if (info.mipmap != null)
                 return info.originalSize.x;
+            if (info.bitmaps != null)
+                return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
         }
         if (resizeWidth > 0)
             return resizeWidth;
@@ -274,10 +274,10 @@ class IonDrawable extends Drawable {
     @Override
     public int getIntrinsicHeight() {
         if (info != null) {
-            if (info.bitmaps != null)
-                return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
             if (info.mipmap != null)
                 return info.originalSize.y;
+            if (info.bitmaps != null)
+                return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
         }
         if (resizeHeight > 0)
             return resizeHeight;
@@ -351,35 +351,22 @@ class IonDrawable extends Drawable {
             }
         }
 
-        if (info.bitmaps != null) {
-            paint.setAlpha((int)destAlpha);
-            canvas.drawBitmap(info.bitmaps[currentFrame % info.bitmaps.length], null, getBounds(), paint);
-            paint.setAlpha(0xFF);
-            if (info.delays != null) {
-                int delay = info.delays[currentFrame % info.delays.length];
-                if (!invalidateScheduled) {
-                    invalidateScheduled = true;
-                    unscheduleSelf(invalidate);
-                    scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
-                }
-            }
-        }
-        else if (info.mipmap != null) {
+        if (info.mipmap != null) {
             // zoom 0: entire image fits in a TILE_DIMxTILE_DIM square
 
+            // draw base bitmap for empty tiles
             // figure out zoom level
             // figure out which tiles need rendering
-            // fetch anything that needs fetching
             // draw stuff that needs drawing
+            // missing tile? fetch it
             // use parent level tiles for tiles that do not exist
-            // crossfading?
-//            System.out.println(info.mipmap);
+
+            // TODO: crossfading?
 
             Rect clip = canvas.getClipBounds();
             Rect bounds = getBounds();
 
             float zoom = (float)canvas.getWidth() / (float)clip.width();
-//            double level = Math.abs(Math.round(Math.log(zoom) / Math.log(2)));
 
             float zoomWidth = zoom * bounds.width();
             float zoomHeight = zoom * bounds.height();
@@ -387,11 +374,6 @@ class IonDrawable extends Drawable {
             double wlevel = Math.log(zoomWidth / TILE_DIM) / LOG_2;
             double hlevel = Math.log(zoomHeight/ TILE_DIM) / LOG_2;
             double maxLevel = Math.max(wlevel, hlevel);
-
-//            System.out.println("clip: " + clip);
-//            System.out.println("zoomWidth: " + zoomWidth);
-//            System.out.println("zoomHeight: " + zoomHeight);
-//            System.out.println("level: " + maxLevel);
 
             int visibleLeft = Math.max(0, clip.left);
             int visibleRight = Math.min(bounds.width(), clip.right);
@@ -401,16 +383,21 @@ class IonDrawable extends Drawable {
             level = Math.min(this.maxLevel, level);
             int levelTiles = 1 << level;
             int textureTileDim = textureDim / levelTiles;
-
-
-//            int levelDim = levelTiles * TILE_DIM;
-//            Rect visible = new Rect(visibleLeft, visibleTop, visibleRight, visibleBottom);
-//            System.out.println("visible: " + visible);
-
 //            System.out.println("textureTileDim: " + textureTileDim);
 
-            paint.setColor(Color.BLACK);
-            canvas.drawRect(getBounds(), paint);
+//            System.out.println(info.key + " visible: " + new Rect(visibleLeft, visibleTop, visibleRight, visibleBottom));
+
+            if (info.bitmaps != null && info.bitmaps[0] != null) {
+                canvas.drawBitmap(info.bitmaps[0], null, getBounds(), paint);
+                paint.setColor(Color.RED);
+                paint.setAlpha(0x80);
+                canvas.drawRect(getBounds(), paint);
+                paint.setAlpha(0xFF);
+            }
+            else {
+                paint.setColor(Color.BLACK);
+                canvas.drawRect(getBounds(), paint);
+            }
 
             int sampleSize = 1;
             while (textureTileDim / sampleSize > TILE_DIM)
@@ -451,12 +438,11 @@ class IonDrawable extends Drawable {
                     // TODO: cancellation of unnecessary regions when fast pan/zooming
                     if (ion.bitmapsPending.tag(tileKey) == null) {
                         // fetch it
+//                        System.out.println(info.key + ": fetching region: " + texRect + " sample size: " + sampleSize);
                         LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.mipmap, texRect, sampleSize);
                     }
                     ion.bitmapsPending.add(tileKey, tileCallback);
 
-                    // TODO: render a sample from another tile
-                    if (true) return;
                     int parentLeft = 0;
                     int parentTop = 0;
                     int parentUp = 1;
@@ -473,21 +459,22 @@ class IonDrawable extends Drawable {
                         tile = ion.bitmapCache.get(tileKey);
                         if (tile != null && tile.bitmaps != null)
                             break;
-                        parentUp++;
+                        if (parentX % 2 == 1) {
+                            parentLeft += 1 << parentUp;
+                        }
+                        if (parentY % 2 == 1) {
+                            parentTop += 1 << parentUp;
+                        }
                         parentLevel--;
-                        parentLeft <<= 1;
-                        parentTop <<= 1;
-                        if (parentX % 2 == 1)
-                            parentLeft++;
-                        if (parentY % 2 == 1)
-                            parentTop++;
+                        parentUp++;
                         parentX >>= 1;
                         parentY >>= 1;
                     }
 
                     // well, i give up
                     if (tile == null || tile.bitmaps == null)
-                        return;
+                        continue;
+
 
                     int subLevelTiles = 1 << parentLevel;
                     int subtileDim = textureDim / subLevelTiles;
@@ -495,11 +482,30 @@ class IonDrawable extends Drawable {
                     while (subtileDim / subSampleSize > TILE_DIM)
                         subSampleSize <<= 1;
                     int subTextureDim = subtileDim / subSampleSize;
+//                    System.out.println(String.format("falling back for %s,%s,%s to %s,%s,%s: %s,%s (%s to %s)", x, y, level, parentX, parentY, parentLevel, parentLeft, parentTop, subTextureDim, subTextureDim >> parentUp));
                     subTextureDim >>= parentUp;
                     int sourceLeft = subTextureDim * parentLeft;
                     int sourceTop = subTextureDim * parentTop;
                     Rect sourceRect = new Rect(sourceLeft, sourceTop, sourceLeft + subTextureDim, sourceTop + subTextureDim);
                     canvas.drawBitmap(tile.bitmaps[0], sourceRect, texRect, paint);
+
+                    paint.setColor(Color.RED);
+                    paint.setAlpha(0x80);
+                    canvas.drawRect(texRect, paint);
+                    paint.setAlpha(0xFF);
+                }
+            }
+        }
+        else if (info.bitmaps != null) {
+            paint.setAlpha((int)destAlpha);
+            canvas.drawBitmap(info.bitmaps[currentFrame % info.bitmaps.length], null, getBounds(), paint);
+            paint.setAlpha(0xFF);
+            if (info.delays != null) {
+                int delay = info.delays[currentFrame % info.delays.length];
+                if (!invalidateScheduled) {
+                    invalidateScheduled = true;
+                    unscheduleSelf(invalidate);
+                    scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
                 }
             }
         }

@@ -2,8 +2,10 @@ package com.koushikdutta.ion;
 
 import android.annotation.TargetApi;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Build;
 
 import com.koushikdutta.async.ByteBufferList;
@@ -77,7 +79,16 @@ public class LoadMipmap extends LoadBitmapEmitter implements FutureCallback<File
 
                     BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(file.toString(), false);
                     Point size = new Point(decoder.getWidth(), decoder.getHeight());
-                    BitmapInfo info = new BitmapInfo(key, null, size);
+                    Point targetSize = ion.bitmapCache.computeTarget(0, 0);
+                    int scale = Math.max(size.x / targetSize.x, size.y / targetSize.y);
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inSampleSize = scale;
+                    Bitmap bitmap = decoder.decodeRegion(new Rect(0, 0, size.x, size.y), options);
+                    if (bitmap == null)
+                        throw new Exception("unable to load mipmap");
+                    Bitmap[] bitmaps = new Bitmap[] { bitmap };
+
+                    BitmapInfo info = new BitmapInfo(key, bitmaps, size);
                     info.mipmap = decoder;
                     info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_NETWORK;
                     report(null, info);

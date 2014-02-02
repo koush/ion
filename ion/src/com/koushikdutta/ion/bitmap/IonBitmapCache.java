@@ -102,7 +102,7 @@ public class IonBitmapCache {
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
-    private Point computeTarget(int minx, int miny) {
+    public Point computeTarget(int minx, int miny) {
         int targetWidth = minx;
         int targetHeight = miny;
         if (targetWidth == 0)
@@ -183,8 +183,10 @@ public class IonBitmapCache {
             o.inJustDecodeBounds = true;
             stream.mark(Integer.MAX_VALUE);
             BitmapFactory.decodeStream(stream, null, o);
-            outSize.x = o.outWidth;
-            outSize.y = o.outHeight;
+            if (outSize != null) {
+                outSize.x = o.outWidth;
+                outSize.y = o.outHeight;
+            }
             if (o.outWidth < 0 || o.outHeight < 0)
                 return null;
             try {
@@ -199,7 +201,7 @@ public class IonBitmapCache {
         }
 
         Bitmap bitmap = BitmapFactory.decodeStream(stream, null, o);
-        if (!decodedBounds) {
+        if (!decodedBounds && outSize != null) {
             outSize.x = o.outWidth;
             outSize.y = o.outHeight;
         }
