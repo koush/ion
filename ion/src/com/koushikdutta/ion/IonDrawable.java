@@ -389,10 +389,10 @@ class IonDrawable extends Drawable {
 
             if (info.bitmaps != null && info.bitmaps[0] != null) {
                 canvas.drawBitmap(info.bitmaps[0], null, getBounds(), paint);
-                paint.setColor(Color.RED);
-                paint.setAlpha(0x80);
-                canvas.drawRect(getBounds(), paint);
-                paint.setAlpha(0xFF);
+//                paint.setColor(Color.RED);
+//                paint.setAlpha(0x80);
+//                canvas.drawRect(getBounds(), paint);
+//                paint.setAlpha(0xFF);
             }
             else {
                 paint.setColor(Color.BLACK);
@@ -489,10 +489,10 @@ class IonDrawable extends Drawable {
                     Rect sourceRect = new Rect(sourceLeft, sourceTop, sourceLeft + subTextureDim, sourceTop + subTextureDim);
                     canvas.drawBitmap(tile.bitmaps[0], sourceRect, texRect, paint);
 
-                    paint.setColor(Color.RED);
-                    paint.setAlpha(0x80);
-                    canvas.drawRect(texRect, paint);
-                    paint.setAlpha(0xFF);
+//                    paint.setColor(Color.RED);
+//                    paint.setAlpha(0x80);
+//                    canvas.drawRect(texRect, paint);
+//                    paint.setAlpha(0xFF);
                 }
             }
         }
