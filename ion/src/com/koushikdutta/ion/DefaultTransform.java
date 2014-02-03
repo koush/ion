@@ -21,7 +21,10 @@ class DefaultTransform implements Transform {
 
     @Override
     public Bitmap transform(Bitmap b) {
-        Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, b.getConfig());
+        Bitmap.Config config = b.getConfig();
+        if (config == null)
+            config = Bitmap.Config.ARGB_8888;
+        Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, config);
         Canvas canvas = new Canvas(ret);
 
         RectF destination = new RectF(0, 0, resizeWidth, resizeHeight);

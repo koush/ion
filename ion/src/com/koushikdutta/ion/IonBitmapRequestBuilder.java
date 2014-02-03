@@ -137,7 +137,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         if (!animateGif)
             downloadKey += ":!animateGif";
         if (deepZoom)
-            downloadKey += ":decoder";
+            downloadKey += ":deepZoom";
         return ResponseCacheMiddleware.toKeyString(downloadKey);
     }
 
@@ -170,6 +170,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         ret.builder = builder;
         ret.transforms = transforms;
         ret.animateGif = animateGif;
+        ret.deepZoom = deepZoom;
 
         // see if this request can be fulfilled from the cache
         if (!builder.noCache) {
@@ -181,55 +182,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         }
 
         return ret;
-    }
-
-    Future<ImageView> executeDeepZoom(ImageView imageView) {
-        final String downloadKey = computeDownloadKey();
-
-        // try to grab the master tile
-        BitmapInfo bitmap = builder.ion.bitmapCache.get(downloadKey);
-        if (bitmap != null) {
-            doAnimation(imageView, null, 0);
-            IonDrawable drawable = setIonDrawable(imageView, bitmap, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
-            drawable.cancel();
-            SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
-            imageViewFuture.reset();
-            imageViewFuture.setComplete(imageView);
-            return imageViewFuture;
-        }
-
-        // see if something is downloading this
-        if (ion.bitmapsPending.tag(downloadKey) == null) {
-            // ok, now we gotta download it.
-            DiskLruCache diskLruCache = ion.responseCache.getDiskLruCache();
-            File file = diskLruCache.getFile(downloadKey, 0);
-
-            builder.setHandler(null);
-            IonRequestBuilder.EmitterTransform<File> emitterTransform = builder.write(file);
-
-            LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, downloadKey, animateGif, emitterTransform);
-            emitterTransform.setCallback(loadDeepZoom);
-
-            // nothing downloading, see if a file already exists
-            if (diskLruCache.containsKey(downloadKey)) {
-                if (file != null && file.exists()) {
-                    loadDeepZoom.onCompleted(null, file);
-                    IonDrawable drawable = setIonDrawable(imageView, null, 0);
-                    doAnimation(imageView, loadAnimation, loadAnimationResource);
-                    SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
-                    imageViewFuture.reset();
-                    drawable.register(ion, downloadKey);
-                    return imageViewFuture;
-                }
-            }
-        }
-
-        IonDrawable drawable = setIonDrawable(imageView, null, 0);
-        doAnimation(imageView, loadAnimation, loadAnimationResource);
-        SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
-        imageViewFuture.reset();
-        drawable.register(ion, downloadKey);
-        return imageViewFuture;
     }
 
     private IonDrawable setIonDrawable(ImageView imageView, BitmapInfo info, int loadedFrom) {
@@ -257,12 +209,6 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             return FUTURE_IMAGEVIEW_NULL_URI;
         }
 
-        // if we're mip mapping this image, let's download the image to a file first
-        // then we'll talk.
-        if (deepZoom) {
-            return executeDeepZoom(imageView);
-        }
-
         // executeCache the request, see if we get a bitmap from cache.
         BitmapFetcher bitmapFetcher = executeCache();
         if (bitmapFetcher.info != null) {
@@ -271,7 +217,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             drawable.cancel();
             SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
             imageViewFuture.reset();
-            imageViewFuture.setComplete(imageView);
+            imageViewFuture.setComplete(bitmapFetcher.info.exception, imageView);
             return imageViewFuture;
         }
 
@@ -288,9 +234,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         doAnimation(imageView, loadAnimation, loadAnimationResource);
         SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
         imageViewFuture.reset();
-
         drawable.register(ion, bitmapFetcher.bitmapKey);
-
         return imageViewFuture;
     }
 

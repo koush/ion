@@ -45,11 +45,12 @@ import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.async.parser.StringParser;
+import com.koushikdutta.async.stream.FileDataSink;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
 import com.koushikdutta.ion.Loader.LoaderEmitter;
-import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
+import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.future.ResponseFuture;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonParser;
@@ -60,7 +61,6 @@ import org.apache.http.NameValuePair;
 import org.w3c.dom.Document;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
@@ -348,12 +348,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         resolveAndLoadRequest(request, ret);
     }
 
-    <T> void resolveAndLoadRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
+    <T> void resolveAndLoadRequest(final AsyncHttpRequest request, final EmitterTransform<T> ret) {
         Future<AsyncHttpRequest> resolved = resolveRequest(request, ret);
         if (resolved != null) {
             resolved.setCallback(new FutureCallback<AsyncHttpRequest>() {
                 @Override
-                public void onCompleted(Exception e, AsyncHttpRequest result) {
+                public void onCompleted(Exception e, final AsyncHttpRequest result) {
                     if (e != null) {
                         ret.setComplete(e);
                         return;
@@ -364,7 +364,20 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             });
             return;
         }
-        if (loadRequestCallback == null || !loadRequestCallback.loadRequest(request))
+        if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+            AsyncServer.post(Ion.mainHandler, new Runnable() {
+                @Override
+                public void run() {
+                    invokeLoadRequest(request, ret);
+                }
+            });
+            return;
+        }
+        invokeLoadRequest(request, ret);
+    }
+
+    <T> void invokeLoadRequest(final AsyncHttpRequest request, final EmitterTransform<T> ret) {
+        if (loadRequestCallback == null || loadRequestCallback.loadRequest(request))
             loadRequest(request, ret);
     }
 
@@ -669,19 +682,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public EmitterTransform<File> write(final File file) {
-        try {
-            return execute(new OutputStreamDataSink(ion.getServer(), new FileOutputStream(file)), true, file, new Runnable() {
-                @Override
-                public void run() {
-                    file.delete();
-                }
-            });
-        }
-        catch (Exception e) {
-            EmitterTransform<File> ret = new EmitterTransform<File>(null);
-            ret.setComplete(e);
-            return ret;
-        }
+        return execute(new FileDataSink(ion.getServer(), file), true, file, new Runnable() {
+            @Override
+            public void run() {
+                file.delete();
+            }
+        });
     }
 
     Multimap bodyParameters;

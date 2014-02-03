@@ -17,9 +17,12 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
 
+import com.koushikdutta.async.http.libcore.IoUtils;
 import com.koushikdutta.ion.Ion;
 
 import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 
 /**
@@ -102,7 +105,7 @@ public class IonBitmapCache {
         Log.i("IonBitmapCache", "freeMemory: " + Runtime.getRuntime().freeMemory());
     }
 
-    public Point computeTarget(int minx, int miny) {
+    private Point computeTarget(int minx, int miny) {
         int targetWidth = minx;
         int targetHeight = miny;
         if (targetWidth == 0)
@@ -116,30 +119,37 @@ public class IonBitmapCache {
         return new Point(targetWidth, targetHeight);
     }
 
-    public Bitmap loadBitmap(byte[] bytes, int offset, int length, int minx, int miny, Point outSize) {
-        assert Thread.currentThread() != Looper.getMainLooper().getThread();
-        Point target = computeTarget(minx, miny);
-
-        boolean decodedBounds = false;
+    public BitmapFactory.Options prepareBitmapOptions(File file, int minx, int miny) {
         BitmapFactory.Options o = new BitmapFactory.Options();
-        if (target.x != Integer.MAX_VALUE || target.y != Integer.MAX_VALUE) {
-            decodedBounds = true;
-            o.inJustDecodeBounds = true;
-            BitmapFactory.decodeByteArray(bytes, offset, length, o);
-            outSize.x = o.outWidth;
-            outSize.y = o.outHeight;
-            if (o.outWidth < 0 || o.outHeight < 0)
-                return null;
-            int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
-            o = new BitmapFactory.Options();
-            o.inSampleSize = scale;
-        }
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(file.toString(), o);
+        return prepareBitmapOptions(o, minx, miny);
+    }
+
+    private BitmapFactory.Options prepareBitmapOptions(BitmapFactory.Options o, int minx, int miny) {
+        if (o.outWidth < 0 || o.outHeight < 0)
+            return null;
+        Point target = computeTarget(minx, miny);
+        int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
+        BitmapFactory.Options ret = new BitmapFactory.Options();
+        ret.inSampleSize = scale;
+        ret.outWidth = o.outWidth;
+        ret.outHeight = o.outHeight;
+        ret.outMimeType = o.outMimeType;
+        return ret;
+    }
+
+    public BitmapFactory.Options prepareBitmapOptions(byte[] bytes, int offset, int length, int minx, int miny) {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, offset, length, o);
+        return prepareBitmapOptions(o, minx, miny);
+    }
+
+    public Bitmap loadBitmap(byte[] bytes, int offset, int length, BitmapFactory.Options o) {
+        assert Thread.currentThread() != Looper.getMainLooper().getThread();
 
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, offset, length, o);
-        if (!decodedBounds) {
-            outSize.x = o.outWidth;
-            outSize.y = o.outHeight;
-        }
         if (bitmap == null)
             return null;
 
@@ -159,52 +169,24 @@ public class IonBitmapCache {
         return decoder.decodeRegion(sourceRect, options);
     }
 
-    public Bitmap loadBitmap(InputStream stream, int minx, int miny, Point outSize) {
-        stream = new BufferedInputStream(stream, 64 * 1024);
+    public Bitmap loadBitmap(File file, BitmapFactory.Options o) {
+//        stream = new BufferedInputStream(stream, 64 * 1024);
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
-        Point target = computeTarget(minx, miny);
 
         int rotation;
+        FileInputStream fin = null;
         try {
+            fin = new FileInputStream(file);
             byte[] bytes = new byte[50000];
-            stream.mark(Integer.MAX_VALUE);
-            int length = stream.read(bytes);
+            int length = fin.read(bytes);
             rotation = Exif.getOrientation(bytes, 0, length);
-            stream.reset();
         }
         catch (Exception e) {
             rotation = 0;
         }
+        IoUtils.closeQuietly(fin);
 
-        boolean decodedBounds = false;
-        BitmapFactory.Options o = new BitmapFactory.Options();
-        if (target.x != Integer.MAX_VALUE || target.y != Integer.MAX_VALUE) {
-            decodedBounds = true;
-            o.inJustDecodeBounds = true;
-            stream.mark(Integer.MAX_VALUE);
-            BitmapFactory.decodeStream(stream, null, o);
-            if (outSize != null) {
-                outSize.x = o.outWidth;
-                outSize.y = o.outHeight;
-            }
-            if (o.outWidth < 0 || o.outHeight < 0)
-                return null;
-            try {
-                stream.reset();
-            }
-            catch (Exception e) {
-                return null;
-            }
-            int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
-            o = new BitmapFactory.Options();
-            o.inSampleSize = scale;
-        }
-
-        Bitmap bitmap = BitmapFactory.decodeStream(stream, null, o);
-        if (!decodedBounds && outSize != null) {
-            outSize.x = o.outWidth;
-            outSize.y = o.outHeight;
-        }
+        Bitmap bitmap = BitmapFactory.decodeFile(file.toString(), o);
         if (bitmap == null)
             return null;
 

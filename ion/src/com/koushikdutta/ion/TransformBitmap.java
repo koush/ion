@@ -10,6 +10,7 @@ import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,22 +33,14 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                 }
 
                 try {
-                    DiskLruCache.Snapshot snapshot = ion.responseCache.getDiskLruCache().get(transformKey);
-                    try {
-                        InputStream in = snapshot.getInputStream(0);
-                        assert in instanceof FileInputStream;
-                        Point size = new Point();
-                        Bitmap bitmap = ion.getBitmapCache().loadBitmap(in, -1, -1, size);
-                        in.close();
-                        if (bitmap == null)
-                            throw new Exception("Bitmap failed to load");
-
-                        BitmapInfo info = new BitmapInfo(transformKey, new Bitmap[] { bitmap }, size);
-                        info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
-                        callback.report(null, info);
-                    } finally {
-                        snapshot.close();
-                    }
+                    File file = ion.responseCache.getDiskLruCache().getFile(transformKey, 0);
+                    Bitmap bitmap = ion.getBitmapCache().loadBitmap(file, null);
+                    if (bitmap == null)
+                        throw new Exception("Bitmap failed to load");
+                    Point size = new Point(bitmap.getWidth(), bitmap.getHeight());
+                    BitmapInfo info = new BitmapInfo(transformKey, new Bitmap[] { bitmap }, size);
+                    info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
+                    callback.report(null, info);
                 }
                 catch (OutOfMemoryError e) {
                     callback.report(new Exception(e), null);

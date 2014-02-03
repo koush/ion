@@ -7,6 +7,7 @@ import android.graphics.BitmapRegionDecoder;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
+import android.text.TextUtils;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.libcore.IoUtils;
@@ -43,7 +44,10 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
             public void run() {
                 FileInputStream fin = null;
                 try {
-                    if (isGif()) {
+                    BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(file, 0, 0);
+                    if (options == null)
+                        throw new Exception("BitmapFactory.Options failed to load");
+                    if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
                         fin = new FileInputStream(file);
                         GifDecoder decoder = new GifDecoder(fin, new GifAction() {
                             @Override
@@ -77,10 +81,6 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
 
                     BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(file.toString(), false);
                     Point size = new Point(decoder.getWidth(), decoder.getHeight());
-                    Point targetSize = ion.bitmapCache.computeTarget(0, 0);
-                    int scale = Math.max(size.x / targetSize.x, size.y / targetSize.y);
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = scale;
                     Bitmap bitmap = decoder.decodeRegion(new Rect(0, 0, size.x, size.y), options);
                     if (bitmap == null)
                         throw new Exception("unable to load decoder");

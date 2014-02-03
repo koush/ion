@@ -1,8 +1,10 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.koushikdutta.async.ByteBufferList;
@@ -53,15 +55,10 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                     Bitmap[] bitmaps;
                     int[] delays;
                     Point size;
-                    if (!isGif()) {
-                        size = new Point();
-                        Bitmap bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight, size);
-                        if (bitmap == null)
-                            throw new Exception("failed to load bitmap");
-                        bitmaps = new Bitmap[] { bitmap };
-                        delays = null;
-                    }
-                    else {
+                    BitmapFactory.Options options = ion.bitmapCache.prepareBitmapOptions(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
+                    if (options == null)
+                        throw new Exception("BitmapFactory.Options failed to load");
+                    if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
                         size = null;
                         GifDecoder decoder = new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), new GifAction() {
                             @Override
@@ -82,6 +79,14 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                             if (size == null)
                                 size = new Point(bitmap.getWidth(), bitmap.getHeight());
                         }
+                    }
+                    else {
+                        size = new Point(options.outWidth, options.outHeight);
+                        Bitmap bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), options);
+                        if (bitmap == null)
+                            throw new Exception("failed to load bitmap");
+                        bitmaps = new Bitmap[] { bitmap };
+                        delays = null;
                     }
 
                     BitmapInfo info = new BitmapInfo(key, bitmaps, size);

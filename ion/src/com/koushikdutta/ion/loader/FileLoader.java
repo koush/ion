@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.loader;
 
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.util.Log;
 
@@ -35,7 +36,7 @@ public class FileLoader extends SimpleLoader {
 
         final SimpleFuture<BitmapInfo> ret = new SimpleFuture<BitmapInfo>();
 
-        Log.d("FileLoader", "Loading file bitmap");
+//        Log.d("FileLoader", "Loading file bitmap " + uri + " " + resizeWidth + "," + resizeHeight);
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
@@ -44,14 +45,16 @@ public class FileLoader extends SimpleLoader {
                     return;
                 }
                 try {
-                    FileInputStream fin = new FileInputStream(new File(URI.create(uri)));
-                    Point size = new Point();
-                    Bitmap bitmap = ion.getBitmapCache().loadBitmap(fin, resizeWidth, resizeHeight, size);
+                    File file = new File(URI.create(uri));
+                    BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(file, resizeWidth, resizeHeight);
+                    if (options == null)
+                        throw new Exception("BitmapFactory.Options failed to load");
+                    Point size = new Point(options.outWidth, options.outHeight);
+                    Bitmap bitmap = ion.getBitmapCache().loadBitmap(file, options);
                     if (bitmap == null)
                         throw new Exception("Bitmap failed to load");
                     BitmapInfo info = new BitmapInfo(key, new Bitmap[] { bitmap }, size);
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
-                    fin.close();
                     ret.setComplete(info);
                 }
                 catch (OutOfMemoryError e) {
