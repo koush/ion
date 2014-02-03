@@ -18,9 +18,8 @@ public class ImageViewSample extends Activity {
         Ion.with(this)
         .load("http://media.salon.com/2013/05/original.jpg")
         .withBitmap()
-//        .resize(512, 512)
-//        .centerCrop()
-        .mipmap()
+        .resize(512, 512)
+        .centerCrop()
         .intoImageView(imageView);
     }
 
