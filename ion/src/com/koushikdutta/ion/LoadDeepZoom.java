@@ -10,6 +10,7 @@ import android.os.Build;
 import android.text.TextUtils;
 
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.http.libcore.IoUtils;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.gif.GifAction;
@@ -23,8 +24,10 @@ import java.io.FileInputStream;
  */
 @TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
 public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<File> {
-    public LoadDeepZoom(Ion ion, String urlKey, boolean animateGif, IonRequestBuilder.EmitterTransform<File> emitterTransform) {
+    DiskLruCache diskLruCache;
+    public LoadDeepZoom(Ion ion, String urlKey, boolean animateGif, IonRequestBuilder.EmitterTransform<File> emitterTransform, DiskLruCache diskLruCache) {
         super(ion, urlKey, true, animateGif, emitterTransform);
+        this.diskLruCache = diskLruCache;
     }
 
     @Override
@@ -43,7 +46,14 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
             @Override
             public void run() {
                 FileInputStream fin = null;
+                DiskLruCache.Editor editor = null;
                 try {
+                    if (diskLruCache != null) {
+                        editor = diskLruCache.edit(key);
+                        editor.set(1, "");
+                        editor.commit(true);
+                    }
+
                     BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(file, 0, 0);
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
@@ -92,6 +102,12 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                     report(null, info);
                 } catch (Exception e) {
                     report(e, null);
+                    try {
+                        if (editor != null)
+                            editor.abort();
+                    }
+                    catch (Exception ex) {
+                    }
                 }
                 finally {
                     IoUtils.closeQuietly(fin);

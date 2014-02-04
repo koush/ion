@@ -37,7 +37,7 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
                 return false;
             MediaFile.MediaFileType type = MediaFile.getFileType(file.getAbsolutePath());
             if (type == null || !MediaFile.isVideoFileType(type.fileType)) {
-                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, downloadKey, animateGif, null);
+                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, downloadKey, animateGif, null, null);
                 loadDeepZoom.onCompleted(null, file);
 //                System.out.println("fastloading deepZoom");
                 return true;
@@ -139,7 +139,12 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
 //                System.out.println("downloading file for deepZoom");
                 File file = diskLruCache.getFile(downloadKey, 0);
                 IonRequestBuilder.EmitterTransform<File> emitterTransform = builder.write(file);
-                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, downloadKey, animateGif, emitterTransform);
+                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, downloadKey, animateGif, emitterTransform, diskLruCache) {
+                    @Override
+                    public void onCompleted(Exception e, File file) {
+                        super.onCompleted(e, file);
+                    }
+                };
                 emitterTransform.setCallback(loadDeepZoom);
             }
         }
