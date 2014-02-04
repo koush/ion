@@ -309,7 +309,7 @@ class IonDrawable extends Drawable {
     };
 
     private static final double LOG_2 = Math.log(2);
-    private static final int TILE_DIM = 512;
+    private static final int TILE_DIM = 256;
 
     FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
         @Override
