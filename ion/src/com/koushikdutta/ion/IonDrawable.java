@@ -377,7 +377,7 @@ class IonDrawable extends Drawable {
             int visibleRight = Math.min(bounds.width(), clip.right);
             int visibleTop = Math.max(0, clip.top);
             int visibleBottom = Math.min(bounds.height(), clip.bottom);
-            int level = (int)Math.ceil(maxLevel);
+            int level = (int)Math.floor(maxLevel);
             level = Math.min(this.maxLevel, level);
             int levelTiles = 1 << level;
             int textureTileDim = textureDim / levelTiles;
