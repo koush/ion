@@ -293,7 +293,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             request.setLogging(logTag, logLevel);
         request.enableProxy(proxyHost, proxyPort);
         request.setTimeout(timeoutMilliseconds);
-        request.setHandler(null);
         request.logd("preparing request");
         return request;
     }
