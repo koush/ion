@@ -361,18 +361,11 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     @Override
     public IonBitmapRequestBuilder deepZoom() {
-        return deepZoom(true);
-    }
-
-    @Override
-    public IonBitmapRequestBuilder deepZoom(boolean deepZoom) {
-        this.deepZoom = deepZoom;
-        if (deepZoom) {
-            if (resizeWidth > 0 || resizeHeight > 0)
-                throw new IllegalStateException("Can't decoder after resize has been called.");
-            resizeWidth = 0;
-            resizeHeight = 0;
-        }
+        this.deepZoom = true;
+        if (resizeWidth > 0 || resizeHeight > 0)
+            throw new IllegalStateException("Can't decoder after resize has been called.");
+        resizeWidth = 0;
+        resizeHeight = 0;
         return this;
     }
 }

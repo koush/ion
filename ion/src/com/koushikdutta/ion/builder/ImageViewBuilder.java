@@ -93,14 +93,4 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      * @return
      */
     public I deepZoom();
-
-    /**
-     * If true, load the ImageView with a deep zoomable image. This allows extremely large images
-     * to be loaded, at full fidelity. Only portions of the image will be decoded,
-     * on an as needed basis when rendering.
-     * This only works on API level 10+, where BitmapRegionDecoder is available.
-     * @param deepZoom
-     * @return
-     */
-    public I deepZoom(boolean deepZoom);
 }
