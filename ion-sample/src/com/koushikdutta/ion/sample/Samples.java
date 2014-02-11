@@ -71,5 +71,13 @@ public class Samples extends Activity {
                 startActivity(new Intent(Samples.this, GallerySample.class));
             }
         });
+
+        Button deepZoomSample = (Button)findViewById(R.id.deepzoom);
+        deepZoomSample.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, DeepZoomSample.class));
+            }
+        });
     }
 }

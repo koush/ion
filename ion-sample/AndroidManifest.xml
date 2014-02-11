@@ -34,8 +34,11 @@
             android:name=".GallerySample"
             android:label="Gallery Sample"/>
         <activity
-            android:name=".ImageViewSample"
-            android:label="ImageView Sample"/>
+                android:name=".ImageViewSample"
+                android:label="ImageView Sample"/>
+        <activity
+                android:name=".DeepZoomSample"
+                android:label="DeepZoom Sample"/>
         <activity
                 android:name=".Samples"
                 android:label="ion samples">
