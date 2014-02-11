@@ -2,6 +2,7 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Looper;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -361,6 +362,8 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     @Override
     public IonBitmapRequestBuilder deepZoom() {
+        if (Build.VERSION.SDK_INT < 10)
+            return this;
         this.deepZoom = true;
         if (resizeWidth > 0 || resizeHeight > 0)
             throw new IllegalStateException("Can't decoder after resize has been called.");
