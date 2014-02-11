@@ -30,14 +30,14 @@ public class DeepZoomSample extends Activity {
 
         // this is going to load a 30mb download...
         Ion.with(this)
-        .load("https://raw2.github.com/koush/ion/master/ion-sample/deepzoom.jpg")
+        .load("https://raw2.github.com/koush/ion/master/ion-sample/telescope.jpg")
         .progressDialog(dlg)
         .withBitmap()
         .intoImageView(photoView)
         .setCallback(new FutureCallback<ImageView>() {
             @Override
             public void onCompleted(Exception e, ImageView result) {
-                dlg.cancel();;
+                dlg.cancel();
             }
         });
     }
