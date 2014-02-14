@@ -166,6 +166,7 @@ The Ion Image load API has the following features:
  * ListView Adapter recycling support
  * Bitmap transformations via the .transform(Transform)
  * Animate loading and loaded ImageView states
+ * [DeepZoom](http://www.youtube.com/watch?v=yIMltNEAKZY) for extremely large images
 
 #### Futures
 
