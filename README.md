@@ -1,4 +1,4 @@
-*Android Asynchronous Networking Made Easy*
+*Android Asynchronous Networking and Image Loading*
 
 ![](ion-sample/ion-sample.png)
 
