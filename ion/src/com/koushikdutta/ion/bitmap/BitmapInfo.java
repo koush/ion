@@ -11,10 +11,11 @@ import java.lang.ref.WeakReference;
  * Created by koush on 6/12/13.
  */
 public class BitmapInfo {
-    public BitmapInfo(String key, Bitmap[] bitmaps, Point originalSize) {
+    public BitmapInfo(String key, String mimeType, Bitmap[] bitmaps, Point originalSize) {
         this.originalSize = originalSize;
         this.bitmaps = bitmaps;
         this.key = key;
+        this.mimeType = mimeType;
     }
 
     final public Point originalSize;
@@ -26,6 +27,8 @@ public class BitmapInfo {
     public int[] delays;
     public Exception exception;
     public BitmapRegionDecoder decoder;
+    public File decoderFile;
+    public final String mimeType;
 
     public int sizeOf() {
         if (bitmaps == null)

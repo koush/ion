@@ -34,7 +34,7 @@ public class PackageIconLoader extends SimpleLoader {
                     Bitmap bmp = ((BitmapDrawable)pm.getPackageInfo(pkg, 0).applicationInfo.loadIcon(pm)).getBitmap();
                     if (bmp == null)
                         throw new Exception("package icon failed to load");
-                    BitmapInfo info = new BitmapInfo(key, new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));
+                    BitmapInfo info = new BitmapInfo(key, null, new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 }

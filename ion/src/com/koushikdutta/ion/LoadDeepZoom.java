@@ -79,7 +79,7 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                             if (size == null)
                                 size = new Point(bitmap.getWidth(), bitmap.getHeight());
                         }
-                        BitmapInfo info = new BitmapInfo(key, bitmaps, size);
+                        BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
                         info.delays = delays;
                         if (emitterTransform != null)
                             info.loadedFrom = emitterTransform.loadedFrom();
@@ -96,8 +96,9 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                         throw new Exception("unable to load decoder");
                     Bitmap[] bitmaps = new Bitmap[] { bitmap };
 
-                    BitmapInfo info = new BitmapInfo(key, bitmaps, size);
+                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
                     info.decoder = decoder;
+                    info.decoderFile = file;
                     info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_NETWORK;
                     report(null, info);
                 } catch (Exception e) {

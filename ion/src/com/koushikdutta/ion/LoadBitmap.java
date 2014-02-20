@@ -89,7 +89,7 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                         delays = null;
                     }
 
-                    BitmapInfo info = new BitmapInfo(key, bitmaps, size);
+                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
                     info.delays = delays;
                     if (emitterTransform != null)
                         info.loadedFrom = emitterTransform.loadedFrom();

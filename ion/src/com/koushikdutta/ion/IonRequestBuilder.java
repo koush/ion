@@ -48,6 +48,7 @@ import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.FileDataSink;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
 import com.koushikdutta.ion.Loader.LoaderEmitter;
+import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
@@ -772,6 +773,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     public IonRequestBuilder load(File file) {
         loadInternal(null, file.toURI().toString());
         return this;
+    }
+
+    @Override
+    public BitmapInfo asCachedBitmap() {
+        return new IonBitmapRequestBuilder(this).asCachedBitmap();
     }
 
     @Override

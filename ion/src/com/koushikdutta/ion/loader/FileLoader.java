@@ -53,7 +53,7 @@ public class FileLoader extends SimpleLoader {
                     Bitmap bitmap = ion.getBitmapCache().loadBitmap(file, options);
                     if (bitmap == null)
                         throw new Exception("Bitmap failed to load");
-                    BitmapInfo info = new BitmapInfo(key, new Bitmap[] { bitmap }, size);
+                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, new Bitmap[] { bitmap }, size);
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 }

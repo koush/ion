@@ -142,6 +142,29 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         return ResponseCacheMiddleware.toKeyString(downloadKey);
     }
 
+    @Override
+    public BitmapInfo asCachedBitmap() {
+        final String downloadKey = computeDownloadKey();
+        assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
+        assert downloadKey != null;
+
+        if (resizeHeight > 0 || resizeWidth > 0) {
+            transform(new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
+        }
+
+        // determine the key for this bitmap after all transformations
+        String bitmapKey = downloadKey;
+        boolean hasTransforms = transforms != null && transforms.size() > 0;
+        if (hasTransforms) {
+            for (Transform transform : transforms) {
+                bitmapKey += transform.key();
+            }
+            bitmapKey = ResponseCacheMiddleware.toKeyString(bitmapKey);
+        }
+
+        return builder.ion.bitmapCache.get(bitmapKey);
+    }
+
     BitmapFetcher executeCache() {
         final String downloadKey = computeDownloadKey();
         assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;

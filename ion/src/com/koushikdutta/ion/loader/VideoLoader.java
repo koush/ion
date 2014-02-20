@@ -83,7 +83,7 @@ public class VideoLoader extends SimpleLoader {
 
         final File file = new File(URI.create(uri));
 
-        MediaFile.MediaFileType type = MediaFile.getFileType(file.getAbsolutePath());
+        final MediaFile.MediaFileType type = MediaFile.getFileType(file.getAbsolutePath());
         if (type == null || !MediaFile.isVideoFileType(type.fileType))
             return null;
 
@@ -99,7 +99,7 @@ public class VideoLoader extends SimpleLoader {
                     Bitmap bmp = createVideoThumbnail(file.getAbsolutePath());
                     if (bmp == null)
                         throw new Exception("video bitmap failed to load");
-                    BitmapInfo info = new BitmapInfo(key, new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));
+                    BitmapInfo info = new BitmapInfo(key, type.mimeType, new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));
                     info.loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 } catch (Exception e) {
