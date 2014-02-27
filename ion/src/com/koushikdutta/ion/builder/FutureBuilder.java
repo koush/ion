@@ -104,6 +104,12 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
     public <T> ResponseFuture<T> as(AsyncParser<T> parser);
 
     /**
+     * Execute the request and get the result as a byte array
+     * @return
+     */
+    public ResponseFuture<byte[]> asByteArray();
+
+    /**
      * Add this request to a group specified by groupKey. This key can be used in a later call to
      * Ion.cancelAll(groupKey) to cancel all the requests in the same group.
      * @param groupKey

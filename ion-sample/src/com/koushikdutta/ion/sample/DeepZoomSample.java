@@ -30,7 +30,7 @@ public class DeepZoomSample extends Activity {
 
         // this is going to load a 30mb download...
         Ion.with(this)
-        .load("https://raw2.github.com/koush/ion/master/ion-sample/telescope.jpg")
+        .load("http://www.julianjm.es/public/asturias-pano.jpg")
         .progressDialog(dlg)
         .withBitmap()
         .deepZoom()

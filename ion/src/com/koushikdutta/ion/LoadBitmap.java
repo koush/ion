@@ -54,12 +54,11 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                 try {
                     Bitmap[] bitmaps;
                     int[] delays;
-                    Point size;
                     BitmapFactory.Options options = ion.bitmapCache.prepareBitmapOptions(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
+                    final Point size = new Point(options.outWidth, options.outHeight);
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
-                        size = null;
                         GifDecoder decoder = new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), new GifAction() {
                             @Override
                             public boolean parseOk(boolean parseStatus, int frameIndex) {
@@ -76,12 +75,9 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                             if (bitmap == null)
                                 throw new Exception("failed to load gif frame");
                             bitmaps[i] = bitmap;
-                            if (size == null)
-                                size = new Point(bitmap.getWidth(), bitmap.getHeight());
                         }
                     }
                     else {
-                        size = new Point(options.outWidth, options.outHeight);
                         Bitmap bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), options);
                         if (bitmap == null)
                             throw new Exception("failed to load bitmap");

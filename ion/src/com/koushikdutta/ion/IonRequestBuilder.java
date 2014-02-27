@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Base64;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -17,6 +18,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.DataSink;
 import com.koushikdutta.async.DataTrackingEmitter;
@@ -43,6 +45,7 @@ import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.parser.AsyncParser;
+import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.FileDataSink;
@@ -61,11 +64,13 @@ import com.koushikdutta.ion.gson.PojoBody;
 import org.apache.http.NameValuePair;
 import org.w3c.dom.Document;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -114,6 +119,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder userAgent(String userAgent) {
+        if (TextUtils.isEmpty(userAgent))
+            return this;
         return setHeader("User-Agent", userAgent);
     }
 
@@ -126,6 +133,15 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public IonRequestBuilder addHeader(String name, String value) {
         getHeaders().add(name, value);
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilder addHeaders(Map<String, List<String>> params) {
+        RawHeaders headers = getHeaders();
+        for (Map.Entry<String, List<String>> entry: params.entrySet()) {
+            headers.addAll(entry.getKey(), entry.getValue());
+        }
         return this;
     }
 
@@ -661,6 +677,27 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public ResponseFuture<byte[]> asByteArray() {
+        return execute(new AsyncParser<byte[]>() {
+            @Override
+            public Future<byte[]> parse(DataEmitter emitter) {
+                return new ByteBufferListParser().parse(emitter)
+                .then(new TransformFuture<byte[], ByteBufferList>() {
+                    @Override
+                    protected void transform(ByteBufferList result) throws Exception {
+                        setComplete(result.getAllByteArray());
+                    }
+                });
+            }
+
+            @Override
+            public void write(DataSink sink, byte[] value, CompletedCallback completed) {
+                new ByteBufferListParser().write(sink, new ByteBufferList(value), completed);
+            }
+        });
+    }
+
+    @Override
     public ResponseFuture<InputStream> asInputStream() {
         return execute(new InputStreamParser());
     }
@@ -888,6 +925,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public Builders.Any.F setFileBody(File file) {
         setBody(new FileBody(file));
+        return this;
+    }
+
+    @Override
+    public Builders.Any.F setByteArrayBody(byte[] bytes) {
+        if (bytes != null)
+            setBody(new StreamBody(new ByteArrayInputStream(bytes), bytes.length));
         return this;
     }
 

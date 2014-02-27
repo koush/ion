@@ -20,8 +20,7 @@ import java.net.URI;
 public class PackageIconLoader extends SimpleLoader {
     @Override
     public Future<BitmapInfo> loadBitmap(final Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight) {
-        final URI request = URI.create(uri);
-        if (request == null || request.getScheme() == null || !request.getScheme().startsWith("package"))
+        if (uri == null || !uri.startsWith("package:"))
             return null;
 
         final SimpleFuture<BitmapInfo> ret = new SimpleFuture<BitmapInfo>();
@@ -29,6 +28,7 @@ public class PackageIconLoader extends SimpleLoader {
             @Override
             public void run() {
                 try {
+                    final URI request = URI.create(uri);
                     String pkg = request.getHost();
                     PackageManager pm = ion.getContext().getPackageManager();
                     Bitmap bmp = ((BitmapDrawable)pm.getPackageInfo(pkg, 0).applicationInfo.loadIcon(pm)).getBitmap();
