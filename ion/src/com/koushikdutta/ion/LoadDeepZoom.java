@@ -57,6 +57,7 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                     BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(file, 0, 0);
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
+                    final Point size = new Point(options.outWidth, options.outHeight);
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
                         fin = new FileInputStream(file);
                         GifDecoder decoder = new GifDecoder(fin, new GifAction() {
@@ -70,14 +71,11 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                             throw new Exception("failed to load gif");
                         Bitmap[] bitmaps = new Bitmap[decoder.getFrameCount()];
                         int[] delays = decoder.getDelays();
-                        Point size = null;
                         for (int i = 0; i < decoder.getFrameCount(); i++) {
                             Bitmap bitmap = decoder.getFrameImage(i);
                             if (bitmap == null)
                                 throw new Exception("failed to load gif frame");
                             bitmaps[i] = bitmap;
-                            if (size == null)
-                                size = new Point(bitmap.getWidth(), bitmap.getHeight());
                         }
                         BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
                         info.delays = delays;
@@ -90,7 +88,6 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                     }
 
                     BitmapRegionDecoder decoder = BitmapRegionDecoder.newInstance(file.toString(), false);
-                    Point size = new Point(decoder.getWidth(), decoder.getHeight());
                     Bitmap bitmap = decoder.decodeRegion(new Rect(0, 0, size.x, size.y), options);
                     if (bitmap == null)
                         throw new Exception("unable to load decoder");
