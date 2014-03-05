@@ -25,7 +25,7 @@ import java.util.ArrayList;
 /**
  * Created by koush on 5/23/13.
  */
-class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBuilder, BitmapFutureBuilder, Builders.Any.BF {
+class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, BitmapFutureBuilder, Builders.Any.BF {
     private static final SimpleFuture<ImageView> FUTURE_IMAGEVIEW_NULL_URI = new SimpleFuture<ImageView>() {
         {
             setComplete(new NullPointerException("uri"));

@@ -5,7 +5,7 @@ package com.koushikdutta.ion.builder;
  */
 public interface Builders {
 
-    public interface ImageView {
+    public interface IV {
         public interface F<A extends F<?>> extends ImageViewBuilder<A>, BitmapBuilder<A>, LoadImageViewFutureBuilder {
         }
     }
