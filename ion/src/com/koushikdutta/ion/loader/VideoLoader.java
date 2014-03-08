@@ -34,13 +34,11 @@ public class VideoLoader extends SimpleLoader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(Ion ion, final String key, String uri, int resizeWidth, int resizeHeight) {
+    public Future<BitmapInfo> loadBitmap(Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight) {
         if (!uri.startsWith(ContentResolver.SCHEME_FILE))
             return null;
 
-        final File file = new File(URI.create(uri));
-
-        final MediaFile.MediaFileType type = MediaFile.getFileType(file.getAbsolutePath());
+        final MediaFile.MediaFileType type = MediaFile.getFileType(uri);
         if (type == null || !MediaFile.isVideoFileType(type.fileType))
             return null;
 
@@ -48,6 +46,7 @@ public class VideoLoader extends SimpleLoader {
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
+                final File file = new File(URI.create(uri));
                 if (ret.isCancelled()) {
 //                    Log.d("VideoLoader", "Bitmap load cancelled (no longer needed)");
                     return;

@@ -1,7 +1,9 @@
 package com.koushikdutta.ion;
 
+import android.content.ContentUris;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.view.animation.Animation;
@@ -226,6 +228,15 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         if (imageView == null)
             throw new IllegalArgumentException("imageView");
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
+
+        if (builder.uri != null && builder.uri.startsWith("android.resource:/")) {
+            IonDrawable drawable = setIonDrawable(imageView, null, 0);
+            SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
+            imageViewFuture.reset();
+            imageView.setImageURI(Uri.parse(builder.uri));
+            imageViewFuture.setComplete(null, imageView);
+            return imageViewFuture;
+        }
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {

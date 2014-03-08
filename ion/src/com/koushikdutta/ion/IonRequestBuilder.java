@@ -97,6 +97,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     private IonRequestBuilder loadInternal(String method, String url) {
         this.method = method;
+        if (!TextUtils.isEmpty(url) && url.startsWith("/"))
+            url = new File(url).toURI().toString();
         this.uri = url;
         return this;
     }
