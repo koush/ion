@@ -43,7 +43,7 @@ public class Issues extends AndroidTestCase {
         httpServer.get("/", new HttpServerRequestCallback() {
             @Override
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
-                response.getHeaders().getHeaders().set("Cache-Control", "max-age: 300");
+                response.getHeaders().getHeaders().set("Cache-Control", "max-age=300");
                 response.send(request.getQuery().size() + "");
             }
         });
