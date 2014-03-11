@@ -44,7 +44,7 @@ public class Issues extends AndroidTestCase {
             @Override
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
                 response.getHeaders().getHeaders().set("Cache-Control", "max-age: 300");
-                response.send(request.getQuery().getString("p"));
+                response.send(request.getQuery().size() + "");
             }
         });
         AsyncServer asyncServer = new AsyncServer();
@@ -52,18 +52,26 @@ public class Issues extends AndroidTestCase {
             int localPort = httpServer.listen(asyncServer, 0).getLocalPort();
             String s1 = Ion.with(getContext())
             .load("http://localhost:" + localPort)
-            .addQuery("p", "hello")
+            .addQuery("query1", "q")
             .asString()
             .get();
 
             String s2 = Ion.with(getContext())
             .load("http://localhost:" + localPort)
-            .addQuery("p", "whatsup")
+            .addQuery("query1", "q")
+            .addQuery("query2", "qq")
             .asString()
             .get();
 
-            assertEquals(s1, "hello");
-            assertEquals(s2, "whatsup");
+            String s3 = Ion.with(getContext())
+            .load("http://localhost:" + localPort)
+            .addQuery("query1", "q")
+            .asString()
+            .get();
+
+            assertEquals(s1, "1");
+            assertEquals(s2, "2");
+            assertEquals(s3, "1");
         }
         finally {
             asyncServer.stop();
