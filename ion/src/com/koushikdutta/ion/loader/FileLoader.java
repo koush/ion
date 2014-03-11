@@ -3,6 +3,7 @@ package com.koushikdutta.ion.loader;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.koushikdutta.async.DataEmitter;
@@ -11,9 +12,12 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpRequest;
+import com.koushikdutta.async.http.libcore.IoUtils;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.gif.GifAction;
+import com.koushikdutta.ion.gif.GifDecoder;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -30,7 +34,8 @@ public class FileLoader extends SimpleLoader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight) {
+    public Future<BitmapInfo> loadBitmap(final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight,
+                                         final boolean animateGif) {
         if (uri == null || !uri.startsWith("file:/"))
             return null;
 
@@ -50,10 +55,38 @@ public class FileLoader extends SimpleLoader {
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
                     Point size = new Point(options.outWidth, options.outHeight);
-                    Bitmap bitmap = ion.getBitmapCache().loadBitmap(file, options);
-                    if (bitmap == null)
-                        throw new Exception("Bitmap failed to load");
-                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, new Bitmap[] { bitmap }, size);
+                    Bitmap[] bitmaps;
+                    int[] delays;
+                    if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
+                        FileInputStream fin = new FileInputStream(file);
+                        GifDecoder decoder = new GifDecoder(fin, new GifAction() {
+                            @Override
+                            public boolean parseOk(boolean parseStatus, int frameIndex) {
+                                return animateGif;
+                            }
+                        });
+                        decoder.run();
+                        IoUtils.closeQuietly(fin);
+                        if (decoder.getFrameCount() == 0)
+                            throw new Exception("failed to load gif");
+                        bitmaps = new Bitmap[decoder.getFrameCount()];
+                        delays = decoder.getDelays();
+                        for (int i = 0; i < decoder.getFrameCount(); i++) {
+                            Bitmap bitmap = decoder.getFrameImage(i);
+                            if (bitmap == null)
+                                throw new Exception("failed to load gif frame");
+                            bitmaps[i] = bitmap;
+                        }
+                    }
+                    else {
+                        Bitmap bitmap = ion.getBitmapCache().loadBitmap(file, options);
+                        if (bitmap == null)
+                            throw new Exception("Bitmap failed to load");
+                        bitmaps = new Bitmap[] { bitmap };
+                        delays = null;
+                    }
+                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
+                    info.delays = delays;
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 }

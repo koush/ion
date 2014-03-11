@@ -78,7 +78,7 @@ public interface Loader {
      * @param resizeHeight
      * @return
      */
-    public Future<BitmapInfo> loadBitmap(Ion ion, String key, String uri, int resizeWidth, int resizeHeight);
+    public Future<BitmapInfo> loadBitmap(Ion ion, String key, String uri, int resizeWidth, int resizeHeight, boolean animateGif);
 
     /**
      * Resolve a request into another request.
