@@ -4,6 +4,11 @@ import android.graphics.Bitmap;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
+import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.http.server.AsyncHttpServer;
+import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
+import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
+import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 
 /**
@@ -31,5 +36,37 @@ public class Issues extends AndroidTestCase {
 
         assertNotNull(bitmap);
         assertTrue(bitmap.getWidth() > 0);
+    }
+
+    public void testIssue146() throws Exception {
+        AsyncHttpServer httpServer = new AsyncHttpServer();
+        httpServer.get("/", new HttpServerRequestCallback() {
+            @Override
+            public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
+                response.getHeaders().getHeaders().set("Cache-Control", "max-age: 300");
+                response.send(request.getQuery().getString("p"));
+            }
+        });
+        AsyncServer asyncServer = new AsyncServer();
+        try {
+            int localPort = httpServer.listen(asyncServer, 0).getLocalPort();
+            String s1 = Ion.with(getContext())
+            .load("http://localhost:" + localPort)
+            .addQuery("p", "hello")
+            .asString()
+            .get();
+
+            String s2 = Ion.with(getContext())
+            .load("http://localhost:" + localPort)
+            .addQuery("p", "whatsup")
+            .asString()
+            .get();
+
+            assertEquals(s1, "hello");
+            assertEquals(s2, "whatsup");
+        }
+        finally {
+            asyncServer.stop();
+        }
     }
 }
