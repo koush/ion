@@ -25,7 +25,7 @@ public class SimpleLoader implements Loader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(Ion ion, String key, String uri, int resizeWidth, int resizeHeight) {
+    public Future<BitmapInfo> loadBitmap(Ion ion, String key, String uri, int resizeWidth, int resizeHeight, boolean animateGif) {
         return null;
     }
 
