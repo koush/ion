@@ -19,7 +19,7 @@ import java.net.URI;
  */
 public class PackageIconLoader extends SimpleLoader {
     @Override
-    public Future<BitmapInfo> loadBitmap(final Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight) {
+    public Future<BitmapInfo> loadBitmap(final Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight, boolean animateGif) {
         if (uri == null || !uri.startsWith("package:"))
             return null;
 

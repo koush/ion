@@ -34,7 +34,7 @@ public class VideoLoader extends SimpleLoader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight) {
+    public Future<BitmapInfo> loadBitmap(Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight, boolean animateGif) {
         if (!uri.startsWith(ContentResolver.SCHEME_FILE))
             return null;
 
