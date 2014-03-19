@@ -555,34 +555,4 @@ public class Ion {
     public IonBitmapCache getBitmapCache() {
         return bitmapCache;
     }
-
-    Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request) {
-        return resolveRequest(request, null);
-    }
-
-    Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request, SimpleFuture<AsyncHttpRequest> ret) {
-        // first attempt to resolve the url
-        for (Loader loader: loaders) {
-            Future<AsyncHttpRequest> resolved = loader.resolve(this, request);
-            if (resolved != null) {
-                if (ret == null)
-                    ret = new SimpleFuture<AsyncHttpRequest>();
-                final SimpleFuture<AsyncHttpRequest> future = ret;
-                resolved.setCallback(new FutureCallback<AsyncHttpRequest>() {
-                    @Override
-                    public void onCompleted(Exception e, AsyncHttpRequest result) {
-                        if (e != null) {
-                            future.setComplete(e);
-                            return;
-                        }
-                        resolveRequest(result, future);
-                    }
-                });
-                return ret;
-            }
-        }
-        if (ret != null)
-            ret.setComplete(request);
-        return ret;
-    }
 }

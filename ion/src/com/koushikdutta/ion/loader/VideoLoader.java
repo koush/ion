@@ -2,6 +2,7 @@ package com.koushikdutta.ion.loader;
 
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.media.MediaMetadataRetriever;
@@ -34,7 +35,7 @@ public class VideoLoader extends SimpleLoader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight, boolean animateGif) {
+    public Future<BitmapInfo> loadBitmap(Context context, Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight, boolean animateGif) {
         if (!uri.startsWith(ContentResolver.SCHEME_FILE))
             return null;
 

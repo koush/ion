@@ -1,5 +1,6 @@
 package com.koushikdutta.ion.loader;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
@@ -34,7 +35,7 @@ public class FileLoader extends SimpleLoader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight,
+    public Future<BitmapInfo> loadBitmap(final Context context, final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight,
                                          final boolean animateGif) {
         if (uri == null || !uri.startsWith("file:/"))
             return null;

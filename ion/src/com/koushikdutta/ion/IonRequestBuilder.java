@@ -415,7 +415,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     <T> Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
         // first attempt to resolve the url
         for (Loader loader: ion.loaders) {
-            Future<AsyncHttpRequest> resolved = loader.resolve(ion, request);
+            Future<AsyncHttpRequest> resolved = loader.resolve(context.get(), ion, request);
             if (resolved != null)
                 return resolved;
 

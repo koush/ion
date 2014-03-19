@@ -1,11 +1,11 @@
 package com.koushikdutta.ion.test;
 
-import android.os.SystemClock;
 import android.test.AndroidTestCase;
 
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.http.libcore.RequestHeaders;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.cookie.CookieMiddleware;
 
 import java.net.CookieManager;
 import java.net.URI;
@@ -35,6 +35,38 @@ public class CookieTests extends AndroidTestCase {
 
         headers.set("Set-Cookie", "foo=goop");
         manager.put(uri, headers.toMultimap());
+
+        RawHeaders newHeaders = new RawHeaders();
+        RequestHeaders requestHeaders = new RequestHeaders(uri, newHeaders);
+        Map<String, List<String>> cookies = manager.get(uri, newHeaders.toMultimap());
+        manager.get(uri, cookies);
+        requestHeaders.addCookies(cookies);
+        assertTrue(newHeaders.get("Cookie").contains("foo=goop"));
+        assertTrue(newHeaders.get("Cookie").contains("poop=scoop"));
+        assertFalse(newHeaders.get("Cookie").contains("bar"));
+    }
+
+    public void testReinit() throws Exception {
+        CookieMiddleware middleware = Ion.getDefault(getContext()).getCookieMiddleware();
+        Ion ion = Ion.getDefault(getContext());
+
+        ion.getCookieMiddleware().clear();
+
+        RawHeaders headers = new RawHeaders();
+        headers.setStatusLine("HTTP/1.1 200 OK");
+        headers.set("Set-Cookie", "foo=bar");
+
+        URI uri = URI.create("http://example.com");
+        middleware.put(uri, headers);
+
+        headers.set("Set-Cookie", "poop=scoop");
+        middleware.put(uri, headers);
+
+        headers.set("Set-Cookie", "foo=goop");
+        middleware.put(uri, headers);
+
+        middleware.reinit(getContext(), Ion.getDefault(getContext()).getName());
+        CookieManager manager = middleware.getCookieManager();
 
         RawHeaders newHeaders = new RawHeaders();
         RequestHeaders requestHeaders = new RequestHeaders(uri, newHeaders);

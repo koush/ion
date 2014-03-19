@@ -1,5 +1,7 @@
 package com.koushikdutta.ion;
 
+import android.content.Context;
+
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
@@ -78,7 +80,7 @@ public interface Loader {
      * @param resizeHeight
      * @return
      */
-    public Future<BitmapInfo> loadBitmap(Ion ion, String key, String uri, int resizeWidth, int resizeHeight, boolean animateGif);
+    public Future<BitmapInfo> loadBitmap(Context context, Ion ion, String key, String uri, int resizeWidth, int resizeHeight, boolean animateGif);
 
     /**
      * Resolve a request into another request.
@@ -86,5 +88,5 @@ public interface Loader {
      * @param request
      * @return
      */
-    public Future<AsyncHttpRequest> resolve(Ion ion, AsyncHttpRequest request);
+    public Future<AsyncHttpRequest> resolve(Context context, Ion ion, AsyncHttpRequest request);
 }
