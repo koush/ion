@@ -88,8 +88,9 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                     Point size = null;
                     Bitmap bitmaps[] = new Bitmap[result.bitmaps.length];
                     for (int i = 0; i < result.bitmaps.length; i++) {
+                        bitmaps[i] = result.bitmaps[i];
                         for (Transform transform : transforms) {
-                            Bitmap bitmap = transform.transform(result.bitmaps[i]);
+                            Bitmap bitmap = transform.transform(bitmaps[i]);
                             if (bitmap == null)
                                 throw new Exception("failed to transform bitmap");
                             bitmaps[i] = bitmap;
