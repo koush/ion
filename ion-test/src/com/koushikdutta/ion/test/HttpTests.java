@@ -108,9 +108,19 @@ public class HttpTests extends AndroidTestCase {
 
     public void testUrlEncodedFormBody() throws Exception {
         JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
-                .setBodyParameter("blit", "bip")
-                .asJsonObject().get();
+        .setBodyParameter("blit", "bip")
+        .asJsonObject().get();
         assertEquals("bip", ret.get("blit").getAsString());
+    }
+
+    public void testUrlEncodedFormBodyWithNull() throws Exception {
+        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        .setTimeout(3000000)
+        .setBodyParameter("blit", null)
+        .setBodyParameter("foo", "bar")
+        .asJsonObject().get();
+        assertTrue(!ret.has("blit"));
+        assertEquals("bar", ret.get("foo").getAsString());
     }
 
     public void testMultipart() throws Exception {

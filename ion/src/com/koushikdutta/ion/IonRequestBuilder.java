@@ -128,13 +128,17 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder setHeader(String name, String value) {
-        getHeaders().set(name, value);
+        if (value == null)
+            getHeaders().removeAll(name);
+        else
+            getHeaders().set(name, value);
         return this;
     }
 
     @Override
     public IonRequestBuilder addHeader(String name, String value) {
-        getHeaders().add(name, value);
+        if (value != null)
+            getHeaders().add(name, value);
         return this;
     }
 
@@ -157,6 +161,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     Multimap query;
     @Override
     public IonRequestBuilder addQuery(String name, String value) {
+        if (value == null)
+            return this;
         if (query == null)
             query = new Multimap();
         query.add(name, value);
@@ -736,7 +742,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             bodyParameters = new Multimap();
             setBody(new UrlEncodedFormBody(bodyParameters));
         }
-        bodyParameters.add(name, value);
+        if (value != null)
+            bodyParameters.add(name, value);
         return this;
     }
 
@@ -780,7 +787,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             multipartBody = new MultipartFormDataBody();
             setBody(multipartBody);
         }
-        multipartBody.addStringPart(name, value);
+        if (value != null)
+            multipartBody.addStringPart(name, value);
         return this;
     }
 
@@ -788,7 +796,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     public IonRequestBuilder setMultipartParameters(Map<String, List<String>> params) {
         for (String key: params.keySet()) {
             for (String value: params.get(key)) {
-                setMultipartParameter(key, value);
+                if (value != null)
+                    setMultipartParameter(key, value);
             }
         }
         return this;
@@ -797,10 +806,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public IonBitmapRequestBuilder withBitmap() {
         return new IonBitmapRequestBuilder(this);
-    }
-
-    IonBitmapRequestBuilder withImageView(ImageView imageView) {
-        return new IonBitmapRequestBuilder(this).withImageView(imageView);
     }
 
     @Override
