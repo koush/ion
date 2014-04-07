@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +29,7 @@ import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.util.FileUtility;
 import com.koushikdutta.async.util.HashList;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
@@ -140,16 +142,25 @@ public class Ion {
         this.context = context = context.getApplicationContext();
         this.name = name;
 
+        File ionCacheDir = new File(context.getCacheDir(), name);
         try {
-            responseCache = ResponseCacheMiddleware.addCache(httpClient, new File(context.getCacheDir(), name), 10L * 1024L * 1024L);
+            responseCache = ResponseCacheMiddleware.addCache(httpClient, ionCacheDir, 10L * 1024L * 1024L);
         }
-        catch (Exception e) {
-            IonLog.w("unable to set up response cache", e);
+        catch (IOException e) {
+            IonLog.w("unable to set up response cache, clearing", e);
+            FileUtility.deleteDirectory(ionCacheDir);
+            try {
+                responseCache = ResponseCacheMiddleware.addCache(httpClient, ionCacheDir, 10L * 1024L * 1024L);
+            }
+            catch (IOException ex) {
+                IonLog.w("unable to set up response cache, failing", e);
+            }
         }
+
         try {
             storeCache = DiskLruCache.open(new File(context.getFilesDir(), name), 1, 1, Long.MAX_VALUE);
         }
-        catch (Exception e) {
+        catch (IOException e) {
         }
 
         // TODO: Support pre GB?

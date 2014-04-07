@@ -12,6 +12,7 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.body.FilePart;
@@ -220,7 +221,7 @@ public class HttpTests extends AndroidTestCase {
                     AsyncHttpClient proxying = new AsyncHttpClient(proxyServer);
 
                     String url = request.getPath();
-                    proxying.get(url, new AsyncHttpClient.StringCallback() {
+                    proxying.executeString(new AsyncHttpGet(url), new AsyncHttpClient.StringCallback() {
                         @Override
                         public void onCompleted(Exception e, AsyncHttpResponse source, String result) {
                             response.send(result);
