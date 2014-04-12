@@ -22,16 +22,17 @@ import java.net.URI;
  * Created by koush on 11/6/13.
  */
 public class VideoLoader extends SimpleLoader {
-    private boolean useThumbnailUtils;
-    public void useThumbnailUtils(boolean useThumbnailUtils) {
-        this.useThumbnailUtils = useThumbnailUtils;
-    }
-
     @TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
     public static Bitmap createVideoThumbnail(String filePath) throws Exception {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(filePath);
         return retriever.getFrameAtTime();
+    }
+
+    static boolean mustUseThumbnailUtils() {
+        // http://developer.samsung.com/forum/thread/mediametadataretriever-getframeattime-to-retrieve-video-frame-fails/77/202945
+        // https://codereview.chromium.org/107523005
+        return Build.MANUFACTURER.toLowerCase().contains("samsung");
     }
 
     @Override
@@ -54,7 +55,8 @@ public class VideoLoader extends SimpleLoader {
                 }
                 try {
                     Bitmap bmp;
-                    if (useThumbnailUtils || Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1)
+
+                    if (mustUseThumbnailUtils() || Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1)
                         bmp = ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND);
                     else
                         bmp = createVideoThumbnail(file.getAbsolutePath());
