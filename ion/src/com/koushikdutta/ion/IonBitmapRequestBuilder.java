@@ -11,7 +11,7 @@ import android.widget.ImageView;
 
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
@@ -140,7 +140,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
             downloadKey += ":!animateGif";
         if (deepZoom)
             downloadKey += ":deepZoom";
-        return ResponseCacheMiddleware.toKeyString(downloadKey);
+        return FileCache.toKeyString(downloadKey);
     }
 
     @Override
@@ -162,7 +162,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
             for (Transform transform : transforms) {
                 bitmapKey += transform.key();
             }
-            bitmapKey = ResponseCacheMiddleware.toKeyString(bitmapKey);
+            bitmapKey = FileCache.toKeyString(bitmapKey);
         }
 
         return builder.ion.bitmapCache.get(bitmapKey);
@@ -186,7 +186,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
             for (Transform transform : transforms) {
                 bitmapKey += transform.key();
             }
-            bitmapKey = ResponseCacheMiddleware.toKeyString(bitmapKey);
+            bitmapKey = FileCache.toKeyString(bitmapKey);
         }
 
         // TODO: eliminate this allocation?

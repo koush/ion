@@ -10,8 +10,8 @@ import android.os.Build;
 import android.text.TextUtils;
 
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.http.libcore.DiskLruCache;
-import com.koushikdutta.async.http.libcore.IoUtils;
+import com.koushikdutta.async.util.FileCache;
+import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.gif.GifAction;
 import com.koushikdutta.ion.gif.GifDecoder;
@@ -24,14 +24,14 @@ import java.io.FileInputStream;
  */
 @TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
 public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<File> {
-    DiskLruCache diskLruCache;
-    public LoadDeepZoom(Ion ion, String urlKey, boolean animateGif, IonRequestBuilder.EmitterTransform<File> emitterTransform, DiskLruCache diskLruCache) {
+    FileCache fileCache;
+    public LoadDeepZoom(Ion ion, String urlKey, boolean animateGif, IonRequestBuilder.EmitterTransform<File> emitterTransform, FileCache fileCache) {
         super(ion, urlKey, true, animateGif, emitterTransform);
-        this.diskLruCache = diskLruCache;
+        this.fileCache = fileCache;
     }
 
     @Override
-    public void onCompleted(Exception e, final File file) {
+    public void onCompleted(Exception e, final File tempFile) {
         if (e != null) {
             report(e, null);
             return;
@@ -46,20 +46,15 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
             @Override
             public void run() {
                 FileInputStream fin = null;
-                DiskLruCache.Editor editor = null;
                 try {
-                    if (diskLruCache != null) {
-                        editor = diskLruCache.edit(key);
-                        editor.set(1, "");
-                        editor.commit(true);
-                    }
-
+                    fileCache.commitTempFiles(key, tempFile);
+                    File file = fileCache.getFile(key);
                     BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(file, 0, 0);
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
                     final Point size = new Point(options.outWidth, options.outHeight);
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
-                        fin = new FileInputStream(file);
+                        fin = fileCache.get(key);
                         GifDecoder decoder = new GifDecoder(fin, new GifAction() {
                             @Override
                             public boolean parseOk(boolean parseStatus, int frameIndex) {
@@ -100,15 +95,9 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                     report(null, info);
                 } catch (Exception e) {
                     report(e, null);
-                    try {
-                        if (editor != null)
-                            editor.abort();
-                    }
-                    catch (Exception ex) {
-                    }
                 }
                 finally {
-                    IoUtils.closeQuietly(fin);
+                    StreamUtility.closeQuietly(fin);
                 }
             }
         });

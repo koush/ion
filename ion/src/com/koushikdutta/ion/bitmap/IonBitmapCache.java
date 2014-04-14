@@ -17,13 +17,11 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
 
-import com.koushikdutta.async.http.libcore.IoUtils;
+import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 
 /**
  * Created by koush on 5/23/13.
@@ -184,7 +182,7 @@ public class IonBitmapCache {
         catch (Exception e) {
             rotation = 0;
         }
-        IoUtils.closeQuietly(fin);
+        StreamUtility.closeQuietly(fin);
 
         Bitmap bitmap = BitmapFactory.decodeFile(file.toString(), o);
         if (bitmap == null)

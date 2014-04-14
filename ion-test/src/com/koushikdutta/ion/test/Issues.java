@@ -11,6 +11,12 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
 /**
  * Created by koush on 10/27/13.
  */
@@ -76,5 +82,20 @@ public class Issues extends AndroidTestCase {
         finally {
             asyncServer.stop();
         }
+    }
+
+    public void testIssue200() throws Exception {
+        Map<String, List<String>> params = new HashMap<String, List<String>>();
+        params.put("email", Arrays.asList("mail@mail.pl"));
+        params.put("password", Arrays.asList("pass"));
+
+        String val = Ion.with(getContext())
+        .load("https://koush.clockworkmod.com/test/echo")
+        .setLogging("Issue200", Log.VERBOSE)
+        .setBodyParameters(params)
+        .asString()
+        .get(2000, TimeUnit.MILLISECONDS);
+
+        System.out.println(val);
     }
 }

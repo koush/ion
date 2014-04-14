@@ -16,7 +16,7 @@ import android.widget.ImageView;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.lang.ref.WeakReference;
@@ -435,7 +435,7 @@ class IonDrawable extends Drawable {
 
                     // find, render/fetch
 //                    System.out.println("rendering: " + texRect + " for: " + bounds);
-                    String tileKey = ResponseCacheMiddleware.toKeyString(info.key + "," + level + "," + x + "," + y);
+                    String tileKey = FileCache.toKeyString(info.key, ",", level, ",", x, ",", y);
                     BitmapInfo tile = ion.bitmapCache.get(tileKey);
                     if (tile != null && tile.bitmaps != null) {
                         // render it
@@ -464,7 +464,7 @@ class IonDrawable extends Drawable {
                     int parentY = y >> 1;
 
                     while (parentLevel >= 0) {
-                        tileKey = ResponseCacheMiddleware.toKeyString(info.key + "," + parentLevel + "," + parentX + "," + parentY);
+                        tileKey = FileCache.toKeyString(info.key, ",", parentLevel, ",", parentX, ",", parentY);
                         tile = ion.bitmapCache.get(tileKey);
                         if (tile != null && tile.bitmaps != null)
                             break;

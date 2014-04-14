@@ -22,13 +22,11 @@ import com.google.gson.Gson;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
-import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.async.util.FileUtility;
 import com.koushikdutta.async.util.HashList;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
@@ -119,7 +117,7 @@ public class Ion {
     AsyncHttpClient httpClient;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
-    DiskLruCache storeCache;
+    FileCache storeCache;
     HttpLoader httpLoader;
     ContentLoader contentLoader;
     VideoLoader videoLoader;
@@ -157,11 +155,7 @@ public class Ion {
             }
         }
 
-        try {
-            storeCache = DiskLruCache.open(new File(context.getFilesDir(), name), 1, 1, Long.MAX_VALUE);
-        }
-        catch (IOException e) {
-        }
+        storeCache = new FileCache(new File(context.getFilesDir(), name), Long.MAX_VALUE, false);
 
         // TODO: Support pre GB?
         if (Build.VERSION.SDK_INT >= 9)
@@ -379,16 +373,16 @@ public class Ion {
      * Get or put an item from the cache
      * @return
      */
-    public DiskLruCacheStore cache() {
-        return new DiskLruCacheStore(this, responseCache.getDiskLruCache());
+    public FileCacheStore cache() {
+        return new FileCacheStore(this, responseCache.getFileCache());
     }
 
     /**
      * Get or put an item in the persistent store
      * @return
      */
-    public DiskLruCacheStore store() {
-        return new DiskLruCacheStore(this, responseCache.getDiskLruCache());
+    public FileCacheStore store() {
+        return new FileCacheStore(this, storeCache);
     }
 
     public String getName() {

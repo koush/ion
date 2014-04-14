@@ -5,7 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.FileDataEmitter;
@@ -13,17 +12,15 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.libcore.IoUtils;
+import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.gif.GifAction;
 import com.koushikdutta.ion.gif.GifDecoder;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
@@ -67,7 +64,7 @@ public class FileLoader extends SimpleLoader {
                             }
                         });
                         decoder.run();
-                        IoUtils.closeQuietly(fin);
+                        StreamUtility.closeQuietly(fin);
                         if (decoder.getFrameCount() == 0)
                             throw new Exception("failed to load gif");
                         bitmaps = new Bitmap[decoder.getFrameCount()];

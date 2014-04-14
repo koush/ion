@@ -8,28 +8,29 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
-import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.async.parser.StringParser;
+import com.koushikdutta.async.stream.FileDataSink;
 import com.koushikdutta.async.stream.InputStreamDataEmitter;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 
 import org.w3c.dom.Document;
 
-import java.io.IOException;
+import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 /**
  * Created by koush on 11/17/13.
  */
-public class DiskLruCacheStore {
+public class FileCacheStore {
     Ion ion;
-    DiskLruCache cache;
-    DiskLruCacheStore(Ion ion, DiskLruCache cache) {
+    FileCache cache;
+    FileCacheStore(Ion ion, FileCache cache) {
         this.ion = ion;
         this.cache = cache;
     }
@@ -39,56 +40,20 @@ public class DiskLruCacheStore {
         Ion.getIoExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                final DiskLruCache.Editor editor;
-                try {
-                    final String key = ResponseCacheMiddleware.toKeyString("ion-store:" + rawKey);
-                    editor = cache.edit(key);
-                }
-                catch (Exception e) {
-                    ret.setComplete(e);
-                    return;
-                }
-                final OutputStream out;
-                try {
-                    out = editor.newOutputStream(0);
-                    for (int i = 1; i < cache.getValueCount(); i++) {
-                        editor.newOutputStream(i).close();
-                    }
-                }
-                catch (Exception e) {
-                    try {
-                        editor.abort();
-                    }
-                    catch (Exception ex) {
-                    }
-                    ret.setComplete(e);
-                    return;
-                }
-
-                if (editor == null) {
-                    ret.setComplete(new Exception("unable to edit"));
-                    return;
-                }
-                parser.write(new OutputStreamDataSink(ion.getServer(), out), value, new CompletedCallback() {
+                final String key = FileCache.toKeyString("ion-store:", rawKey);
+                final File file = cache.getTempFile();
+                final FileDataSink sink = new FileDataSink(ion.getServer(), file);
+                parser.write(sink, value, new CompletedCallback() {
                     @Override
                     public void onCompleted(Exception ex) {
-                        if (ex == null) {
-                            try {
-                                out.close();
-                                editor.commit();
-                                ret.setComplete(value);
-                                return;
-                            }
-                            catch (Exception e) {
-                                ex = e;
-                            }
+                        sink.close();
+                        if (ex != null) {
+                            file.delete();
+                            ret.setComplete(ex);
+                            return;
                         }
-                        try {
-                            editor.abort();
-                        }
-                        catch (Exception e) {
-                        }
-                        ret.setComplete(ex);
+                        cache.commitTempFiles(key, file);
+                        ret.setComplete(value);
                     }
                 });
             }
@@ -137,24 +102,15 @@ public class DiskLruCacheStore {
             @Override
             public void run() {
                 try {
-                    final String key = ResponseCacheMiddleware.toKeyString("ion-store:" + rawKey);
-                    final DiskLruCache.Snapshot snapshot = cache.get(key);
-                    if (snapshot == null) {
+                    final String key = FileCache.toKeyString("ion-store:", rawKey);
+                    final File file = cache.getFile(key);
+                    if (!file.exists()) {
                         ret.setComplete((T)null);
                         return;
                     }
-                    InputStream inputStream = snapshot.getInputStream(0);
-                    InputStreamDataEmitter emitter = new InputStreamDataEmitter(ion.getServer(), inputStream);
-                    parser.parse(emitter).setCallback(new FutureCallback<T>() {
-                        @Override
-                        public void onCompleted(Exception e, T result) {
-                            snapshot.close();
-                            if (e != null)
-                                ret.setComplete(e);
-                            else
-                                ret.setComplete(result);
-                        }
-                    });
+                    ion.build(ion.getContext(), file)
+                    .as(parser)
+                    .setCallback(ret.getCompletionCallback());
                 }
                 catch (Exception e) {
                 }
