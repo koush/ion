@@ -373,16 +373,16 @@ public class Ion {
      * Get or put an item from the cache
      * @return
      */
-    public FileCacheStore cache() {
-        return new FileCacheStore(this, responseCache.getFileCache());
+    public FileCacheStore cache(String key) {
+        return new FileCacheStore(this, responseCache.getFileCache(), key);
     }
 
     /**
      * Get or put an item in the persistent store
      * @return
      */
-    public FileCacheStore store() {
-        return new FileCacheStore(this, storeCache);
+    public FileCacheStore store(String key) {
+        return new FileCacheStore(this, storeCache, key);
     }
 
     public String getName() {
