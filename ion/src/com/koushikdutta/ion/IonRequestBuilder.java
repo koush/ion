@@ -956,8 +956,9 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public Builders.Any.B setHeader(NameValuePair... header) {
+        RawHeaders headers = getHeaders();
         for (NameValuePair h: header) {
-            this.headers.set(h.getName(), h.getValue());
+            headers.set(h.getName(), h.getValue());
         }
         return this;
     }
