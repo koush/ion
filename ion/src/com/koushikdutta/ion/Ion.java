@@ -1,15 +1,7 @@
 package com.koushikdutta.ion;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.WeakHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import android.annotation.TargetApi;
+import android.app.Fragment;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -42,6 +34,16 @@ import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
 import com.koushikdutta.ion.loader.VideoLoader;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Created by koush on 5/21/13.
  */
@@ -54,22 +56,32 @@ public class Ion {
 
     /**
      * Get the default Ion object instance and begin building a request
-     * with the given uri
-     * @param context
-     * @param uri
-     * @return
-     */
-    public static Builders.Any.B with(Context context, String uri) {
-        return getDefault(context).build(context, uri);
-    }
-
-    /**
-     * Get the default Ion object instance and begin building a request
      * @param context
      * @return
      */
     public static LoadBuilder<Builders.Any.B> with(Context context) {
         return getDefault(context).build(context);
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    public static LoadBuilder<Builders.Any.B> with(Fragment fragment) {
+        return getDefault(fragment.getActivity()).build(fragment);
+    }
+
+    public static LoadBuilder<Builders.Any.B> with(android.support.v4.app.Fragment fragment) {
+        return getDefault(fragment.getActivity()).build(fragment);
+    }
+
+    /**
+     * Get the default Ion object instance and begin building a request
+     * with the given uri
+     * @param context
+     * @param uri
+     * @return
+     */
+    @Deprecated
+    public static Builders.Any.B with(Context context, String uri) {
+        return getDefault(context).build(context, uri);
     }
 
     /**
@@ -79,6 +91,7 @@ public class Ion {
      * @param file
      * @return
      */
+    @Deprecated
     public static FutureBuilder with(Context context, File file) {
         return getDefault(context).build(context, file);
     }
@@ -98,6 +111,8 @@ public class Ion {
      * @return
      */
     public static Ion getInstance(Context context, String name) {
+        if (context == null)
+            throw new NullPointerException("Can not pass null context in to retrieve ion instance");
         Ion instance = instances.get(name);
         if (instance == null)
             instances.put(name, instance = new Ion(context, name));
@@ -188,8 +203,9 @@ public class Ion {
      * @param file
      * @return
      */
+    @Deprecated
     public FutureBuilder build(Context context, File file) {
-        return new IonRequestBuilder(context, this).load(file);
+        return new IonRequestBuilder(ContextReference.fromContext(context), this).load(file);
     }
 
     /**
@@ -198,8 +214,9 @@ public class Ion {
      * @param uri
      * @return
      */
+    @Deprecated
     public Builders.Any.B build(Context context, String uri) {
-        return new IonRequestBuilder(context, this).load(uri);
+        return new IonRequestBuilder(ContextReference.fromContext(context), this).load(uri);
     }
 
     /**
@@ -208,7 +225,15 @@ public class Ion {
      * @return
      */
     public LoadBuilder<Builders.Any.B> build(Context context) {
-        return new IonRequestBuilder(context, this);
+        return new IonRequestBuilder(ContextReference.fromContext(context), this);
+    }
+
+    public LoadBuilder<Builders.Any.B> build(Fragment fragment) {
+        return new IonRequestBuilder(new ContextReference.FragmentContextReference(fragment), this);
+    }
+
+    public LoadBuilder<Builders.Any.B> build(android.support.v4.app.Fragment fragment) {
+        return new IonRequestBuilder(new ContextReference.SupportFragmentContextReference(fragment), this);
     }
 
     /**

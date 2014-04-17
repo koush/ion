@@ -4,10 +4,10 @@ import android.graphics.Point;
 
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.util.ArrayList;
+import java.util.concurrent.CancellationException;
 
 abstract class BitmapCallback {
     String key;
@@ -37,10 +37,11 @@ abstract class BitmapCallback {
             public void run() {
                 BitmapInfo result = info;
                 if (result == null) {
-                    // cache errors
+                    // cache errors, unless they were cancellation exceptions
                     result = new BitmapInfo(key, null, null, new Point());
                     result.exception = e;
-                    ion.getBitmapCache().put(result);
+                    if (!(e instanceof CancellationException))
+                        ion.getBitmapCache().put(result);
                 } else if (put()) {
                     ion.getBitmapCache().put(result);
                 }

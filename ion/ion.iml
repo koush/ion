@@ -33,6 +33,7 @@
       </library>
     </orderEntry>
     <orderEntry type="module" module-name="AndroidAsync" exported="" />
+    <orderEntry type="module" module-name="v4" exported="" />
   </component>
 </module>
 

@@ -70,7 +70,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -80,14 +79,14 @@ import java.util.Map;
  */
 class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.M, Builders.Any.U, LoadBuilder<Builders.Any.B> {
     Ion ion;
-    WeakReference<Context> context;
+    ContextReference contextReference;
     Handler handler = Ion.mainHandler;
     String method = AsyncHttpGet.METHOD;
     String uri;
 
-    public IonRequestBuilder(Context context, Ion ion) {
+    public IonRequestBuilder(ContextReference contextReference, Ion ion) {
         this.ion = ion;
-        this.context = new WeakReference<Context>(context);
+        this.contextReference = contextReference;
     }
 
     @Override
@@ -233,13 +232,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return false;
     }
 
-    static boolean checkContext(WeakReference<Context> contextWeakReference) {
-        Context context = contextWeakReference.get();
-        if (context == null)
-            return false;
-        return checkContext(context);
-    }
-
     static boolean checkContext(Context context) {
         if (context instanceof Activity) {
             Activity activity = (Activity)context;
@@ -255,17 +247,14 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return true;
     }
 
-    private boolean checkContext() {
-        return checkContext(context);
-    }
-
     private <T> void postExecute(final EmitterTransform<T> future, final Exception ex, final T value) {
         final Runnable runner = new Runnable() {
             @Override
             public void run() {
                 // check if the context is still alive...
-                if (!checkContext()) {
-                    future.initialRequest.logd("context has died");
+                String deadReason = contextReference.isAlive();
+                if (deadReason != null) {
+                    future.initialRequest.logd("context has died: " + deadReason);
                     return;
                 }
 
@@ -421,7 +410,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     <T> Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
         // first attempt to resolve the url
         for (Loader loader: ion.loaders) {
-            Future<AsyncHttpRequest> resolved = loader.resolve(context.get(), ion, request);
+            Future<AsyncHttpRequest> resolved = loader.resolve(contextReference.getContext(), ion, request);
             if (resolved != null)
                 return resolved;
 
@@ -467,7 +456,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
         public EmitterTransform(Runnable cancelCallback) {
             this.cancelCallback = cancelCallback;
-            ion.addFutureInFlight(this, context.get());
+            ion.addFutureInFlight(this, contextReference.getContext());
             if (groups == null)
                 return;
             for (WeakReference<Object> ref: groups) {
@@ -527,7 +516,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 public void onData(final int totalBytesRead) {
                     assert Thread.currentThread() != Looper.getMainLooper().getThread();
                     // if the requesting context dies during the transfer... cancel
-                    if (!checkContext()) {
+                    String deadReason = contextReference.isAlive();
+                    if (deadReason != null) {
                         initialRequest.logd("context has died, cancelling");
                         cancel();
                         return;

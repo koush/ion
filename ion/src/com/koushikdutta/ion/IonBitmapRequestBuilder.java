@@ -18,7 +18,6 @@ import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 /**
@@ -38,7 +37,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     IonRequestBuilder builder;
     Ion ion;
-    WeakReference<ImageView> imageViewPostRef;
+    ContextReference.ImageViewContextReference imageViewPostRef;
     ArrayList<Transform> transforms;
     Drawable placeholderDrawable;
     int placeholderResource;
@@ -100,7 +99,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     private IonRequestBuilder ensureBuilder() {
         if (builder == null)
-            builder = new IonRequestBuilder(imageViewPostRef.get().getContext(), ion);
+            builder = new IonRequestBuilder(imageViewPostRef, ion);
         return builder;
     }
 
@@ -119,7 +118,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
     }
 
     IonBitmapRequestBuilder withImageView(ImageView imageView) {
-        imageViewPostRef = new WeakReference<ImageView>(imageView);
+        imageViewPostRef = new ContextReference.ImageViewContextReference(imageView);
         return this;
     }
 
@@ -293,7 +292,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
         bitmapFetcher.execute();
         // we're loading, so let's register for the result.
-        BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.context);
+        BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.contextReference);
         ion.bitmapsPending.add(bitmapFetcher.bitmapKey, ret);
         return ret;
     }

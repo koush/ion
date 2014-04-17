@@ -48,7 +48,7 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
         boolean put = !hasTransforms;
 
         for (Loader loader: ion.configure().getLoaders()) {
-            Future<BitmapInfo> future = loader.loadBitmap(builder.context.get(), ion, downloadKey, uri, resizeWidth, resizeHeight, animateGif);
+            Future<BitmapInfo> future = loader.loadBitmap(builder.contextReference.getContext(), ion, downloadKey, uri, resizeWidth, resizeHeight, animateGif);
             if (future != null) {
                 final BitmapCallback callback = new LoadBitmapBase(ion, downloadKey, put);
                 future.setCallback(new FutureCallback<BitmapInfo>() {
