@@ -57,7 +57,8 @@ at 30+ ion unit tests in the [ion-test](https://github.com/koush/ion/tree/master
 #### Get JSON
 
 ```java
-Ion.with(context, "http://example.com/thing.json")
+Ion.with(context)
+.load("http://example.com/thing.json")
 .asJsonObject()
 .setCallback(new FutureCallback<JsonObject>() {
    @Override
@@ -73,7 +74,8 @@ Ion.with(context, "http://example.com/thing.json")
 JsonObject json = new JsonObject();
 json.addProperty("foo", "bar");
 
-Ion.with(context, "http://example.com/post")
+Ion.with(context)
+.load("http://example.com/post")
 .setJsonObjectBody(json)
 .asJsonObject()
 .setCallback(new FutureCallback<JsonObject>() {
@@ -108,7 +110,8 @@ Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
 #### Download a File with a progress bar
 
 ```java
-Ion.with(context, "http://example.com/really-big-file.zip")
+Ion.with(context)
+.load("http://example.com/really-big-file.zip")
 // have a ProgressBar get updated automatically with the percent
 .progressBar(progressBar)
 // and a ProgressDialog
@@ -132,7 +135,8 @@ Ion.with(context, "http://example.com/really-big-file.zip")
 #### Setting Headers
 
 ```java
-Ion.with(context, "http://example.com/test.txt")
+Ion.with(context)
+.load("http://example.com/test.txt")
 // set the header
 .setHeader("foo", "bar")
 .asString()
@@ -143,7 +147,8 @@ Ion.with(context, "http://example.com/test.txt")
 
 ```java
 // This is the "long" way to do build an ImageView request... it allows you to set headers, etc.
-Ion.with(context, "http://example.com/image.png")
+Ion.with(context)
+.load("http://example.com/image.png")
 .withBitmap()
 .placeholder(R.drawable.placeholder_image)
 .error(R.drawable.error_image)
@@ -183,18 +188,21 @@ public interface Future<T> extends Cancellable, java.util.concurrent.Future<T> {
     public Future<T> setCallback(FutureCallback<T> callback);
 }
 
-Future<String> string = Ion.with(context, "http://example.com/string.txt")
-    .asString();
+Future<String> string = Ion.with(context)
+.load("http://example.com/string.txt")
+.asString();
 
-Future<JsonObject> json = Ion.with(context, "http://example.com/json.json")
-    .asJsonObject();
+Future<JsonObject> json = Ion.with(context)
+.load("http://example.com/json.json")
+.asJsonObject();
 
-Future<File> file = Ion.with(context, "http://example.com/file.zip")
-    .write(new File("/sdcard/file.zip"));
+Future<File> file = Ion.with(context)
+.load("http://example.com/file.zip")
+.write(new File("/sdcard/file.zip"));
 
-Future<Bitmap> bitmap = Ion.with(context, "http://example.com/image.png")
-    .intoImageView(imageView);
-
+Future<Bitmap> bitmap = Ion.with(context)
+.load("http://example.com/image.png")
+.intoImageView(imageView);
 ```
 
 #### Cancelling Requests
@@ -212,7 +220,8 @@ Though you should try to use callbacks for handling requests whenever possible, 
 All Futures have a Future<T>.get() method that waits for the result of the request, by blocking if necessary.
 
 ```java
-JsonObject json = Ion.with(context, "http://example.com/thing.json").asJsonObject().get();
+JsonObject json = Ion.with(context)
+.load("http://example.com/thing.json").asJsonObject().get();
 ```
 
 #### Seamlessly use your own Java classes with [Gson](https://code.google.com/p/google-gson/)
@@ -225,7 +234,8 @@ public static class Tweet {
 }
 
 public void getTweets() throws Exception {
-    Ion.with(context, "http://example.com/api/tweets")
+    Ion.with(context)
+    .load("http://example.com/api/tweets")
     .as(new TypeToken<List<Tweet>>(){})
     .setCallback(new FutureCallback<List<Tweet>>() {
        @Override
@@ -249,7 +259,8 @@ Ion.getDefault(getContext()).configure().setLogging("MyLogs", Log.DEBUG);
 Or to enable it on just a single request:
 
 ```java
-Ion.with(context, "http://example.com/thing.json")
+Ion.with(context)
+.load("http://example.com/thing.json")
 .setLogging("MyLogs", Log.DEBUG)
 .asJsonObject();
 ```
@@ -320,7 +331,8 @@ Proxy server settings can be enabled all Ion requests, or on a per request basis
 Ion.getDefault(context).configure().proxy("mycomputer", 8888);
 
 // or... to proxy specific requests
-Ion.with(context, "http://example.com/proxied.html")
+Ion.with(context)
+.load("http://example.com/proxied.html")
 .proxy("mycomputer", 8888)
 .getString();
 ```
