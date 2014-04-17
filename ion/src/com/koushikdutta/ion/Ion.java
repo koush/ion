@@ -422,12 +422,20 @@ public class Ion {
         return new FileCacheStore(this, responseCache.getFileCache(), key);
     }
 
+    public FileCache getCache() {
+        return responseCache.getFileCache();
+    }
+
     /**
      * Get or put an item in the persistent store
      * @return
      */
     public FileCacheStore store(String key) {
         return new FileCacheStore(this, storeCache, key);
+    }
+
+    public FileCache getStore() {
+        return storeCache;
     }
 
     public String getName() {

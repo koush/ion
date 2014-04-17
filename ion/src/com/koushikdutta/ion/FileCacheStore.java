@@ -17,6 +17,7 @@ import com.koushikdutta.ion.gson.GsonSerializer;
 import org.w3c.dom.Document;
 
 import java.io.File;
+import java.util.Set;
 
 /**
  * Created by koush on 11/17/13.
@@ -36,7 +37,7 @@ public class FileCacheStore {
         Ion.getIoExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                final String key = FileCache.toKeyString("ion-store:", rawKey);
+                final String key = computeKey();
                 final File file = cache.getTempFile();
                 final FileDataSink sink = new FileDataSink(ion.getServer(), file);
                 parser.write(sink, value, new CompletedCallback() {
@@ -98,7 +99,7 @@ public class FileCacheStore {
             @Override
             public void run() {
                 try {
-                    final String key = FileCache.toKeyString("ion-store:", rawKey);
+                    final String key = computeKey();
                     final File file = cache.getFile(key);
                     if (!file.exists()) {
                         ret.setComplete((T)null);
@@ -119,7 +120,7 @@ public class FileCacheStore {
 
     private <T> T get(final AsyncParser<T> parser) {
         try {
-            final String key = FileCache.toKeyString("ion-store:", rawKey);
+            final String key = computeKey();
             final File file = cache.getFile(key);
             return ion.build(ion.getContext(), file)
             .as(parser)
@@ -178,8 +179,12 @@ public class FileCacheStore {
         return get(new GsonSerializer<T>(ion.configure().getGson(), token));
     }
 
+    private String computeKey() {
+        return rawKey.replace(":", "_");
+    }
+
     public void remove() {
-        final String key = FileCache.toKeyString("ion-store:", rawKey);
+        final String key = computeKey();
         cache.remove(key);
     }
 }
