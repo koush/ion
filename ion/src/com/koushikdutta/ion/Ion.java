@@ -63,11 +63,21 @@ public class Ion {
         return getDefault(context).build(context);
     }
 
+    /**
+     * the default Ion object instance and begin building a request
+     * @param fragment
+     * @return
+     */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     public static LoadBuilder<Builders.Any.B> with(Fragment fragment) {
         return getDefault(fragment.getActivity()).build(fragment);
     }
 
+    /**
+     * the default Ion object instance and begin building a request
+     * @param fragment
+     * @return
+     */
     public static LoadBuilder<Builders.Any.B> with(android.support.v4.app.Fragment fragment) {
         return getDefault(fragment.getActivity()).build(fragment);
     }
@@ -228,10 +238,20 @@ public class Ion {
         return new IonRequestBuilder(ContextReference.fromContext(context), this);
     }
 
+    /**
+     * Begin building a request
+     * @param fragment
+     * @return
+     */
     public LoadBuilder<Builders.Any.B> build(Fragment fragment) {
         return new IonRequestBuilder(new ContextReference.FragmentContextReference(fragment), this);
     }
 
+    /**
+     * Begin building a request
+     * @param fragment
+     * @return
+     */
     public LoadBuilder<Builders.Any.B> build(android.support.v4.app.Fragment fragment) {
         return new IonRequestBuilder(new ContextReference.SupportFragmentContextReference(fragment), this);
     }
