@@ -68,7 +68,7 @@ class IonDrawable extends Drawable {
     // dont let it hold strong references to anything.
     static class IonDrawableCallback implements FutureCallback<BitmapInfo> {
         private WeakReference<IonDrawable> ionDrawableRef;
-        private WeakReference<ImageView> imageViewRef;
+        private ContextReference.ImageViewContextReference imageViewRef;
         private String bitmapKey;
         private SimpleFuture<ImageView> imageViewFuture = new SimpleFuture<ImageView>();
         private Animation inAnimation;
@@ -77,7 +77,7 @@ class IonDrawable extends Drawable {
 
         public IonDrawableCallback(IonDrawable drawable, ImageView imageView) {
             ionDrawableRef = new WeakReference<IonDrawable>(drawable);
-            imageViewRef = new WeakReference<ImageView>(imageView);
+            imageViewRef = new ContextReference.ImageViewContextReference(imageView);
         }
 
         @Override
@@ -105,8 +105,8 @@ class IonDrawable extends Drawable {
             imageView.setImageDrawable(drawable);
             IonBitmapRequestBuilder.doAnimation(imageView, inAnimation, inAnimationResource);
 
-            if (!IonRequestBuilder.checkContext(imageView.getContext())) {
-                imageViewFuture.cancel();
+            if (null != imageViewRef.isAlive()) {
+                imageViewFuture.cancelSilently();
                 return;
             }
 

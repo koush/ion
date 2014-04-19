@@ -219,34 +219,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return this;
     }
 
-    private static boolean isServiceRunning(Service candidate) {
-        ActivityManager manager = (ActivityManager)candidate.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningServiceInfo> services = manager.getRunningServices(Integer.MAX_VALUE);
-        if (services == null)
-            return false;
-        for (ActivityManager.RunningServiceInfo service: services) {
-            if (candidate.getClass().getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    static boolean checkContext(Context context) {
-        if (context instanceof Activity) {
-            Activity activity = (Activity)context;
-            if (activity.isFinishing())
-                return false;
-        }
-        else if (context instanceof Service) {
-            Service service = (Service)context;
-            if (!isServiceRunning(service))
-                return false;
-        }
-
-        return true;
-    }
-
     private <T> void postExecute(final EmitterTransform<T> future, final Exception ex, final T value) {
         final Runnable runner = new Runnable() {
             @Override
@@ -255,6 +227,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 String deadReason = contextReference.isAlive();
                 if (deadReason != null) {
                     future.initialRequest.logd("context has died: " + deadReason);
+                    future.cancelSilently();
                     return;
                 }
 
@@ -519,7 +492,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                     String deadReason = contextReference.isAlive();
                     if (deadReason != null) {
                         initialRequest.logd("context has died, cancelling");
-                        cancel();
+                        cancelSilently();
                         return;
                     }
 
