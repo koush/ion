@@ -38,7 +38,8 @@ public class StoreTests extends AndroidTestCase {
 
         Ion.getDefault(getContext())
         .store("foo")
-        .putJsonObject(json);
+        .putJsonObject(json)
+        .get(1000, TimeUnit.MILLISECONDS);
 
         JsonObject result = Ion.getDefault(getContext())
         .store("foo")
