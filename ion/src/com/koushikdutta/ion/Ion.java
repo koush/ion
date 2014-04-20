@@ -161,7 +161,7 @@ public class Ion {
     IonBitmapRequestBuilder bitmapBuilder = new IonBitmapRequestBuilder(this);
 
     private Ion(Context context, String name) {
-        httpClient = new AsyncHttpClient(new AsyncServer());
+        httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         this.context = context = context.getApplicationContext();
         this.name = name;
 
