@@ -1,16 +1,13 @@
 package com.koushikdutta.ion;
 
-import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.ProgressDialog;
-import android.app.Service;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
@@ -85,6 +82,9 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     String uri;
 
     public IonRequestBuilder(ContextReference contextReference, Ion ion) {
+        String alive = contextReference.isAlive();
+        if (null != alive)
+            Log.w("Ion", "Building request with dead context: " + alive);
         this.ion = ion;
         this.contextReference = contextReference;
     }

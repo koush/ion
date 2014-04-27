@@ -105,6 +105,7 @@ public class Ion {
     public static FutureBuilder with(Context context, File file) {
         return getDefault(context).build(context, file);
     }
+
     /**
      * Get the default Ion instance
      * @param context
@@ -135,8 +136,7 @@ public class Ion {
      * @return
      */
     public static Builders.IV.F<? extends Builders.IV.F<?>> with(ImageView imageView) {
-        Ion ion = getDefault(imageView.getContext());
-        return ion.build(imageView);
+        return getDefault(imageView.getContext()).build(imageView);
     }
 
     AsyncHttpClient httpClient;

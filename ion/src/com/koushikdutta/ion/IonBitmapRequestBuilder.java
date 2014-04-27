@@ -99,7 +99,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     private IonRequestBuilder ensureBuilder() {
         if (builder == null)
-            builder = new IonRequestBuilder(imageViewPostRef, ion);
+            builder = new IonRequestBuilder(ContextReference.fromContext(imageViewPostRef.getContext().getApplicationContext()), ion);
         return builder;
     }
 
