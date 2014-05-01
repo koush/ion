@@ -96,7 +96,8 @@ public class Twitter extends Activity {
 
     String accessToken;
     private void getCredentials() {
-        Ion.with(this, "https://api.twitter.com/oauth2/token")
+        Ion.with(this)
+        .load("https://api.twitter.com/oauth2/token")
         // embedding twitter api key and secret is a bad idea, but this isn't a real twitter app :)
         .basicAuthentication("e4LrcHB55R3WamRYHpNfA", "MIABn1DU5db3Aj0xXzhthsf4aUKMAdoWJTMxJJcY")
         .setBodyParameter("grant_type", "client_credentials")
@@ -120,7 +121,7 @@ public class Twitter extends Activity {
             return;
 
         // load the tweets
-        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=favstar50&count=20";
+        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=BestAt&count=20";
         if (tweetAdapter.getCount() > 0) {
             // load from the "last" id
             JsonObject last = tweetAdapter.getItem(tweetAdapter.getCount() - 1);

@@ -5,8 +5,8 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.parser.ByteBufferListParser;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.loader.MediaFile;
@@ -48,7 +48,7 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
         boolean put = !hasTransforms;
 
         for (Loader loader: ion.configure().getLoaders()) {
-            Future<BitmapInfo> future = loader.loadBitmap(ion, downloadKey, uri, resizeWidth, resizeHeight);
+            Future<BitmapInfo> future = loader.loadBitmap(builder.contextReference.getContext(), ion, downloadKey, uri, resizeWidth, resizeHeight, animateGif);
             if (future != null) {
                 final BitmapCallback callback = new LoadBitmapBase(ion, downloadKey, put);
                 future.setCallback(new FutureCallback<BitmapInfo>() {
@@ -107,11 +107,11 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
     public void execute() {
         final Ion ion = builder.ion;
 
-        // bitmaps that were transformed are put into the DiskLruCache to prevent
+        // bitmaps that were transformed are put into the FileCache to prevent
         // subsequent retransformation. See if we can retrieve the bitmap from the disk cache.
         // See TransformBitmap for where the cache is populated.
-        DiskLruCache diskLruCache = ion.responseCache.getDiskLruCache();
-        if (!builder.noCache && hasTransforms && diskLruCache.containsKey(bitmapKey) && !deepZoom) {
+        FileCache fileCache = ion.responseCache.getFileCache();
+        if (!builder.noCache && hasTransforms && fileCache.exists(bitmapKey) && !deepZoom) {
             TransformBitmap.getBitmapSnapshot(ion, bitmapKey);
             return;
         }
@@ -137,9 +137,9 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
             }
             else {
 //                System.out.println("downloading file for deepZoom");
-                File file = diskLruCache.getFile(downloadKey, 0);
+                File file = fileCache.getTempFile();
                 IonRequestBuilder.EmitterTransform<File> emitterTransform = builder.write(file);
-                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, downloadKey, animateGif, emitterTransform, diskLruCache) {
+                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, downloadKey, animateGif, emitterTransform, fileCache) {
                     @Override
                     public void onCompleted(Exception e, File file) {
                         super.onCompleted(e, file);

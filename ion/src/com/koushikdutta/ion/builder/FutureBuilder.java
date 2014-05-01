@@ -1,7 +1,5 @@
 package com.koushikdutta.ion.builder;
 
-import android.util.Xml;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
@@ -17,7 +15,7 @@ import java.io.OutputStream;
 /**
 * Created by koush on 5/30/13.
 */ // get the result, transformed to how you want it
-public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuilder {
+public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuilder, GsonFutureBuilder {
     /**
      * Execute the request and get the result as a String
      * @return
@@ -31,18 +29,6 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @return
      */
     public ResponseFuture<InputStream> asInputStream();
-
-    /**
-     * Execute the request and get the result as a (Gson) JsonArray
-     * @return
-     */
-    public ResponseFuture<JsonArray> asJsonArray();
-
-    /**
-     * Execute the request and get the result as a (Gson) JsonObject
-     * @return
-     */
-    public ResponseFuture<JsonObject> asJsonObject();
 
     /**
      * Execute the request and get the result as an XML Document
@@ -81,27 +67,18 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
     public ResponseFuture<File> write(File file);
 
     /**
-     * Deserialize the JSON request into a Java object of the given class using Gson.
-     * @param <T>
-     * @return
-     */
-    public <T> ResponseFuture<T> as(Class<T> clazz);
-
-    /**
-     * Deserialize the JSON request into a Java object of the given class using Gson.
-     * @param token
-     * @param <T>
-     * @return
-     */
-    public <T> ResponseFuture<T> as(TypeToken<T> token);
-
-    /**
      * Deserialize a response into an object given a custom parser.
      * @param parser
      * @param <T>
      * @return
      */
     public <T> ResponseFuture<T> as(AsyncParser<T> parser);
+
+    /**
+     * Execute the request and get the result as a byte array
+     * @return
+     */
+    public ResponseFuture<byte[]> asByteArray();
 
     /**
      * Add this request to a group specified by groupKey. This key can be used in a later call to

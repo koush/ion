@@ -2,18 +2,14 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.Point;
-import android.util.Log;
 
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.http.ResponseCacheMiddleware;
-import com.koushikdutta.async.http.libcore.DiskLruCache;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInfo> {
@@ -33,7 +29,7 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                 }
 
                 try {
-                    File file = ion.responseCache.getDiskLruCache().getFile(transformKey, 0);
+                    File file = ion.responseCache.getFileCache().getFile(transformKey);
                     Bitmap bitmap = ion.getBitmapCache().loadBitmap(file, null);
                     if (bitmap == null)
                         throw new Exception("Bitmap failed to load");
@@ -48,7 +44,7 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                 catch (Exception e) {
                     callback.report(e, null);
                     try {
-                        ion.responseCache.getDiskLruCache().remove(transformKey);
+                        ion.responseCache.getFileCache().remove(transformKey);
                     } catch (Exception ex) {
                     }
                 }
@@ -88,8 +84,9 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                     Point size = null;
                     Bitmap bitmaps[] = new Bitmap[result.bitmaps.length];
                     for (int i = 0; i < result.bitmaps.length; i++) {
+                        bitmaps[i] = result.bitmaps[i];
                         for (Transform transform : transforms) {
-                            Bitmap bitmap = transform.transform(result.bitmaps[i]);
+                            Bitmap bitmap = transform.transform(bitmaps[i]);
                             if (bitmap == null)
                                 throw new Exception("failed to transform bitmap");
                             bitmaps[i] = bitmap;
@@ -115,27 +112,21 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                 // but don't persist gifs...
                 if (info.bitmaps.length > 1)
                     return;
+                FileCache cache = ion.responseCache.getFileCache();
+                if (cache == null)
+                    return;
+                File tempFile = cache.getTempFile();
                 try {
-                    DiskLruCache cache = ion.responseCache.getDiskLruCache();
-                    if (cache == null)
-                        return;
-                    DiskLruCache.Editor editor = cache.edit(key);
-                    if (editor == null)
-                        return;
-                    try {
-                        for (int i = 1; i < ResponseCacheMiddleware.ENTRY_COUNT; i++) {
-                            editor.set(i, key);
-                        }
-                        OutputStream out = editor.newOutputStream(0);
-                        Bitmap.CompressFormat format = info.bitmaps[0].hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
-                        info.bitmaps[0].compress(format, 100, out);
-                        out.close();
-                        editor.commit();
-                    } catch (Exception ex) {
-                        editor.abort();
-                    }
+                    FileOutputStream out = new FileOutputStream(tempFile);
+                    Bitmap.CompressFormat format = info.bitmaps[0].hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
+                    info.bitmaps[0].compress(format, 100, out);
+                    out.close();
+                    cache.commitTempFiles(key, tempFile);
                 }
-                catch (Exception e) {
+                catch (Exception ex) {
+                }
+                finally {
+                    tempFile.delete();
                 }
             }
         });

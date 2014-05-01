@@ -1,15 +1,13 @@
 package com.koushikdutta.ion;
 
-import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.ProgressDialog;
-import android.app.Service;
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 
@@ -17,6 +15,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.DataSink;
 import com.koushikdutta.async.DataTrackingEmitter;
@@ -43,6 +42,7 @@ import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.parser.AsyncParser;
+import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.FileDataSink;
@@ -61,6 +61,7 @@ import com.koushikdutta.ion.gson.PojoBody;
 import org.apache.http.NameValuePair;
 import org.w3c.dom.Document;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -75,14 +76,17 @@ import java.util.Map;
  */
 class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.M, Builders.Any.U, LoadBuilder<Builders.Any.B> {
     Ion ion;
-    WeakReference<Context> context;
+    ContextReference contextReference;
     Handler handler = Ion.mainHandler;
     String method = AsyncHttpGet.METHOD;
     String uri;
 
-    public IonRequestBuilder(Context context, Ion ion) {
+    public IonRequestBuilder(ContextReference contextReference, Ion ion) {
+        String alive = contextReference.isAlive();
+        if (null != alive)
+            Log.w("Ion", "Building request with dead context: " + alive);
         this.ion = ion;
-        this.context = new WeakReference<Context>(context);
+        this.contextReference = contextReference;
     }
 
     @Override
@@ -92,6 +96,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     private IonRequestBuilder loadInternal(String method, String url) {
         this.method = method;
+        if (!TextUtils.isEmpty(url) && url.startsWith("/"))
+            url = new File(url).toURI().toString();
         this.uri = url;
         return this;
     }
@@ -114,18 +120,33 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder userAgent(String userAgent) {
+        if (TextUtils.isEmpty(userAgent))
+            return this;
         return setHeader("User-Agent", userAgent);
     }
 
     @Override
     public IonRequestBuilder setHeader(String name, String value) {
-        getHeaders().set(name, value);
+        if (value == null)
+            getHeaders().removeAll(name);
+        else
+            getHeaders().set(name, value);
         return this;
     }
 
     @Override
     public IonRequestBuilder addHeader(String name, String value) {
-        getHeaders().add(name, value);
+        if (value != null)
+            getHeaders().add(name, value);
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilder addHeaders(Map<String, List<String>> params) {
+        RawHeaders headers = getHeaders();
+        for (Map.Entry<String, List<String>> entry: params.entrySet()) {
+            headers.addAll(entry.getKey(), entry.getValue());
+        }
         return this;
     }
 
@@ -139,6 +160,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     Multimap query;
     @Override
     public IonRequestBuilder addQuery(String name, String value) {
+        if (value == null)
+            return this;
         if (query == null)
             query = new Multimap();
         query.add(name, value);
@@ -196,52 +219,15 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return this;
     }
 
-    private static boolean isServiceRunning(Service candidate) {
-        ActivityManager manager = (ActivityManager)candidate.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningServiceInfo> services = manager.getRunningServices(Integer.MAX_VALUE);
-        if (services == null)
-            return false;
-        for (ActivityManager.RunningServiceInfo service: services) {
-            if (candidate.getClass().getName().equals(service.service.getClassName())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    static boolean checkContext(WeakReference<Context> contextWeakReference) {
-        Context context = contextWeakReference.get();
-        if (context == null)
-            return false;
-        return checkContext(context);
-    }
-
-    static boolean checkContext(Context context) {
-        if (context instanceof Activity) {
-            Activity activity = (Activity)context;
-            if (activity.isFinishing())
-                return false;
-        }
-        else if (context instanceof Service) {
-            Service service = (Service)context;
-            if (!isServiceRunning(service))
-                return false;
-        }
-
-        return true;
-    }
-
-    private boolean checkContext() {
-        return checkContext(context);
-    }
-
     private <T> void postExecute(final EmitterTransform<T> future, final Exception ex, final T value) {
         final Runnable runner = new Runnable() {
             @Override
             public void run() {
                 // check if the context is still alive...
-                if (!checkContext()) {
-                    future.initialRequest.logd("context has died");
+                String deadReason = contextReference.isAlive();
+                if (deadReason != null) {
+                    future.initialRequest.logd("context has died: " + deadReason);
+                    future.cancelSilently();
                     return;
                 }
 
@@ -397,7 +383,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     <T> Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
         // first attempt to resolve the url
         for (Loader loader: ion.loaders) {
-            Future<AsyncHttpRequest> resolved = loader.resolve(ion, request);
+            Future<AsyncHttpRequest> resolved = loader.resolve(contextReference.getContext(), ion, request);
             if (resolved != null)
                 return resolved;
 
@@ -443,7 +429,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
         public EmitterTransform(Runnable cancelCallback) {
             this.cancelCallback = cancelCallback;
-            ion.addFutureInFlight(this, context.get());
+            ion.addFutureInFlight(this, contextReference.getContext());
             if (groups == null)
                 return;
             for (WeakReference<Object> ref: groups) {
@@ -503,9 +489,10 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 public void onData(final int totalBytesRead) {
                     assert Thread.currentThread() != Looper.getMainLooper().getThread();
                     // if the requesting context dies during the transfer... cancel
-                    if (!checkContext()) {
+                    String deadReason = contextReference.isAlive();
+                    if (deadReason != null) {
                         initialRequest.logd("context has died, cancelling");
-                        cancel();
+                        cancelSilently();
                         return;
                     }
 
@@ -661,6 +648,27 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public ResponseFuture<byte[]> asByteArray() {
+        return execute(new AsyncParser<byte[]>() {
+            @Override
+            public Future<byte[]> parse(DataEmitter emitter) {
+                return new ByteBufferListParser().parse(emitter)
+                .then(new TransformFuture<byte[], ByteBufferList>() {
+                    @Override
+                    protected void transform(ByteBufferList result) throws Exception {
+                        setComplete(result.getAllByteArray());
+                    }
+                });
+            }
+
+            @Override
+            public void write(DataSink sink, byte[] value, CompletedCallback completed) {
+                new ByteBufferListParser().write(sink, new ByteBufferList(value), completed);
+            }
+        });
+    }
+
+    @Override
     public ResponseFuture<InputStream> asInputStream() {
         return execute(new InputStreamParser());
     }
@@ -697,7 +705,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             bodyParameters = new Multimap();
             setBody(new UrlEncodedFormBody(bodyParameters));
         }
-        bodyParameters.add(name, value);
+        if (value != null)
+            bodyParameters.add(name, value);
         return this;
     }
 
@@ -741,7 +750,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             multipartBody = new MultipartFormDataBody();
             setBody(multipartBody);
         }
-        multipartBody.addStringPart(name, value);
+        if (value != null)
+            multipartBody.addStringPart(name, value);
         return this;
     }
 
@@ -749,7 +759,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     public IonRequestBuilder setMultipartParameters(Map<String, List<String>> params) {
         for (String key: params.keySet()) {
             for (String value: params.get(key)) {
-                setMultipartParameter(key, value);
+                if (value != null)
+                    setMultipartParameter(key, value);
             }
         }
         return this;
@@ -758,10 +769,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public IonBitmapRequestBuilder withBitmap() {
         return new IonBitmapRequestBuilder(this);
-    }
-
-    IonBitmapRequestBuilder withImageView(ImageView imageView) {
-        return new IonBitmapRequestBuilder(this).withImageView(imageView);
     }
 
     @Override
@@ -892,6 +899,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public Builders.Any.F setByteArrayBody(byte[] bytes) {
+        if (bytes != null)
+            setBody(new StreamBody(new ByteArrayInputStream(bytes), bytes.length));
+        return this;
+    }
+
+    @Override
     public Builders.Any.F setStreamBody(InputStream inputStream) {
         setBody(new StreamBody(inputStream, -1));
         return this;
@@ -905,8 +919,9 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public Builders.Any.B setHeader(NameValuePair... header) {
+        RawHeaders headers = getHeaders();
         for (NameValuePair h: header) {
-            this.headers.set(h.getName(), h.getValue());
+            headers.set(h.getName(), h.getValue());
         }
         return this;
     }

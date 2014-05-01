@@ -1,14 +1,7 @@
 package com.koushikdutta.ion;
 
-import java.io.File;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.WeakHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import android.annotation.TargetApi;
+import android.app.Fragment;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
@@ -21,13 +14,12 @@ import com.google.gson.Gson;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
-import com.koushikdutta.async.http.libcore.DiskLruCache;
 import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.util.FileCache;
+import com.koushikdutta.async.util.FileUtility;
 import com.koushikdutta.async.util.HashList;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
@@ -42,6 +34,16 @@ import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
 import com.koushikdutta.ion.loader.VideoLoader;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.WeakHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * Created by koush on 5/21/13.
  */
@@ -54,22 +56,42 @@ public class Ion {
 
     /**
      * Get the default Ion object instance and begin building a request
-     * with the given uri
-     * @param context
-     * @param uri
-     * @return
-     */
-    public static Builders.Any.B with(Context context, String uri) {
-        return getDefault(context).build(context, uri);
-    }
-
-    /**
-     * Get the default Ion object instance and begin building a request
      * @param context
      * @return
      */
     public static LoadBuilder<Builders.Any.B> with(Context context) {
         return getDefault(context).build(context);
+    }
+
+    /**
+     * the default Ion object instance and begin building a request
+     * @param fragment
+     * @return
+     */
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    public static LoadBuilder<Builders.Any.B> with(Fragment fragment) {
+        return getDefault(fragment.getActivity()).build(fragment);
+    }
+
+    /**
+     * the default Ion object instance and begin building a request
+     * @param fragment
+     * @return
+     */
+    public static LoadBuilder<Builders.Any.B> with(android.support.v4.app.Fragment fragment) {
+        return getDefault(fragment.getActivity()).build(fragment);
+    }
+
+    /**
+     * Get the default Ion object instance and begin building a request
+     * with the given uri
+     * @param context
+     * @param uri
+     * @return
+     */
+    @Deprecated
+    public static Builders.Any.B with(Context context, String uri) {
+        return getDefault(context).build(context, uri);
     }
 
     /**
@@ -79,9 +101,11 @@ public class Ion {
      * @param file
      * @return
      */
+    @Deprecated
     public static FutureBuilder with(Context context, File file) {
         return getDefault(context).build(context, file);
     }
+
     /**
      * Get the default Ion instance
      * @param context
@@ -98,6 +122,8 @@ public class Ion {
      * @return
      */
     public static Ion getInstance(Context context, String name) {
+        if (context == null)
+            throw new NullPointerException("Can not pass null context in to retrieve ion instance");
         Ion instance = instances.get(name);
         if (instance == null)
             instances.put(name, instance = new Ion(context, name));
@@ -109,15 +135,14 @@ public class Ion {
      * @param imageView
      * @return
      */
-    public static Builders.ImageView.F<? extends Builders.ImageView.F<?>> with(ImageView imageView) {
-        Ion ion = getDefault(imageView.getContext());
-        return ion.build(imageView);
+    public static Builders.IV.F<? extends Builders.IV.F<?>> with(ImageView imageView) {
+        return getDefault(imageView.getContext()).build(imageView);
     }
 
     AsyncHttpClient httpClient;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
-    DiskLruCache storeCache;
+    FileCache storeCache;
     HttpLoader httpLoader;
     ContentLoader contentLoader;
     VideoLoader videoLoader;
@@ -136,21 +161,26 @@ public class Ion {
     IonBitmapRequestBuilder bitmapBuilder = new IonBitmapRequestBuilder(this);
 
     private Ion(Context context, String name) {
-        httpClient = new AsyncHttpClient(new AsyncServer());
+        httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         this.context = context = context.getApplicationContext();
         this.name = name;
 
+        File ionCacheDir = new File(context.getCacheDir(), name);
         try {
-            responseCache = ResponseCacheMiddleware.addCache(httpClient, new File(context.getCacheDir(), name), 10L * 1024L * 1024L);
+            responseCache = ResponseCacheMiddleware.addCache(httpClient, ionCacheDir, 10L * 1024L * 1024L);
         }
-        catch (Exception e) {
-            IonLog.w("unable to set up response cache", e);
+        catch (IOException e) {
+            IonLog.w("unable to set up response cache, clearing", e);
+            FileUtility.deleteDirectory(ionCacheDir);
+            try {
+                responseCache = ResponseCacheMiddleware.addCache(httpClient, ionCacheDir, 10L * 1024L * 1024L);
+            }
+            catch (IOException ex) {
+                IonLog.w("unable to set up response cache, failing", e);
+            }
         }
-        try {
-            storeCache = DiskLruCache.open(new File(context.getFilesDir(), name), 1, 1, Long.MAX_VALUE);
-        }
-        catch (Exception e) {
-        }
+
+        storeCache = new FileCache(new File(context.getFilesDir(), name), Long.MAX_VALUE, false);
 
         // TODO: Support pre GB?
         if (Build.VERSION.SDK_INT >= 9)
@@ -183,8 +213,9 @@ public class Ion {
      * @param file
      * @return
      */
+    @Deprecated
     public FutureBuilder build(Context context, File file) {
-        return new IonRequestBuilder(context, this).load(file);
+        return new IonRequestBuilder(ContextReference.fromContext(context), this).load(file);
     }
 
     /**
@@ -193,8 +224,9 @@ public class Ion {
      * @param uri
      * @return
      */
+    @Deprecated
     public Builders.Any.B build(Context context, String uri) {
-        return new IonRequestBuilder(context, this).load(uri);
+        return new IonRequestBuilder(ContextReference.fromContext(context), this).load(uri);
     }
 
     /**
@@ -203,7 +235,25 @@ public class Ion {
      * @return
      */
     public LoadBuilder<Builders.Any.B> build(Context context) {
-        return new IonRequestBuilder(context, this);
+        return new IonRequestBuilder(ContextReference.fromContext(context), this);
+    }
+
+    /**
+     * Begin building a request
+     * @param fragment
+     * @return
+     */
+    public LoadBuilder<Builders.Any.B> build(Fragment fragment) {
+        return new IonRequestBuilder(new ContextReference.FragmentContextReference(fragment), this);
+    }
+
+    /**
+     * Begin building a request
+     * @param fragment
+     * @return
+     */
+    public LoadBuilder<Builders.Any.B> build(android.support.v4.app.Fragment fragment) {
+        return new IonRequestBuilder(new ContextReference.SupportFragmentContextReference(fragment), this);
     }
 
     /**
@@ -211,7 +261,7 @@ public class Ion {
      * @param imageView
      * @return
      */
-    public Builders.ImageView.F<? extends Builders.ImageView.F<?>> build(ImageView imageView) {
+    public Builders.IV.F<? extends Builders.IV.F<?>> build(ImageView imageView) {
         if (Thread.currentThread() != Looper.getMainLooper().getThread())
             throw new IllegalStateException("must be called from UI thread");
         bitmapBuilder.reset();
@@ -368,16 +418,24 @@ public class Ion {
      * Get or put an item from the cache
      * @return
      */
-    public DiskLruCacheStore cache() {
-        return new DiskLruCacheStore(this, responseCache.getDiskLruCache());
+    public FileCacheStore cache(String key) {
+        return new FileCacheStore(this, responseCache.getFileCache(), key);
+    }
+
+    public FileCache getCache() {
+        return responseCache.getFileCache();
     }
 
     /**
      * Get or put an item in the persistent store
      * @return
      */
-    public DiskLruCacheStore store() {
-        return new DiskLruCacheStore(this, responseCache.getDiskLruCache());
+    public FileCacheStore store(String key) {
+        return new FileCacheStore(this, storeCache, key);
+    }
+
+    public FileCache getStore() {
+        return storeCache;
     }
 
     public String getName() {
@@ -554,35 +612,5 @@ public class Ion {
      */
     public IonBitmapCache getBitmapCache() {
         return bitmapCache;
-    }
-
-    Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request) {
-        return resolveRequest(request, null);
-    }
-
-    Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request, SimpleFuture<AsyncHttpRequest> ret) {
-        // first attempt to resolve the url
-        for (Loader loader: loaders) {
-            Future<AsyncHttpRequest> resolved = loader.resolve(this, request);
-            if (resolved != null) {
-                if (ret == null)
-                    ret = new SimpleFuture<AsyncHttpRequest>();
-                final SimpleFuture<AsyncHttpRequest> future = ret;
-                resolved.setCallback(new FutureCallback<AsyncHttpRequest>() {
-                    @Override
-                    public void onCompleted(Exception e, AsyncHttpRequest result) {
-                        if (e != null) {
-                            future.setComplete(e);
-                            return;
-                        }
-                        resolveRequest(result, future);
-                    }
-                });
-                return ret;
-            }
-        }
-        if (ret != null)
-            ret.setComplete(request);
-        return ret;
     }
 }

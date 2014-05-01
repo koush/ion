@@ -2,6 +2,7 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.view.animation.Animation;
@@ -10,22 +11,19 @@ import android.widget.ImageView;
 
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.http.ResponseCacheMiddleware;
-import com.koushikdutta.async.http.libcore.DiskLruCache;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
-import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 /**
  * Created by koush on 5/23/13.
  */
-class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBuilder, BitmapFutureBuilder, Builders.Any.BF {
+class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, BitmapFutureBuilder, Builders.Any.BF {
     private static final SimpleFuture<ImageView> FUTURE_IMAGEVIEW_NULL_URI = new SimpleFuture<ImageView>() {
         {
             setComplete(new NullPointerException("uri"));
@@ -39,7 +37,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     IonRequestBuilder builder;
     Ion ion;
-    WeakReference<ImageView> imageViewPostRef;
+    ContextReference.ImageViewContextReference imageViewPostRef;
     ArrayList<Transform> transforms;
     Drawable placeholderDrawable;
     int placeholderResource;
@@ -101,7 +99,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     private IonRequestBuilder ensureBuilder() {
         if (builder == null)
-            builder = new IonRequestBuilder(imageViewPostRef.get().getContext(), ion);
+            builder = new IonRequestBuilder(ContextReference.fromContext(imageViewPostRef.getContext().getApplicationContext()), ion);
         return builder;
     }
 
@@ -120,12 +118,14 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
     }
 
     IonBitmapRequestBuilder withImageView(ImageView imageView) {
-        imageViewPostRef = new WeakReference<ImageView>(imageView);
+        imageViewPostRef = new ContextReference.ImageViewContextReference(imageView);
         return this;
     }
 
     @Override
     public IonBitmapRequestBuilder transform(Transform transform) {
+        if (transform == null)
+            return this;
         if (transforms == null)
             transforms = new ArrayList<Transform>();
         transforms.add(transform);
@@ -139,7 +139,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             downloadKey += ":!animateGif";
         if (deepZoom)
             downloadKey += ":deepZoom";
-        return ResponseCacheMiddleware.toKeyString(downloadKey);
+        return FileCache.toKeyString(downloadKey);
     }
 
     @Override
@@ -149,7 +149,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         assert downloadKey != null;
 
         if (resizeHeight > 0 || resizeWidth > 0) {
-            transform(new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
+            if (transforms == null)
+                transforms = new ArrayList<Transform>();
+            transforms.add(0, new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
         }
 
         // determine the key for this bitmap after all transformations
@@ -159,7 +161,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             for (Transform transform : transforms) {
                 bitmapKey += transform.key();
             }
-            bitmapKey = ResponseCacheMiddleware.toKeyString(bitmapKey);
+            bitmapKey = FileCache.toKeyString(bitmapKey);
         }
 
         return builder.ion.bitmapCache.get(bitmapKey);
@@ -171,7 +173,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         assert downloadKey != null;
 
         if (resizeHeight > 0 || resizeWidth > 0) {
-            transform(new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
+            if (transforms == null)
+                transforms = new ArrayList<Transform>();
+            transforms.add(0, new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
         }
 
         // determine the key for this bitmap after all transformations
@@ -181,7 +185,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             for (Transform transform : transforms) {
                 bitmapKey += transform.key();
             }
-            bitmapKey = ResponseCacheMiddleware.toKeyString(bitmapKey);
+            bitmapKey = FileCache.toKeyString(bitmapKey);
         }
 
         // TODO: eliminate this allocation?
@@ -226,6 +230,15 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
         if (imageView == null)
             throw new IllegalArgumentException("imageView");
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
+
+        if (builder.uri != null && builder.uri.startsWith("android.resource:/")) {
+            IonDrawable drawable = setIonDrawable(imageView, null, 0);
+            SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
+            imageViewFuture.reset();
+            imageView.setImageURI(Uri.parse(builder.uri));
+            imageViewFuture.setComplete(null, imageView);
+            return imageViewFuture;
+        }
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
@@ -279,7 +292,7 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
         bitmapFetcher.execute();
         // we're loading, so let's register for the result.
-        BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.context);
+        BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.contextReference);
         ion.bitmapsPending.add(bitmapFetcher.bitmapKey, ret);
         return ret;
     }
@@ -334,6 +347,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     @Override
     public IonBitmapRequestBuilder centerCrop() {
+        if (transforms != null && transforms.size() > 0)
+            throw new IllegalStateException("Can't apply centerCrop after transform has been called." +
+            "centerCrop is applied to the original resized bitmap.");
         if (resizeWidth <= 0 || resizeHeight <= 0)
             throw new IllegalStateException("must call resize first");
         scaleMode = ScaleMode.CenterCrop;
@@ -342,6 +358,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     @Override
     public IonBitmapRequestBuilder centerInside() {
+        if (transforms != null && transforms.size() > 0)
+            throw new IllegalStateException("Can't apply centerInside after transform has been called." +
+            "centerInside is applied to the original resized bitmap.");
         if (resizeWidth <= 0 || resizeHeight <= 0)
             throw new IllegalStateException("must call resize first");
         scaleMode = ScaleMode.CenterInside;
@@ -350,6 +369,12 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 
     @Override
     public IonBitmapRequestBuilder resize(int width, int height) {
+        // TODO: prevent multiple calls to resize and friends?
+        if (transforms != null && transforms.size() > 0)
+            throw new IllegalStateException("Can't apply resize after transform has been called." +
+                "resize is applied to the original bitmap.");
+        if (deepZoom)
+            throw new IllegalStateException("Can not resize with deepZoom.");
         resizeWidth = width;
         resizeHeight = height;
         return this;
@@ -364,7 +389,10 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
 	public IonBitmapRequestBuilder smartSize(boolean smartSize) {
         //don't want to disable device resize if user has already resized the Bitmap.
         if (resizeWidth > 0 || resizeHeight > 0)
-            throw new IllegalStateException("Can't change smart size after resize has been called.");
+            throw new IllegalStateException("Can't set smart size after resize has been called.");
+
+        if (deepZoom)
+            throw new IllegalStateException("Can not smartSize with deepZoom.");
 
         if (!smartSize) {
 			resizeWidth = -1;
@@ -389,7 +417,9 @@ class IonBitmapRequestBuilder implements Builders.ImageView.F, ImageViewFutureBu
             return this;
         this.deepZoom = true;
         if (resizeWidth > 0 || resizeHeight > 0)
-            throw new IllegalStateException("Can't decoder after resize has been called.");
+            throw new IllegalStateException("Can't deepZoom with resize.");
+        if (transforms != null && transforms.size() > 0)
+            throw new IllegalStateException("Can't deepZoom with transforms.");
         resizeWidth = 0;
         resizeHeight = 0;
         return this;

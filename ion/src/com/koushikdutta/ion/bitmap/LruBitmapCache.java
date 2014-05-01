@@ -1,5 +1,7 @@
 package com.koushikdutta.ion.bitmap;
 
+import com.koushikdutta.async.util.LruCache;
+
 class LruBitmapCache extends LruCache<String, BitmapInfo> {
     private SoftReferenceHashtable<String, BitmapInfo> soft = new SoftReferenceHashtable<String, BitmapInfo>();
 
@@ -8,7 +10,7 @@ class LruBitmapCache extends LruCache<String, BitmapInfo> {
     }
 
     @Override
-    protected int sizeOf(String key, BitmapInfo info) {
+    protected long sizeOf(String key, BitmapInfo info) {
         return info.sizeOf();
     }
 

@@ -16,7 +16,7 @@ import android.widget.ImageView;
 
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.lang.ref.WeakReference;
@@ -68,7 +68,7 @@ class IonDrawable extends Drawable {
     // dont let it hold strong references to anything.
     static class IonDrawableCallback implements FutureCallback<BitmapInfo> {
         private WeakReference<IonDrawable> ionDrawableRef;
-        private WeakReference<ImageView> imageViewRef;
+        private ContextReference.ImageViewContextReference imageViewRef;
         private String bitmapKey;
         private SimpleFuture<ImageView> imageViewFuture = new SimpleFuture<ImageView>();
         private Animation inAnimation;
@@ -77,7 +77,7 @@ class IonDrawable extends Drawable {
 
         public IonDrawableCallback(IonDrawable drawable, ImageView imageView) {
             ionDrawableRef = new WeakReference<IonDrawable>(drawable);
-            imageViewRef = new WeakReference<ImageView>(imageView);
+            imageViewRef = new ContextReference.ImageViewContextReference(imageView);
         }
 
         @Override
@@ -105,8 +105,8 @@ class IonDrawable extends Drawable {
             imageView.setImageDrawable(drawable);
             IonBitmapRequestBuilder.doAnimation(imageView, inAnimation, inAnimationResource);
 
-            if (!IonRequestBuilder.checkContext(imageView.getContext())) {
-                imageViewFuture.cancel();
+            if (null != imageViewRef.isAlive()) {
+                imageViewFuture.cancelSilently();
                 return;
             }
 
@@ -386,6 +386,7 @@ class IonDrawable extends Drawable {
             int visibleBottom = Math.min(bounds.height(), clip.bottom);
             int level = (int)Math.floor(maxLevel);
             level = Math.min(this.maxLevel, level);
+            level = Math.max(level, 0);
             int levelTiles = 1 << level;
             int textureTileDim = textureDim / levelTiles;
 //            System.out.println("textureTileDim: " + textureTileDim);
@@ -434,7 +435,7 @@ class IonDrawable extends Drawable {
 
                     // find, render/fetch
 //                    System.out.println("rendering: " + texRect + " for: " + bounds);
-                    String tileKey = ResponseCacheMiddleware.toKeyString(info.key + "," + level + "," + x + "," + y);
+                    String tileKey = FileCache.toKeyString(info.key, ",", level, ",", x, ",", y);
                     BitmapInfo tile = ion.bitmapCache.get(tileKey);
                     if (tile != null && tile.bitmaps != null) {
                         // render it
@@ -463,7 +464,7 @@ class IonDrawable extends Drawable {
                     int parentY = y >> 1;
 
                     while (parentLevel >= 0) {
-                        tileKey = ResponseCacheMiddleware.toKeyString(info.key + "," + parentLevel + "," + parentX + "," + parentY);
+                        tileKey = FileCache.toKeyString(info.key, ",", parentLevel, ",", parentX, ",", parentY);
                         tile = ion.bitmapCache.get(tileKey);
                         if (tile != null && tile.bitmaps != null)
                             break;

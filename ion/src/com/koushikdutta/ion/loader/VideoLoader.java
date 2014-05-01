@@ -1,89 +1,46 @@
 package com.koushikdutta.ion.loader;
 
+import android.annotation.TargetApi;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.media.MediaMetadataRetriever;
+import android.media.ThumbnailUtils;
 import android.os.Build;
-import android.util.Log;
+import android.provider.MediaStore;
 
-import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.io.File;
-import java.io.InputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URI;
 
 /**
  * Created by koush on 11/6/13.
  */
 public class VideoLoader extends SimpleLoader {
-    private static final String TAG = "IonVideoLoader";
+    @TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
+    public static Bitmap createVideoThumbnail(String filePath) throws Exception {
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(filePath);
+        return retriever.getFrameAtTime();
+    }
 
-    public static Bitmap createVideoThumbnail(String filePath) {
-        // MediaMetadataRetriever is available on API Level 8
-        // but is hidden until API Level 10
-        Class<?> clazz = null;
-        Object instance = null;
-        try {
-            clazz = Class.forName("android.media.MediaMetadataRetriever");
-            instance = clazz.newInstance();
-
-            Method method = clazz.getMethod("setDataSource", String.class);
-            method.invoke(instance, filePath);
-
-            // The method name changes between API Level 9 and 10.
-            if (Build.VERSION.SDK_INT <= 9) {
-                return (Bitmap) clazz.getMethod("captureFrame").invoke(instance);
-            } else {
-                byte[] data = (byte[]) clazz.getMethod("getEmbeddedPicture").invoke(instance);
-                if (data != null) {
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                    if (bitmap != null) return bitmap;
-                }
-                return (Bitmap) clazz.getMethod("getFrameAtTime").invoke(instance);
-            }
-        } catch (IllegalArgumentException ex) {
-            // Assume this is a corrupt video file
-        } catch (RuntimeException ex) {
-            // Assume this is a corrupt video file.
-        } catch (InstantiationException e) {
-            Log.e(TAG, "createVideoThumbnail", e);
-        } catch (InvocationTargetException e) {
-            Log.e(TAG, "createVideoThumbnail", e);
-        } catch (ClassNotFoundException e) {
-            Log.e(TAG, "createVideoThumbnail", e);
-        } catch (NoSuchMethodException e) {
-            Log.e(TAG, "createVideoThumbnail", e);
-        } catch (IllegalAccessException e) {
-            Log.e(TAG, "createVideoThumbnail", e);
-        } finally {
-            try {
-                if (instance != null) {
-                    clazz.getMethod("release").invoke(instance);
-                }
-            } catch (Exception ignored) {
-            }
-        }
-        return null;
+    static boolean mustUseThumbnailUtils() {
+        // http://developer.samsung.com/forum/thread/mediametadataretriever-getframeattime-to-retrieve-video-frame-fails/77/202945
+        // https://codereview.chromium.org/107523005
+        return Build.MANUFACTURER.toLowerCase().contains("samsung");
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(Ion ion, final String key, String uri, int resizeWidth, int resizeHeight) {
+    public Future<BitmapInfo> loadBitmap(Context context, Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight, boolean animateGif) {
         if (!uri.startsWith(ContentResolver.SCHEME_FILE))
             return null;
 
-        final File file = new File(URI.create(uri));
-
-        final MediaFile.MediaFileType type = MediaFile.getFileType(file.getAbsolutePath());
+        final MediaFile.MediaFileType type = MediaFile.getFileType(uri);
         if (type == null || !MediaFile.isVideoFileType(type.fileType))
             return null;
 
@@ -91,12 +48,18 @@ public class VideoLoader extends SimpleLoader {
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
+                final File file = new File(URI.create(uri));
                 if (ret.isCancelled()) {
 //                    Log.d("VideoLoader", "Bitmap load cancelled (no longer needed)");
                     return;
                 }
                 try {
-                    Bitmap bmp = createVideoThumbnail(file.getAbsolutePath());
+                    Bitmap bmp;
+
+                    if (mustUseThumbnailUtils() || Build.VERSION.SDK_INT < Build.VERSION_CODES.GINGERBREAD_MR1)
+                        bmp = ThumbnailUtils.createVideoThumbnail(file.getAbsolutePath(), MediaStore.Video.Thumbnails.MINI_KIND);
+                    else
+                        bmp = createVideoThumbnail(file.getAbsolutePath());
                     if (bmp == null)
                         throw new Exception("video bitmap failed to load");
                     BitmapInfo info = new BitmapInfo(key, type.mimeType, new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));

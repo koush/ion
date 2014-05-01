@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.koushikdutta.async.future.FutureCallback;
@@ -32,6 +33,7 @@ public class DeepZoomSample extends Activity {
         Ion.with(this)
         .load("https://raw2.github.com/koush/ion/master/ion-sample/telescope.jpg")
         .progressDialog(dlg)
+        .setLogging("DeepZoom", Log.VERBOSE)
         .withBitmap()
         .deepZoom()
         .intoImageView(photoView)

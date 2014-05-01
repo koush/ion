@@ -12,6 +12,7 @@ import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.body.FilePart;
@@ -108,9 +109,19 @@ public class HttpTests extends AndroidTestCase {
 
     public void testUrlEncodedFormBody() throws Exception {
         JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
-                .setBodyParameter("blit", "bip")
-                .asJsonObject().get();
+        .setBodyParameter("blit", "bip")
+        .asJsonObject().get();
         assertEquals("bip", ret.get("blit").getAsString());
+    }
+
+    public void testUrlEncodedFormBodyWithNull() throws Exception {
+        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        .setTimeout(3000000)
+        .setBodyParameter("blit", null)
+        .setBodyParameter("foo", "bar")
+        .asJsonObject().get();
+        assertTrue(!ret.has("blit"));
+        assertEquals("bar", ret.get("foo").getAsString());
     }
 
     public void testMultipart() throws Exception {
@@ -210,7 +221,7 @@ public class HttpTests extends AndroidTestCase {
                     AsyncHttpClient proxying = new AsyncHttpClient(proxyServer);
 
                     String url = request.getPath();
-                    proxying.get(url, new AsyncHttpClient.StringCallback() {
+                    proxying.executeString(new AsyncHttpGet(url), new AsyncHttpClient.StringCallback() {
                         @Override
                         public void onCompleted(Exception e, AsyncHttpResponse source, String result) {
                             response.send(result);
