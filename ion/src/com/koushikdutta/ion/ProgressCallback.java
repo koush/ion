@@ -9,5 +9,5 @@ public interface ProgressCallback {
      * @param downloaded The number of bytes currently downloaded
      * @param total The total number of bytes in this request, or -1 if unknown
      */
-    void onProgress(int downloaded, int total);
+    void onProgress(long downloaded, long total);
 }

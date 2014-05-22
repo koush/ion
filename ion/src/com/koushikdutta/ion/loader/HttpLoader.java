@@ -24,7 +24,7 @@ public class HttpLoader extends SimpleLoader {
         return (Future< DataEmitter >)(Future)ion.getHttpClient().execute(request, new HttpConnectCallback() {
             @Override
             public void onConnectCompleted(Exception ex, AsyncHttpResponse response) {
-                int length = -1;
+                long length = -1;
                 int loadedFrom = LoaderEmitter.LOADED_FROM_NETWORK;
                 RawHeaders headers = null;
                 AsyncHttpRequest request = null;

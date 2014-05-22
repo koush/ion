@@ -3,6 +3,7 @@ package com.koushikdutta.ion;
 import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.content.Context;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -559,7 +560,7 @@ public class Ion {
 
         AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactory() {
             @Override
-            public AsyncHttpRequest createAsyncHttpRequest(URI uri, String method, RawHeaders headers) {
+            public AsyncHttpRequest createAsyncHttpRequest(Uri uri, String method, RawHeaders headers) {
                 AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
                 if (!TextUtils.isEmpty(userAgent))
                     request.getHeaders().setUserAgent(userAgent);

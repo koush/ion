@@ -1,5 +1,6 @@
 package com.koushikdutta.ion.test;
 
+import android.net.Uri;
 import android.test.AndroidTestCase;
 
 import com.koushikdutta.async.http.libcore.RawHeaders;
@@ -37,7 +38,7 @@ public class CookieTests extends AndroidTestCase {
         manager.put(uri, headers.toMultimap());
 
         RawHeaders newHeaders = new RawHeaders();
-        RequestHeaders requestHeaders = new RequestHeaders(uri, newHeaders);
+        RequestHeaders requestHeaders = new RequestHeaders(Uri.parse(uri.toString()), newHeaders);
         Map<String, List<String>> cookies = manager.get(uri, newHeaders.toMultimap());
         manager.get(uri, cookies);
         requestHeaders.addCookies(cookies);
@@ -69,7 +70,7 @@ public class CookieTests extends AndroidTestCase {
         CookieManager manager = middleware.getCookieManager();
 
         RawHeaders newHeaders = new RawHeaders();
-        RequestHeaders requestHeaders = new RequestHeaders(uri, newHeaders);
+        RequestHeaders requestHeaders = new RequestHeaders(Uri.parse(uri.toString()), newHeaders);
         Map<String, List<String>> cookies = manager.get(uri, newHeaders.toMultimap());
         manager.get(uri, cookies);
         requestHeaders.addCookies(cookies);

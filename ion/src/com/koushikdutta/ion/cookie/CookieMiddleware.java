@@ -2,6 +2,7 @@ package com.koushikdutta.ion.cookie;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -71,7 +72,7 @@ public class CookieMiddleware extends SimpleMiddleware {
     @Override
     public void onSocket(OnSocketData data) {
         try {
-            Map<String, List<String>> cookies = manager.get (data.request.getUri(), data.request.getHeaders().getHeaders().toMultimap());
+            Map<String, List<String>> cookies = manager.get(URI.create(data.request.getUri().toString()), data.request.getHeaders().getHeaders().toMultimap());
             data.request.getHeaders().addCookies(cookies);
         }
         catch (Exception e) {
@@ -80,7 +81,11 @@ public class CookieMiddleware extends SimpleMiddleware {
 
     @Override
     public void onHeadersReceived(OnHeadersReceivedData data) {
-        put(data.request.getUri(), data.headers.getHeaders());
+        try {
+            put(URI.create(data.request.getUri().toString()), data.headers.getHeaders());
+        }
+        catch (Exception e) {
+        }
     }
 
     public void put(URI uri, RawHeaders headers) {

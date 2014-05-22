@@ -109,7 +109,7 @@ public class FileLoader extends SimpleLoader {
             @Override
             public void run() {
                 try {
-                    InputStream stream = new FileInputStream(new File(request.getUri()));
+                    InputStream stream = new FileInputStream(new File(URI.create(request.getUri().toString())));
                     ret.setComplete(stream);
                 } catch (Exception e) {
                     ret.setComplete(e);
@@ -127,7 +127,7 @@ public class FileLoader extends SimpleLoader {
         ion.getHttpClient().getServer().post(new Runnable() {
             @Override
             public void run() {
-                File file = new File(request.getUri());
+                File file = new File(URI.create(request.getUri().toString()));
                 FileDataEmitter emitter = new FileDataEmitter(ion.getHttpClient().getServer(), file);
                 ret.setComplete(emitter);
                 callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length(), LoaderEmitter.LOADED_FROM_CACHE, null, request));

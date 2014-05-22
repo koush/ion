@@ -48,7 +48,8 @@ public class ProgressBarDownload extends Activity {
 
                 download.setText("Cancel");
                 // this is a 180MB zip file to test with
-                downloading = Ion.with(ProgressBarDownload.this, "http://developer.clockworkmod.com/downloads/51/4883/cm-10.1-20130512-CPUFREQ-m7.zip")
+                downloading = Ion.with(ProgressBarDownload.this)
+                .load("http://developer.clockworkmod.com/downloads/51/4883/cm-10.1-20130512-CPUFREQ-m7.zip")
                     // attach the percentage report to a progress bar.
                     // can also attach to a ProgressDialog with progressDialog.
                     .progressBar(progressBar)
@@ -57,7 +58,7 @@ public class ProgressBarDownload extends Activity {
                     // Updates to TextViews MUST happen on the UI thread.
                     .progressHandler(new ProgressCallback() {
                         @Override
-                        public void onProgress(int downloaded, int total) {
+                        public void onProgress(long downloaded, long total) {
                             downloadCount.setText("" + downloaded + " / " + total);
                         }
                     })

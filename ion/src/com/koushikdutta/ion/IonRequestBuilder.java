@@ -113,7 +113,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     private RawHeaders getHeaders() {
         if (headers == null) {
             headers = new RawHeaders();
-            AsyncHttpRequest.setDefaultHeaders(headers, uri == null ? null : URI.create(uri));
+            AsyncHttpRequest.setDefaultHeaders(headers, uri == null ? null : Uri.parse(uri));
         }
         return headers;
     }
@@ -246,8 +246,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             AsyncServer.post(handler, runner);
     }
 
-    private URI prepareURI() {
-        URI uri;
+    private Uri prepareURI() {
+        Uri uri;
         try {
             if (query != null) {
                 Uri.Builder builder = Uri.parse(this.uri).buildUpon();
@@ -256,10 +256,10 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                         builder = builder.appendQueryParameter(key, value);
                     }
                 }
-                uri = URI.create(builder.toString());
+                uri = builder.build();
             }
             else {
-                uri = URI.create(this.uri);
+                uri = Uri.parse(this.uri);
             }
         }
         catch (Exception e) {
@@ -271,7 +271,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return uri;
     }
 
-    private AsyncHttpRequest prepareRequest(URI uri, AsyncHttpRequestBody wrappedBody) {
+    private AsyncHttpRequest prepareRequest(Uri uri, AsyncHttpRequestBody wrappedBody) {
         AsyncHttpRequest request = ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers);
         request.setFollowRedirect(followRedirect);
         request.setBody(wrappedBody);
@@ -291,7 +291,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     LoadRequestCallback loadRequestCallback;
 
     private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
-        URI uri = prepareURI();
+        Uri uri = prepareURI();
         if (uri == null) {
             ret.setComplete(new Exception("Invalid URI"));
             return;
@@ -301,7 +301,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         if (uploadProgressHandler != null || uploadProgressBar != null || uploadProgress != null || uploadProgressDialog != null) {
             wrappedBody = new RequestBodyUploadObserver(body, new ProgressCallback() {
                 @Override
-                public void onProgress(final int downloaded, final int total) {
+                public void onProgress(final long downloaded, final long total) {
                     assert Thread.currentThread() != Looper.getMainLooper().getThread();
 
                     final int percent = (int)((float)downloaded / total * 100f);
@@ -473,7 +473,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             }
 
             // hook up data progress callbacks
-            final int total = emitter.length();
+            final long total = emitter.length();
             DataTrackingEmitter tracker;
             if (!(emitter instanceof DataTrackingEmitter)) {
                 tracker = new FilteredDataEmitter();
@@ -618,7 +618,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     Future<InputStream> execute() {
-        URI uri = prepareURI();
+        Uri uri = prepareURI();
         if (uri == null)
             return null;
 

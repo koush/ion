@@ -33,7 +33,7 @@ public class ProgressTests extends AndroidTestCase {
                 .setTimeout(600000)
                 .progress(new ProgressCallback() {
                     @Override
-                    public void onProgress(int downloaded, int total) {
+                    public void onProgress(long downloaded, long total) {
                         // depending on gzip, etc. the total may vary... the actual length of the uncompressed data
                         // is 100000
                         assertTrue(total > 90000 && total < 110000);
@@ -83,7 +83,7 @@ public class ProgressTests extends AndroidTestCase {
             Ion.with(getContext(), "http://localhost:5000/")
                     .uploadProgress(new ProgressCallback() {
                         @Override
-                        public void onProgress(int downloaded, int total) {
+                        public void onProgress(long downloaded, long total) {
                             semaphore.release();
                         }
                     })
