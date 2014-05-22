@@ -36,6 +36,7 @@ import com.koushikdutta.async.http.body.DocumentBody;
 import com.koushikdutta.async.http.body.FileBody;
 import com.koushikdutta.async.http.body.FilePart;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
+import com.koushikdutta.async.http.body.Part;
 import com.koushikdutta.async.http.body.StreamBody;
 import com.koushikdutta.async.http.body.StringBody;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
@@ -762,6 +763,19 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 if (value != null)
                     setMultipartParameter(key, value);
             }
+        }
+        return this;
+    }
+
+    @Override
+    public Builders.Any.M addMultipartParts(List<Part> parameters) {
+        if (multipartBody == null) {
+            multipartBody = new MultipartFormDataBody();
+            setBody(multipartBody);
+        }
+
+        for (Part part: parameters) {
+            multipartBody.addPart(part);
         }
         return this;
     }

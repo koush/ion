@@ -1,5 +1,7 @@
 package com.koushikdutta.ion.builder;
 
+import com.koushikdutta.async.http.body.Part;
+
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -43,4 +45,12 @@ public interface MultipartBodyBuilder<M extends MultipartBodyBuilder> {
      * @return
      */
     public M setMultipartFile(String name, String contentType, File file);
+
+    /**
+     * Specify multipart/form-data parameters to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param parameters
+     * @return
+     */
+    public M addMultipartParts(List<Part> parameters);
 }
