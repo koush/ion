@@ -47,8 +47,16 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
             public void run() {
                 FileInputStream fin = null;
                 try {
-                    fileCache.commitTempFiles(key, tempFile);
-                    File file = fileCache.getFile(key);
+                    File file;
+                    // file cache will be null if the file is on the local file system already
+                    if (fileCache != null) {
+                        fileCache.commitTempFiles(key, tempFile);
+                        file = fileCache.getFile(key);
+                    }
+                    else {
+                        // local file system, use the "temp" file as the source.
+                        file = tempFile;
+                    }
                     BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(file, 0, 0);
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
