@@ -1,5 +1,6 @@
 package com.koushikdutta.ion.test;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.provider.ContactsContract;
@@ -21,8 +22,9 @@ public class ContentTests extends AndroidTestCase {
             if (id != null)
                 break;
         }
-        Ion.with(getContext(), id)
-        .write(new FileOutputStream("/sdcard/test.png")).get();
+        Ion.with(getContext())
+        .load(id)
+        .write(getContext().openFileOutput("test.png", Context.MODE_PRIVATE)).get();
         assertNotNull(id);
         assertNotNull(c);
     }
@@ -35,8 +37,9 @@ public class ContentTests extends AndroidTestCase {
             if (id != null)
                 break;
         }
-        Ion.with(getContext(), id)
-        .write(new File("/sdcard/test2.png")).get();
+        Ion.with(getContext())
+        .load(id)
+        .write(getContext().openFileOutput("test2.png", Context.MODE_PRIVATE)).get();
         assertNotNull(id);
         assertNotNull(c);
     }
@@ -49,9 +52,11 @@ public class ContentTests extends AndroidTestCase {
             if (id != null)
                 break;
         }
-        Bitmap b = Ion.with(getContext(), id)
-                .asBitmap()
-                .get();
+        Bitmap b =
+        Ion.with(getContext())
+        .load(id)
+        .asBitmap()
+        .get();
         assertNotNull(b);
         assertNotNull(id);
         assertNotNull(c);
