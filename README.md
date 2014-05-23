@@ -122,7 +122,7 @@ Ion.with(context)
        System.out.println("" + downloaded + " / " + total);
    }
 })
-.write(new File("/sdcard/really-big-file.zip")
+.write(new File("/sdcard/really-big-file.zip"))
 .setCallback(new FutureCallback<File>() {
    @Override
     public void onCompleted(Exception e, File file) {
