@@ -16,6 +16,7 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
+import com.koushikdutta.ion.builder.ImageViewBuilder;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 
 import java.util.ArrayList;
@@ -295,6 +296,17 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.contextReference);
         ion.bitmapsPending.add(bitmapFetcher.bitmapKey, ret);
         return ret;
+    }
+
+    @Override
+    public IonBitmapRequestBuilder crossfade() {
+        ImageView iv = imageViewPostRef.get();
+        Drawable drawable = iv.getDrawable();
+        if (drawable instanceof IonDrawable) {
+            IonDrawable ionDrawable = (IonDrawable)drawable;
+            drawable = ionDrawable.getCurrentDrawable();
+        }
+        return placeholder(drawable);
     }
 
     @Override

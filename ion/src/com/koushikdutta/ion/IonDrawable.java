@@ -7,6 +7,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -47,6 +48,19 @@ class IonDrawable extends Drawable {
     public IonDrawable ion(Ion ion) {
         this.ion = ion;
         return this;
+    }
+
+    public Drawable getCurrentDrawable() {
+        if (info == null) {
+            if (placeholderResource != 0)
+                return resources.getDrawable(placeholderResource);
+        }
+        if (info.bitmaps != null) {
+            return new BitmapDrawable(resources, info.bitmaps[0]);
+        }
+        if (errorResource != 0)
+            return resources.getDrawable(errorResource);
+        return null;
     }
 
     public SimpleFuture<ImageView> getFuture() {

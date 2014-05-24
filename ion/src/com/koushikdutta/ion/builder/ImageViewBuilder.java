@@ -93,4 +93,10 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      * @return
      */
     public I deepZoom();
+
+    /**
+     * Crossfade the new image with the existing image.
+     * @return
+     */
+    public I crossfade();
 }
