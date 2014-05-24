@@ -55,9 +55,8 @@ class IonDrawable extends Drawable {
             if (placeholderResource != 0)
                 return resources.getDrawable(placeholderResource);
         }
-        if (info.bitmaps != null) {
+        if (info != null && info.bitmaps != null)
             return new BitmapDrawable(resources, info.bitmaps[0]);
-        }
         if (errorResource != 0)
             return resources.getDrawable(errorResource);
         return null;
