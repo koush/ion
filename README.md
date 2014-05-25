@@ -404,3 +404,11 @@ git clone git://github.com/koush/ion.git
 ```
 * Import the project from AndroidAsync/AndroidAsync into your workspace
 * Import all the ion projects (ion/ion, ion/ion-test, ion/ion-sample) into your workspace.
+
+#### Projects using ion
+
+* [AllCast](https://play.google.com/store/apps/details?id=com.koushikdutta.cast)
+* [Helium](https://play.google.com/store/apps/details?id=com.koushikdutta.backup)
+* [Repost](https://play.google.com/store/apps/details?id=com.dodgingpixels.repost)
+* [Cloupload](https://play.google.com/store/apps/details?id=de.gidix.cloupload)
+* [Binge](https://play.google.com/store/apps/details?id=com.stfleurs.binge)
