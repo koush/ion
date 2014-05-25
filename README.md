@@ -407,6 +407,8 @@ git clone git://github.com/koush/ion.git
 
 #### Projects using ion
 
+There's hundreds of apps using ion. Feel free to contact me or submit a pull request to add yours to this list.
+
 * [AllCast](https://play.google.com/store/apps/details?id=com.koushikdutta.cast)
 * [Helium](https://play.google.com/store/apps/details?id=com.koushikdutta.backup)
 * [Repost](https://play.google.com/store/apps/details?id=com.dodgingpixels.repost)
