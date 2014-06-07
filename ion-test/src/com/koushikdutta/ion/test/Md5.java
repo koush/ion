@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.test;
 
 import com.koushikdutta.async.ByteBufferList;
+import com.koushikdutta.async.util.StreamUtility;
 
 import java.io.File;
 import java.io.FileInputStream;

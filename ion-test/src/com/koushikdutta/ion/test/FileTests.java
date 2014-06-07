@@ -1,10 +1,11 @@
 package com.koushikdutta.ion.test;
 
 import android.test.AndroidTestCase;
+
+import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
 
 import java.io.File;
-import java.util.concurrent.Semaphore;
 
 /**
  * Created by koush on 5/22/13.

@@ -2,19 +2,24 @@ package com.koushikdutta.ion.test;
 
 import android.graphics.Bitmap;
 import android.test.AndroidTestCase;
+import android.util.Base64;
 import android.util.Log;
 
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
+import com.koushikdutta.async.util.*;
 import com.koushikdutta.ion.Ion;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -97,5 +102,45 @@ public class Issues extends AndroidTestCase {
         .get(2000, TimeUnit.MILLISECONDS);
 
         System.out.println(val);
+    }
+
+    public void testIssue179() throws Exception {
+        Ion.with(getContext())
+        .load("https://api.gigaset-elements.de/app/check-support" )
+        .setBodyParameter("version", "1.0")
+        .asString()
+        .setCallback(new FutureCallback<String>() {
+            @Override
+            public void onCompleted(Exception e, String result) {
+                if(result!=null)
+                    Log.d("WTF",result);
+                if(e!=null){
+                    e.printStackTrace();
+                }
+            }
+        })
+        .get();
+    }
+
+    public void testIssue253() throws Exception {
+        byte[] random = new byte[100000];
+        new Random(39548394).nextBytes(random);
+        String b64 = Base64.encodeToString(random, 0);
+
+        String uploadUrl = Ion.with(getContext())
+        .load("http://ion-test.appspot.com/upload_url")
+        .asString()
+        .get();
+
+        File file = getContext().getFileStreamPath("testData");
+        StreamUtility.writeFile(file, b64);
+
+        String data = Ion.with(getContext())
+        .load(uploadUrl)
+        .setMultipartFile("file", file)
+        .asString()
+        .get();
+
+        assertEquals(b64, data);
     }
 }
