@@ -151,7 +151,7 @@ public class Ion {
     FileLoader fileLoader;
     String logtag;
     int logLevel;
-    Gson gson = new Gson();
+    Gson gson;
     String userAgent;
     ArrayList<Loader> loaders = new ArrayList<Loader>();
     String name;
@@ -498,7 +498,9 @@ public class Ion {
          * from java objects.
          * @return
          */
-        public Gson getGson() {
+        public synchronized Gson getGson() {
+            if (gson == null)
+                gson = new Gson();
             return gson;
         }
 
