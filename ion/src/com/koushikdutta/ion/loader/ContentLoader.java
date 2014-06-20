@@ -17,9 +17,6 @@ import java.io.InputStream;
  * Created by koush on 5/22/13.
  */
 public class ContentLoader extends SimpleLoader {
-    private static final class InputStreamDataEmitterFuture extends SimpleFuture<DataEmitter> {
-    }
-
     @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
         if (!request.getUri().getScheme().startsWith("content"))
