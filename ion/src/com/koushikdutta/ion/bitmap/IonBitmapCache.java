@@ -11,6 +11,7 @@ import android.graphics.BitmapRegionDecoder;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.util.DisplayMetrics;
@@ -21,7 +22,9 @@ import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
 
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.InputStream;
 
 /**
  * Created by koush on 5/23/13.
@@ -117,13 +120,6 @@ public class IonBitmapCache {
         return new Point(targetWidth, targetHeight);
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(File file, int minx, int miny) {
-        BitmapFactory.Options o = new BitmapFactory.Options();
-        o.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(file.toString(), o);
-        return prepareBitmapOptions(o, minx, miny);
-    }
-
     private BitmapFactory.Options prepareBitmapOptions(BitmapFactory.Options o, int minx, int miny) {
         if (o.outWidth < 0 || o.outHeight < 0)
             return null;
@@ -137,6 +133,13 @@ public class IonBitmapCache {
         return ret;
     }
 
+    public BitmapFactory.Options prepareBitmapOptions(File file, int minx, int miny) {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(file.toString(), o);
+        return prepareBitmapOptions(o, minx, miny);
+    }
+
     public BitmapFactory.Options prepareBitmapOptions(byte[] bytes, int offset, int length, int minx, int miny) {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
@@ -144,14 +147,16 @@ public class IonBitmapCache {
         return prepareBitmapOptions(o, minx, miny);
     }
 
-    public Bitmap loadBitmap(byte[] bytes, int offset, int length, BitmapFactory.Options o) {
-        assert Thread.currentThread() != Looper.getMainLooper().getThread();
+    public BitmapFactory.Options prepareBitmapOptions(Resources res, int id, int minx, int miny) {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeResource(res, id, o);
+        return prepareBitmapOptions(o, minx, miny);
+    }
 
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, offset, length, o);
+    private static Bitmap getRotatedBitmap(Bitmap bitmap, int rotation) {
         if (bitmap == null)
             return null;
-
-        int rotation = Exif.getOrientation(bytes, offset, length);
         if (rotation == 0)
             return bitmap;
 
@@ -160,14 +165,42 @@ public class IonBitmapCache {
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
     }
 
+    public static Bitmap loadBitmap(byte[] bytes, int offset, int length, BitmapFactory.Options o) {
+        assert Thread.currentThread() != Looper.getMainLooper().getThread();
+
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, offset, length, o);
+        if (bitmap == null)
+            return null;
+        int rotation = Exif.getOrientation(bytes, offset, length);
+        return getRotatedBitmap(bitmap, rotation);
+    }
+
     @TargetApi(Build.VERSION_CODES.GINGERBREAD_MR1)
-    public Bitmap loadRegion(final BitmapRegionDecoder decoder, Rect sourceRect, int inSampleSize) {
+    public static Bitmap loadRegion(final BitmapRegionDecoder decoder, Rect sourceRect, int inSampleSize) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = inSampleSize;
         return decoder.decodeRegion(sourceRect, options);
     }
 
-    public Bitmap loadBitmap(File file, BitmapFactory.Options o) {
+    public static Bitmap loadBitmap(Resources res, int id, BitmapFactory.Options o) {
+        int rotation;
+        InputStream in = null;
+        try {
+            in = res.openRawResource(id);
+            byte[] bytes = new byte[50000];
+            int length = in.read(bytes);
+            rotation = Exif.getOrientation(bytes, 0, length);
+        }
+        catch (Exception e) {
+            rotation = 0;
+        }
+        StreamUtility.closeQuietly(in);
+
+        Bitmap bitmap = BitmapFactory.decodeResource(res, id, o);
+        return getRotatedBitmap(bitmap, rotation);
+    }
+
+    public static Bitmap loadBitmap(File file, BitmapFactory.Options o) {
 //        stream = new BufferedInputStream(stream, 64 * 1024);
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
 
@@ -185,15 +218,7 @@ public class IonBitmapCache {
         StreamUtility.closeQuietly(fin);
 
         Bitmap bitmap = BitmapFactory.decodeFile(file.toString(), o);
-        if (bitmap == null)
-            return null;
-
-        if (rotation == 0)
-            return bitmap;
-
-        Matrix matrix = new Matrix();
-        matrix.postRotate(rotation);
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+        return getRotatedBitmap(bitmap, rotation);
     }
 
     private static int getHeapSize(final Context context) {

@@ -33,6 +33,7 @@ import com.koushikdutta.ion.loader.ContentLoader;
 import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
+import com.koushikdutta.ion.loader.ResourceLoader;
 import com.koushikdutta.ion.loader.VideoLoader;
 
 import java.io.File;
@@ -146,6 +147,7 @@ public class Ion {
     FileCache storeCache;
     HttpLoader httpLoader;
     ContentLoader contentLoader;
+    ResourceLoader resourceLoader;
     VideoLoader videoLoader;
     PackageIconLoader packageIconLoader;
     FileLoader fileLoader;
@@ -197,6 +199,7 @@ public class Ion {
                 .addLoader(packageIconLoader = new PackageIconLoader())
                 .addLoader(httpLoader = new HttpLoader())
                 .addLoader(contentLoader = new ContentLoader())
+                .addLoader(resourceLoader = new ResourceLoader())
                 .addLoader(fileLoader = new FileLoader());
     }
 

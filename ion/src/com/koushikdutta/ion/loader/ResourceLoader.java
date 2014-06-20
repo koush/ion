@@ -1,17 +1,15 @@
 package com.koushikdutta.ion.loader;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.net.Uri;
 import android.text.TextUtils;
 
-import com.koushikdutta.async.DataEmitter;
-import com.koushikdutta.async.FileDataEmitter;
 import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
@@ -20,22 +18,15 @@ import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.gif.GifAction;
 import com.koushikdutta.ion.gif.GifDecoder;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URI;
 
 /**
- * Created by koush on 5/22/13.
+ * Created by koush on 6/20/14.
  */
-public class FileLoader extends SimpleLoader {
-    private static final class FileFuture extends SimpleFuture<DataEmitter> {
-    }
-
+public class ResourceLoader extends SimpleLoader {
     @Override
-    public Future<BitmapInfo> loadBitmap(final Context context, final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight,
-                                         final boolean animateGif) {
-        if (uri == null || !uri.startsWith("file:/"))
+    public Future<BitmapInfo> loadBitmap(final Context context, final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight, final boolean animateGif) {
+        if (uri == null || !uri.startsWith("android.resource:/"))
             return null;
 
         final SimpleFuture<BitmapInfo> ret = new SimpleFuture<BitmapInfo>();
@@ -44,28 +35,41 @@ public class FileLoader extends SimpleLoader {
         Ion.getBitmapLoadExecutorService().execute(new Runnable() {
             @Override
             public void run() {
-                if (ret.isCancelled()) {
-//                    Log.d("FileLoader", "Bitmap load cancelled (no longer needed)");
-                    return;
-                }
                 try {
-                    File file = new File(URI.create(uri));
-                    BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(file, resizeWidth, resizeHeight);
+                    Uri u = Uri.parse(uri);
+                    if (u.getPathSegments() == null)
+                        throw new IllegalArgumentException("uri is not a valid resource uri");
+                    String pkg = u.getAuthority();
+                    Context ctx = context.createPackageContext(pkg, 0);
+                    Resources res = ctx.getResources();
+                    int id;
+                    if (u.getPathSegments().size() == 1)
+                        id = Integer.valueOf(u.getPathSegments().get(0));
+                    else if (u.getPathSegments().size() == 2) {
+                        String type = u.getPathSegments().get(0);
+                        String name = u.getPathSegments().get(1);
+                        id = res.getIdentifier(name, type, pkg);
+                    }
+                    else {
+                        throw new IllegalArgumentException("uri is not a valid resource uri");
+                    }
+
+                    BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(res, id, resizeWidth, resizeHeight);
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
                     Point size = new Point(options.outWidth, options.outHeight);
                     Bitmap[] bitmaps;
                     int[] delays;
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
-                        FileInputStream fin = new FileInputStream(file);
-                        GifDecoder decoder = new GifDecoder(fin, new GifAction() {
+                        InputStream in = res.openRawResource(id);
+                        GifDecoder decoder = new GifDecoder(in, new GifAction() {
                             @Override
                             public boolean parseOk(boolean parseStatus, int frameIndex) {
                                 return animateGif;
                             }
                         });
                         decoder.run();
-                        StreamUtility.closeQuietly(fin);
+                        StreamUtility.closeQuietly(in);
                         if (decoder.getFrameCount() == 0)
                             throw new Exception("failed to load gif");
                         bitmaps = new Bitmap[decoder.getFrameCount()];
@@ -78,7 +82,7 @@ public class FileLoader extends SimpleLoader {
                         }
                     }
                     else {
-                        Bitmap bitmap = IonBitmapCache.loadBitmap(file, options);
+                        Bitmap bitmap = IonBitmapCache.loadBitmap(res, id, options);
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");
                         bitmaps = new Bitmap[] { bitmap };
@@ -98,42 +102,6 @@ public class FileLoader extends SimpleLoader {
             }
         });
 
-        return ret;
-    }
-
-    @Override
-    public Future<InputStream> load(final Ion ion, final AsyncHttpRequest request) {
-        if (!request.getUri().getScheme().startsWith("file"))
-            return null;
-        final SimpleFuture<InputStream> ret = new SimpleFuture<InputStream>();
-        Ion.getIoExecutorService().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    InputStream stream = new FileInputStream(new File(URI.create(request.getUri().toString())));
-                    ret.setComplete(stream);
-                } catch (Exception e) {
-                    ret.setComplete(e);
-                }
-            }
-        });
-        return ret;
-    }
-
-    @Override
-    public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().getScheme().startsWith("file"))
-            return null;
-        final FileFuture ret = new FileFuture();
-        ion.getHttpClient().getServer().post(new Runnable() {
-            @Override
-            public void run() {
-                File file = new File(URI.create(request.getUri().toString()));
-                FileDataEmitter emitter = new FileDataEmitter(ion.getHttpClient().getServer(), file);
-                ret.setComplete(emitter);
-                callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length(), LoaderEmitter.LOADED_FROM_CACHE, null, request));
-            }
-        });
         return ret;
     }
 }

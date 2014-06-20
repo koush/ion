@@ -237,15 +237,6 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         if (imageView == null)
             throw new NullPointerException("imageView");
 
-        if (builder.uri != null && builder.uri.startsWith("android.resource:/")) {
-            IonDrawable drawable = setIonDrawable(imageView, null, 0);
-            SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
-            imageViewFuture.reset();
-            imageView.setImageURI(Uri.parse(builder.uri));
-            imageViewFuture.setComplete(null, imageView);
-            return imageViewFuture;
-        }
-
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
             setIonDrawable(imageView, null, 0).cancel();

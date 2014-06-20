@@ -6,6 +6,7 @@ import android.graphics.Point;
 import android.graphics.Rect;
 
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.IonBitmapCache;
 
 /**
  * Created by koush on 1/29/14.
@@ -18,7 +19,7 @@ public class LoadBitmapRegion extends BitmapCallback {
             @Override
             public void run() {
                 try {
-                    Bitmap bitmap = ion.bitmapCache.loadRegion(decoder, region, inSampleSize);
+                    Bitmap bitmap = IonBitmapCache.loadRegion(decoder, region, inSampleSize);
                     if (bitmap == null)
                         throw new Exception("failed to load bitmap region");
                     BitmapInfo info = new BitmapInfo(key, null, new Bitmap[] { bitmap }, new Point(bitmap.getWidth(), bitmap.getHeight()));

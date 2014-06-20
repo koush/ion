@@ -10,6 +10,7 @@ import android.util.Log;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.gif.GifAction;
 import com.koushikdutta.ion.gif.GifDecoder;
 
@@ -78,7 +79,7 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                         }
                     }
                     else {
-                        Bitmap bitmap = ion.bitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), options);
+                        Bitmap bitmap = IonBitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), options);
                         if (bitmap == null)
                             throw new Exception("failed to load bitmap");
                         bitmaps = new Bitmap[] { bitmap };

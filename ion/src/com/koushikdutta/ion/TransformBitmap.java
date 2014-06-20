@@ -6,6 +6,7 @@ import android.graphics.Point;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.bitmap.Transform;
 
 import java.io.File;
@@ -30,7 +31,7 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
 
                 try {
                     File file = ion.responseCache.getFileCache().getFile(transformKey);
-                    Bitmap bitmap = ion.getBitmapCache().loadBitmap(file, null);
+                    Bitmap bitmap = IonBitmapCache.loadBitmap(file, null);
                     if (bitmap == null)
                         throw new Exception("Bitmap failed to load");
                     Point size = new Point(bitmap.getWidth(), bitmap.getHeight());

@@ -50,9 +50,24 @@ public class ImageViewSample extends Activity {
         .intoImageView(imageView);
     }
 
+    public void loadGifResource() {
+        Ion.with(this)
+        .load("android.resource://" + getPackageName() + "/" + R.drawable.borg)
+        .withBitmap()
+        .resize(512, 512)
+        .centerInside()
+        .intoImageView(imageView);
+    }
+
     public void loadExifRotated() {
         Ion.with(this)
         .load("https://raw.github.com/koush/ion/master/ion-test/testdata/exif.jpg")
+        .intoImageView(imageView);
+    }
+
+    public void loadTwitterResource() {
+        Ion.with(this)
+        .load("android.resource://" + getPackageName() + "/drawable/twitter")
         .intoImageView(imageView);
     }
 
@@ -71,7 +86,9 @@ public class ImageViewSample extends Activity {
         adapter.add("centerInside");
         adapter.add("gif centerCrop");
         adapter.add("gif centerInside");
+        adapter.add("gif resource");
         adapter.add("exif rotated");
+        adapter.add("twitter drawable resource");
         fitChoices.setAdapter(adapter);
         fitChoices.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -85,7 +102,11 @@ public class ImageViewSample extends Activity {
                 else if (position == 3)
                     loadGifCenterInside();
                 else if (position == 4)
+                    loadGifResource();
+                else if (position == 5)
                     loadExifRotated();
+                else if (position == 6)
+                    loadTwitterResource();
             }
 
             @Override
