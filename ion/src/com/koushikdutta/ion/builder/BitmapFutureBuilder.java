@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 
 /**
 * Created by koush on 5/30/13.
@@ -16,8 +17,14 @@ public interface BitmapFutureBuilder {
     public Future<Bitmap> asBitmap();
 
     /**
-     * Attempt to immediately retrieve the cached Bitmap info
+     * Attempt to immediately retrieve the cached Bitmap info from the memory cache
      * @return
      */
     public BitmapInfo asCachedBitmap();
+
+    /**
+     * Check whether the Bitmap can be loaded from either the file or memory cache
+     * @return
+     */
+    public LocallyCachedStatus isLocallyCached();
 }

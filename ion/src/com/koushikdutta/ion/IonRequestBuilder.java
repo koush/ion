@@ -50,6 +50,7 @@ import com.koushikdutta.async.stream.FileDataSink;
 import com.koushikdutta.async.stream.OutputStreamDataSink;
 import com.koushikdutta.ion.Loader.LoaderEmitter;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
@@ -799,6 +800,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public BitmapInfo asCachedBitmap() {
         return new IonBitmapRequestBuilder(this).asCachedBitmap();
+    }
+
+    @Override
+    public LocallyCachedStatus isLocallyCached() {
+        return new IonBitmapRequestBuilder(this).isLocallyCached();
     }
 
     @Override

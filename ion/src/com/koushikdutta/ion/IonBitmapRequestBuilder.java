@@ -13,6 +13,7 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
@@ -135,7 +136,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     private String computeDownloadKey() {
         String downloadKey = builder.uri;
-        // although a gif is always same download, the initial decode is different
+        // although a gif is always same download, the decode (non/animated) result may different
         if (!animateGif)
             downloadKey += ":!animateGif";
         if (deepZoom)
@@ -143,12 +144,8 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         return FileCache.toKeyString(downloadKey);
     }
 
-    @Override
-    public BitmapInfo asCachedBitmap() {
-        final String downloadKey = computeDownloadKey();
-        assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
+    public String computeBitmapKey(String downloadKey) {
         assert downloadKey != null;
-
         if (resizeHeight > 0 || resizeWidth > 0) {
             if (transforms == null)
                 transforms = new ArrayList<Transform>();
@@ -164,36 +161,44 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
             }
             bitmapKey = FileCache.toKeyString(bitmapKey);
         }
+        return bitmapKey;
+    }
 
+    @Override
+    public LocallyCachedStatus isLocallyCached() {
+        if (builder.noCache || deepZoom)
+            return LocallyCachedStatus.NOT_CACHED;
+        final String downloadKey = computeDownloadKey();
+        String bitmapKey = computeBitmapKey(downloadKey);
+        BitmapInfo info = builder.ion.bitmapCache.get(bitmapKey);
+        // memory cache
+        if (info != null && info.bitmaps != null)
+            return LocallyCachedStatus.CACHED;
+        FileCache fileCache = ion.responseCache.getFileCache();
+        if (transforms != null && fileCache.exists(bitmapKey))
+            return LocallyCachedStatus.CACHED;
+        if (fileCache.exists(downloadKey))
+            return LocallyCachedStatus.MAYBE_CACHED;
+        return LocallyCachedStatus.NOT_CACHED;
+    }
+
+    @Override
+    public BitmapInfo asCachedBitmap() {
+        assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
+        final String downloadKey = computeDownloadKey();
+        String bitmapKey = computeBitmapKey(downloadKey);
         return builder.ion.bitmapCache.get(bitmapKey);
     }
 
     BitmapFetcher executeCache() {
         final String downloadKey = computeDownloadKey();
-        assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
-        assert downloadKey != null;
-
-        if (resizeHeight > 0 || resizeWidth > 0) {
-            if (transforms == null)
-                transforms = new ArrayList<Transform>();
-            transforms.add(0, new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
-        }
-
-        // determine the key for this bitmap after all transformations
-        String bitmapKey = downloadKey;
-        boolean hasTransforms = transforms != null && transforms.size() > 0;
-        if (hasTransforms) {
-            for (Transform transform : transforms) {
-                bitmapKey += transform.key();
-            }
-            bitmapKey = FileCache.toKeyString(bitmapKey);
-        }
+        String bitmapKey = computeBitmapKey(downloadKey);
 
         // TODO: eliminate this allocation?
         BitmapFetcher ret = new BitmapFetcher();
         ret.downloadKey = downloadKey;
         ret.bitmapKey = bitmapKey;
-        ret.hasTransforms = hasTransforms;
+        ret.hasTransforms = hasTransforms();
         ret.resizeWidth = resizeWidth;
         ret.resizeHeight = resizeHeight;
         ret.builder = builder;
@@ -228,9 +233,9 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     @Override
     public Future<ImageView> intoImageView(ImageView imageView) {
-        if (imageView == null)
-            throw new IllegalArgumentException("imageView");
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
+        if (imageView == null)
+            throw new NullPointerException("imageView");
 
         if (builder.uri != null && builder.uri.startsWith("android.resource:/")) {
             IonDrawable drawable = setIonDrawable(imageView, null, 0);
@@ -359,9 +364,10 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     @Override
     public IonBitmapRequestBuilder centerCrop() {
-        if (transforms != null && transforms.size() > 0)
+        if (hasTransforms()) {
             throw new IllegalStateException("Can't apply centerCrop after transform has been called." +
             "centerCrop is applied to the original resized bitmap.");
+        }
         if (resizeWidth <= 0 || resizeHeight <= 0)
             throw new IllegalStateException("must call resize first");
         scaleMode = ScaleMode.CenterCrop;
@@ -370,9 +376,10 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     @Override
     public IonBitmapRequestBuilder centerInside() {
-        if (transforms != null && transforms.size() > 0)
+        if (hasTransforms()) {
             throw new IllegalStateException("Can't apply centerInside after transform has been called." +
             "centerInside is applied to the original resized bitmap.");
+        }
         if (resizeWidth <= 0 || resizeHeight <= 0)
             throw new IllegalStateException("must call resize first");
         scaleMode = ScaleMode.CenterInside;
@@ -382,9 +389,10 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
     @Override
     public IonBitmapRequestBuilder resize(int width, int height) {
         // TODO: prevent multiple calls to resize and friends?
-        if (transforms != null && transforms.size() > 0)
+        if (hasTransforms()) {
             throw new IllegalStateException("Can't apply resize after transform has been called." +
-                "resize is applied to the original bitmap.");
+            "resize is applied to the original bitmap.");
+        }
         if (deepZoom)
             throw new IllegalStateException("Can not resize with deepZoom.");
         resizeWidth = width;
@@ -430,10 +438,14 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         this.deepZoom = true;
         if (resizeWidth > 0 || resizeHeight > 0)
             throw new IllegalStateException("Can't deepZoom with resize.");
-        if (transforms != null && transforms.size() > 0)
+        if (hasTransforms())
             throw new IllegalStateException("Can't deepZoom with transforms.");
         resizeWidth = 0;
         resizeHeight = 0;
         return this;
+    }
+
+    boolean hasTransforms() {
+        return transforms != null && transforms.size() > 0;
     }
 }
