@@ -52,5 +52,21 @@ public interface MultipartBodyBuilder<M extends MultipartBodyBuilder> {
      * @param parameters
      * @return
      */
-    public M addMultipartParts(List<Part> parameters);
+    public M addMultipartParts(Iterable<Part> parameters);
+
+    /**
+     * Specify multipart/form-data parameters to send to the HTTP server. If no HTTP method was explicitly
+     * provided in the load call, the default HTTP method, POST, is used.
+     * @param parameters
+     * @return
+     */
+    public M addMultipartParts(Part... parameters);
+
+    /**
+     * Specify the content type to use in this request. By default it is
+     * multipart/form-data
+     * @param contentType
+     * @return
+     */
+    public M setMultipartContentType(String contentType);
 }

@@ -68,7 +68,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -403,6 +402,15 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         RawHeaders headers;
         DataEmitter emitter;
 
+        public Response<T> getResponse(Exception e, T result) {
+            Response<T> response = new Response<T>();
+            response.headers = headers;
+            response.request = finalRequest;
+            response.result = result;
+            response.exception = e;
+            return response;
+        }
+
         @Override
         public Future<Response<T>> withResponse() {
             final SimpleFuture<Response<T>> ret = new SimpleFuture<Response<T>>();
@@ -410,12 +418,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 @Override
                 public void onCompleted(Exception e, T result) {
                     if (emitter != null) {
-                        Response<T> response = new Response<T>();
-                        response.headers = headers;
-                        response.request = finalRequest;
-                        response.result = result;
-                        response.exception = e;
-                        ret.setComplete(response);
+                        ret.setComplete(getResponse(e, result));
                         return;
                     }
                     ret.setComplete(e, null);
@@ -769,7 +772,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public Builders.Any.M addMultipartParts(List<Part> parameters) {
+    public IonRequestBuilder addMultipartParts(Iterable<Part> parameters) {
         if (multipartBody == null) {
             multipartBody = new MultipartFormDataBody();
             setBody(multipartBody);
@@ -778,6 +781,29 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         for (Part part: parameters) {
             multipartBody.addPart(part);
         }
+        return this;
+    }
+
+    @Override
+    public Builders.Any.M addMultipartParts(Part... parameters) {
+        if (multipartBody == null) {
+            multipartBody = new MultipartFormDataBody();
+            setBody(multipartBody);
+        }
+
+        for (Part part: parameters) {
+            multipartBody.addPart(part);
+        }
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilder setMultipartContentType(String contentType) {
+        if (multipartBody == null) {
+            multipartBody = new MultipartFormDataBody();
+            setBody(multipartBody);
+        }
+        multipartBody.setContentType(contentType);
         return this;
     }
 
