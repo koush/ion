@@ -20,9 +20,12 @@ import java.io.InputStreamReader;
 /**
  * Created by koush on 5/27/13.
  */
-public class GsonParser<T extends JsonElement> implements AsyncParser<T> {
-    public GsonParser() {
+public abstract class GsonParser<T extends JsonElement> implements AsyncParser<T> {
+    Class<? extends JsonElement> clazz;
+    public GsonParser(Class<? extends T> clazz) {
+        this.clazz = clazz;
     }
+
     @Override
     public Future<T> parse(DataEmitter emitter) {
         return new ByteBufferListParser().parse(emitter)
@@ -30,10 +33,12 @@ public class GsonParser<T extends JsonElement> implements AsyncParser<T> {
             @Override
             protected void transform(ByteBufferList result) throws Exception {
                 JsonParser parser = new JsonParser();
-                T parsed = (T)parser.parse(new JsonReader(new InputStreamReader(new ByteBufferListInputStream(result))));
+                JsonElement parsed = parser.parse(new JsonReader(new InputStreamReader(new ByteBufferListInputStream(result))));
                 if (parsed.isJsonNull() || parsed.isJsonPrimitive())
                     throw new JsonParseException("unable to parse json");
-                setComplete(null, parsed);
+                if (!clazz.isInstance(parsed))
+                    throw new ClassCastException(parsed.getClass().getCanonicalName() + " can not be casted to " + clazz.getCanonicalName());
+                setComplete(null, (T)parsed);
             }
         });
     }

@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.callback.CompletedCallback;
@@ -11,6 +12,8 @@ import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.FileDataSink;
 import com.koushikdutta.async.util.FileCache;
+import com.koushikdutta.ion.gson.GsonArrayParser;
+import com.koushikdutta.ion.gson.GsonObjectParser;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 
@@ -63,7 +66,7 @@ public class FileCacheStore {
     }
 
     public Future<JsonObject> putJsonObject(JsonObject value) {
-        return put(value, new GsonParser<JsonObject>());
+        return put(value, new GsonObjectParser());
     }
 
     public Future<Document> putDocument(Document value) {
@@ -71,7 +74,7 @@ public class FileCacheStore {
     }
 
     public Future<JsonArray> putJsonArray(JsonArray value) {
-        return put(value, new GsonParser<JsonArray>());
+        return put(value, new GsonArrayParser());
     }
 
     /*
@@ -140,19 +143,19 @@ public class FileCacheStore {
     }
 
     public Future<JsonObject> asJsonObject() {
-        return as(new GsonParser<JsonObject>());
+        return as(new GsonObjectParser());
     }
 
     public JsonObject getJsonObject() {
-        return get(new GsonParser<JsonObject>());
+        return get(new GsonObjectParser());
     }
 
     public Future<JsonArray> asJsonArray() {
-        return as(new GsonParser<JsonArray>());
+        return as(new GsonArrayParser());
     }
 
     public JsonArray getJsonArray() {
-        return get(new GsonParser<JsonArray>());
+        return get(new GsonArrayParser());
     }
 
     public Future<Document> asDocument() {

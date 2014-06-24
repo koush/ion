@@ -47,6 +47,7 @@ public class AuthTests extends AndroidTestCase {
                     response.send(json.toString());
                 }
                 catch (Exception e) {
+                    e.printStackTrace();
                     fail();
                 }
             }

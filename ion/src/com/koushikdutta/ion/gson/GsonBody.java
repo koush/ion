@@ -25,13 +25,7 @@ public class GsonBody<T extends JsonElement> implements AsyncHttpRequestBody<T> 
 
     @Override
     public void parse(DataEmitter emitter, final CompletedCallback completed) {
-        new GsonParser<T>().parse(emitter).setCallback(new FutureCallback<T>() {
-            @Override
-            public void onCompleted(Exception e, T result) {
-                json = result;
-                completed.onCompleted(e);
-            }
-        });
+        throw new AssertionError("not implemented");
     }
 
     @Override

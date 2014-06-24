@@ -55,7 +55,9 @@ import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.future.ResponseFuture;
+import com.koushikdutta.ion.gson.GsonArrayParser;
 import com.koushikdutta.ion.gson.GsonBody;
+import com.koushikdutta.ion.gson.GsonObjectParser;
 import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 import com.koushikdutta.ion.gson.PojoBody;
@@ -639,12 +641,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public ResponseFuture<JsonObject> asJsonObject() {
-        return execute(new GsonParser<JsonObject>());
+        return execute(new GsonObjectParser());
     }
 
     @Override
     public ResponseFuture<JsonArray> asJsonArray() {
-        return execute(new GsonParser<JsonArray>());
+        return execute(new GsonArrayParser());
     }
 
     @Override
