@@ -28,7 +28,7 @@ import java.net.URI;
 /**
  * Created by koush on 5/22/13.
  */
-public class FileLoader extends SimpleLoader {
+public class FileLoader extends StreamLoader {
     private static final class FileFuture extends SimpleFuture<DataEmitter> {
     }
 
@@ -54,38 +54,22 @@ public class FileLoader extends SimpleLoader {
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
                     Point size = new Point(options.outWidth, options.outHeight);
-                    Bitmap[] bitmaps;
-                    int[] delays;
+                    BitmapInfo info;
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
                         FileInputStream fin = new FileInputStream(file);
-                        GifDecoder decoder = new GifDecoder(fin, new GifAction() {
-                            @Override
-                            public boolean parseOk(boolean parseStatus, int frameIndex) {
-                                return animateGif;
-                            }
-                        });
-                        decoder.run();
-                        StreamUtility.closeQuietly(fin);
-                        if (decoder.getFrameCount() == 0)
-                            throw new Exception("failed to load gif");
-                        bitmaps = new Bitmap[decoder.getFrameCount()];
-                        delays = decoder.getDelays();
-                        for (int i = 0; i < decoder.getFrameCount(); i++) {
-                            Bitmap bitmap = decoder.getFrameImage(i);
-                            if (bitmap == null)
-                                throw new Exception("failed to load gif frame");
-                            bitmaps[i] = bitmap;
+                        try {
+                            info = loadGif(key, size, fin, options);
+                        }
+                        finally {
+                            StreamUtility.closeQuietly(fin);
                         }
                     }
                     else {
                         Bitmap bitmap = IonBitmapCache.loadBitmap(file, options);
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");
-                        bitmaps = new Bitmap[] { bitmap };
-                        delays = null;
+                        info = new BitmapInfo(key, options.outMimeType, new Bitmap[] { bitmap }, size);
                     }
-                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
-                    info.delays = delays;
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 }

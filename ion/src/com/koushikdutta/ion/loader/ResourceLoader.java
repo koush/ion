@@ -23,12 +23,13 @@ import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.gif.GifAction;
 import com.koushikdutta.ion.gif.GifDecoder;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 
 /**
  * Created by koush on 6/20/14.
  */
-public class ResourceLoader extends SimpleLoader {
+public class ResourceLoader extends StreamLoader {
     private static class Resource {
         Resources res;
         int id;
@@ -77,38 +78,22 @@ public class ResourceLoader extends SimpleLoader {
                     if (options == null)
                         throw new Exception("BitmapFactory.Options failed to load");
                     Point size = new Point(options.outWidth, options.outHeight);
-                    Bitmap[] bitmaps;
-                    int[] delays;
+                    BitmapInfo info;
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
                         InputStream in = res.res.openRawResource(res.id);
-                        GifDecoder decoder = new GifDecoder(in, new GifAction() {
-                            @Override
-                            public boolean parseOk(boolean parseStatus, int frameIndex) {
-                                return animateGif;
-                            }
-                        });
-                        decoder.run();
-                        StreamUtility.closeQuietly(in);
-                        if (decoder.getFrameCount() == 0)
-                            throw new Exception("failed to load gif");
-                        bitmaps = new Bitmap[decoder.getFrameCount()];
-                        delays = decoder.getDelays();
-                        for (int i = 0; i < decoder.getFrameCount(); i++) {
-                            Bitmap bitmap = decoder.getFrameImage(i);
-                            if (bitmap == null)
-                                throw new Exception("failed to load gif frame");
-                            bitmaps[i] = bitmap;
+                        try {
+                            info = loadGif(key, size, in, options);
+                        }
+                        finally {
+                            StreamUtility.closeQuietly(in);
                         }
                     }
                     else {
                         Bitmap bitmap = IonBitmapCache.loadBitmap(res.res, res.id, options);
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");
-                        bitmaps = new Bitmap[] { bitmap };
-                        delays = null;
+                        info = new BitmapInfo(key, options.outMimeType, new Bitmap[] { bitmap }, size);
                     }
-                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
-                    info.delays = delays;
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 }

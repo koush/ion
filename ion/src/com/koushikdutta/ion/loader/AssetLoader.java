@@ -14,12 +14,12 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 import java.io.InputStream;
 
 /**
- * Created by koush on 5/22/13.
+ * Created by koush on 6/27/14.
  */
-public class ContentLoader extends StreamLoader {
+public class AssetLoader extends StreamLoader {
     @Override
     public Future<BitmapInfo> loadBitmap(final Context context, final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight, final boolean animateGif) {
-        if (!uri.startsWith("content:/"))
+        if (!uri.startsWith("file://android_asset/"))
             return null;
 
         return super.loadBitmap(context, ion, key, uri, resizeWidth, resizeHeight, animateGif);
@@ -27,12 +27,12 @@ public class ContentLoader extends StreamLoader {
 
     @Override
     protected InputStream getInputStream(Context context, String uri) throws Exception {
-        return context.getContentResolver().openInputStream(Uri.parse(uri));
+        return context.getAssets().open(Uri.parse(uri).getPath());
     }
 
     @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().getScheme().startsWith("content"))
+        if (!request.getUri().getScheme().startsWith("file://android_asset/"))
             return null;
 
         final InputStreamDataEmitterFuture ret = new InputStreamDataEmitterFuture();

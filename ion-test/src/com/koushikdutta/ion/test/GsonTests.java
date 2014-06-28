@@ -4,7 +4,6 @@ import android.test.AndroidTestCase;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
@@ -17,8 +16,6 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.gson.GsonObjectParser;
-
-import junit.framework.Test;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutionException;

@@ -24,6 +24,7 @@ import com.koushikdutta.ion.Ion;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 /**
@@ -154,6 +155,13 @@ public class IonBitmapCache {
         return prepareBitmapOptions(o, minx, miny);
     }
 
+    public BitmapFactory.Options prepareBitmapOptions(InputStream in, int minx, int miny) {
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(in, null, o);
+        return prepareBitmapOptions(o, minx, miny);
+    }
+
     private static Bitmap getRotatedBitmap(Bitmap bitmap, int rotation) {
         if (bitmap == null)
             return null;
@@ -183,6 +191,8 @@ public class IonBitmapCache {
     }
 
     public static Bitmap loadBitmap(Resources res, int id, BitmapFactory.Options o) {
+        assert Thread.currentThread() != Looper.getMainLooper().getThread();
+
         int rotation;
         InputStream in = null;
         try {
@@ -200,8 +210,27 @@ public class IonBitmapCache {
         return getRotatedBitmap(bitmap, rotation);
     }
 
+    public static Bitmap loadBitmap(InputStream stream, BitmapFactory.Options o) throws IOException {
+        assert Thread.currentThread() != Looper.getMainLooper().getThread();
+
+        int rotation;
+        MarkableInputStream in = new MarkableInputStream(stream);
+        in.mark(50000);
+        try {
+            byte[] bytes = new byte[50000];
+            int length = in.read(bytes);
+            rotation = Exif.getOrientation(bytes, 0, length);
+        }
+        catch (Exception e) {
+            rotation = 0;
+        }
+        in.reset();
+
+        Bitmap bitmap = BitmapFactory.decodeStream(in, null, o);
+        return getRotatedBitmap(bitmap, rotation);
+    }
+
     public static Bitmap loadBitmap(File file, BitmapFactory.Options o) {
-//        stream = new BufferedInputStream(stream, 64 * 1024);
         assert Thread.currentThread() != Looper.getMainLooper().getThread();
 
         int rotation;
