@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.Arrays;
+import java.lang.NoSuchMethodError;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -183,7 +184,11 @@ public class GifDecoder extends Thread{
                 }
             }
 			if (lastPixels != null) {
-                dest = copyOfRange(lastPixels, 0, lastPixels.length);
+		try {
+                	dest = Arrays.copyOf(lastPixels, lastPixels.length);
+		} catch (NoSuchMethodError error) {
+			dest = copyOfRange(lastPixels, 0, lastPixels.length);	
+		}
                 // copy pixels
 				if (lastDispose == 2) {
 					// fill last image rect area with background color
