@@ -27,7 +27,7 @@ public class AssetLoader extends StreamLoader {
 
     @Override
     protected InputStream getInputStream(Context context, String uri) throws Exception {
-        return context.getAssets().open(Uri.parse(uri).getPath());
+        return context.getAssets().open(Uri.parse(uri).getPath().substring(1));
     }
 
     @Override

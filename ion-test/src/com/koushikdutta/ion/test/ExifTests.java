@@ -11,7 +11,7 @@ import com.koushikdutta.ion.Ion;
 public class ExifTests extends AndroidTestCase {
     public void testRotated() throws Exception {
         Bitmap bitmap = Ion.with(getContext())
-        .load("https://raw.github.com/koush/ion/master/ion-test/testdata/exif.jpg")
+        .load("https://raw.github.com/koush/ion/master/ion-test/assets/exif.jpg")
         .asBitmap()
         .get();
 

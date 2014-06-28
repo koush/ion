@@ -68,7 +68,7 @@ public class StreamLoader extends SimpleLoader {
                     StreamUtility.closeQuietly(in);
                     Point size = new Point(options.outWidth, options.outHeight);
                     BitmapInfo info;
-                    in = ion.getContext().getContentResolver().openInputStream(Uri.parse(uri));
+                    in = getInputStream(context, uri);
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
                         info = loadGif(key, size, in, options);
                     }
