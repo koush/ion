@@ -54,6 +54,7 @@ import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
+import com.koushikdutta.ion.future.ImageViewFuture;
 import com.koushikdutta.ion.future.ResponseFuture;
 import com.koushikdutta.ion.gson.GsonArrayParser;
 import com.koushikdutta.ion.gson.GsonBody;
@@ -815,7 +816,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public Future<ImageView> intoImageView(ImageView imageView) {
+    public ImageViewFuture intoImageView(ImageView imageView) {
         return new IonBitmapRequestBuilder(this).intoImageView(imageView);
     }
 

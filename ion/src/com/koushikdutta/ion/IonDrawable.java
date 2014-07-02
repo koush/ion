@@ -15,10 +15,12 @@ import android.text.TextUtils;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.future.ImageViewFuture;
 
 import java.lang.ref.WeakReference;
 
@@ -62,7 +64,32 @@ class IonDrawable extends Drawable {
         return null;
     }
 
-    public SimpleFuture<ImageView> getFuture() {
+    public static class ImageViewFutureImpl extends SimpleFuture<ImageView> implements ImageViewFuture {
+        @Override
+        public Future<ImageViewBitmapInfo> withBitmapInfo() {
+            final SimpleFuture<ImageViewBitmapInfo> ret = new SimpleFuture<ImageViewBitmapInfo>();
+            setCallback(new FutureCallback<ImageView>() {
+                @Override
+                public void onCompleted(Exception e, ImageView result) {
+                    ImageViewBitmapInfo val = new ImageViewBitmapInfo();
+                    Drawable d = null;
+                    if (result != null)
+                        d = result.getDrawable();
+                    if (d instanceof IonDrawable) {
+                        IonDrawable id = (IonDrawable)d;
+                        val.info = id.info;
+                    }
+                    val.exception = e;
+                    val.imageView = result;
+                    ret.setComplete(val);
+                }
+            });
+            ret.setParent(this);
+            return ret;
+        }
+    }
+
+    public ImageViewFutureImpl getFuture() {
         return callback.imageViewFuture;
     }
     
@@ -83,7 +110,7 @@ class IonDrawable extends Drawable {
         private WeakReference<IonDrawable> ionDrawableRef;
         private ContextReference.ImageViewContextReference imageViewRef;
         private String bitmapKey;
-        private SimpleFuture<ImageView> imageViewFuture = new SimpleFuture<ImageView>();
+        private ImageViewFutureImpl imageViewFuture = new ImageViewFutureImpl();
         private Animation inAnimation;
         private int inAnimationResource;
         private int requestId;
@@ -340,6 +367,7 @@ class IonDrawable extends Drawable {
 
     @Override
     public void draw(Canvas canvas) {
+        // TODO: handle animated drawables
         if (info == null) {
             if (placeholder == null && placeholderResource != 0)
                 placeholder = resources.getDrawable(placeholderResource);

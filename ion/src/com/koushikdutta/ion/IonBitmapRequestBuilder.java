@@ -2,7 +2,6 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.view.animation.Animation;
@@ -13,12 +12,13 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
-import com.koushikdutta.ion.builder.ImageViewBuilder;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
+import com.koushikdutta.ion.future.ImageViewFuture;
 
 import java.util.ArrayList;
 
@@ -26,7 +26,7 @@ import java.util.ArrayList;
  * Created by koush on 5/23/13.
  */
 class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, BitmapFutureBuilder, Builders.Any.BF {
-    private static final SimpleFuture<ImageView> FUTURE_IMAGEVIEW_NULL_URI = new SimpleFuture<ImageView>() {
+    private static final IonDrawable.ImageViewFutureImpl FUTURE_IMAGEVIEW_NULL_URI = new IonDrawable.ImageViewFutureImpl() {
         {
             setComplete(new NullPointerException("uri"));
         }
@@ -55,6 +55,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
     boolean disableFadeIn;
     boolean animateGif = true;
     boolean deepZoom;
+    PostProcess postProcess;
 
     void reset() {
         placeholderDrawable = null;
@@ -75,6 +76,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         animateGif = true;
         builder = null;
         deepZoom = false;
+        postProcess = null;
     }
 
     public IonBitmapRequestBuilder(IonRequestBuilder builder) {
@@ -106,7 +108,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
     }
 
     @Override
-    public Future<ImageView> load(String uri) {
+    public ImageViewFuture load(String uri) {
         ensureBuilder();
         builder.load(uri);
         return intoImageView(imageViewPostRef.get());
@@ -134,6 +136,14 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         return this;
     }
 
+    @Override
+    public IonBitmapRequestBuilder postProcess(PostProcess postProcess) {
+        if (this.postProcess != null)
+            throw new IllegalStateException("only one post processor may be used.");
+        this.postProcess = postProcess;
+        return transform(new TransformBitmap.PostProcessNullTransform(postProcess.key()));
+    }
+
     private String computeDownloadKey() {
         String downloadKey = builder.uri;
         // although a gif is always same download, the decode (non/animated) result may different
@@ -146,6 +156,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     public String computeBitmapKey(String downloadKey) {
         assert downloadKey != null;
+
         if (resizeHeight > 0 || resizeWidth > 0) {
             if (transforms == null)
                 transforms = new ArrayList<Transform>();
@@ -154,13 +165,13 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
         // determine the key for this bitmap after all transformations
         String bitmapKey = downloadKey;
-        boolean hasTransforms = transforms != null && transforms.size() > 0;
-        if (hasTransforms) {
+        if (hasTransforms()) {
             for (Transform transform : transforms) {
                 bitmapKey += transform.key();
             }
             bitmapKey = FileCache.toKeyString(bitmapKey);
         }
+
         return bitmapKey;
     }
 
@@ -175,7 +186,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         if (info != null && info.bitmaps != null)
             return LocallyCachedStatus.CACHED;
         FileCache fileCache = ion.responseCache.getFileCache();
-        if (transforms != null && fileCache.exists(bitmapKey))
+        if (hasTransforms() && fileCache.exists(bitmapKey))
             return LocallyCachedStatus.CACHED;
         if (fileCache.exists(downloadKey))
             return LocallyCachedStatus.MAYBE_CACHED;
@@ -205,6 +216,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         ret.transforms = transforms;
         ret.animateGif = animateGif;
         ret.deepZoom = deepZoom;
+        ret.postProcess = postProcess;
 
         // see if this request can be fulfilled from the cache
         if (!builder.noCache) {
@@ -232,7 +244,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
     }
 
     @Override
-    public Future<ImageView> intoImageView(ImageView imageView) {
+    public ImageViewFuture intoImageView(ImageView imageView) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
         if (imageView == null)
             throw new NullPointerException("imageView");
@@ -249,7 +261,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
             doAnimation(imageView, null, 0);
             IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher.info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
             drawable.cancel();
-            SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
+            IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
             imageViewFuture.reset();
             imageViewFuture.setComplete(bitmapFetcher.info.exception, imageView);
             return imageViewFuture;
@@ -266,7 +278,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
         IonDrawable drawable = setIonDrawable(imageView, null, 0);
         doAnimation(imageView, loadAnimation, loadAnimationResource);
-        SimpleFuture<ImageView> imageViewFuture = drawable.getFuture();
+        IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
         imageViewFuture.reset();
         drawable.register(ion, bitmapFetcher.bitmapKey);
         return imageViewFuture;

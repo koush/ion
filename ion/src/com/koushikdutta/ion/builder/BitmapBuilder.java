@@ -1,5 +1,6 @@
 package com.koushikdutta.ion.builder;
 
+import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.Transform;
 
 /**
@@ -43,4 +44,11 @@ public interface BitmapBuilder<B extends BitmapBuilder<?>> {
      * @return
      */
     public B smartSize(boolean smartSize);
+
+    /**
+     * Process the bitmap on a background thread.
+     * @param postProcess
+     * @return
+     */
+    public B postProcess(PostProcess postProcess);
 }

@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.test.AndroidTestCase;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.FutureCallback;
@@ -142,5 +143,12 @@ public class Issues extends AndroidTestCase {
         .get();
 
         assertEquals(b64, data);
+    }
+
+    public void testIssue187() throws Exception {
+        Ion.with(getContext())
+        .load("https://www.google.com/")
+        .setLogging("iontest", Log.VERBOSE)
+        .asString().get();
     }
 }

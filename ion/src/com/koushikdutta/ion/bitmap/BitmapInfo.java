@@ -4,8 +4,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapRegionDecoder;
 import android.graphics.Point;
 
+import com.koushikdutta.async.util.UntypedHashtable;
+
 import java.io.File;
-import java.lang.ref.WeakReference;
 
 /**
  * Created by koush on 6/12/13.
@@ -29,6 +30,7 @@ public class BitmapInfo {
     public BitmapRegionDecoder decoder;
     public File decoderFile;
     public final String mimeType;
+    public final UntypedHashtable extras = new UntypedHashtable();
 
     public int sizeOf() {
         if (bitmaps == null)
