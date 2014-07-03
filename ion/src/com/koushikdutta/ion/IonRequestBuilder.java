@@ -583,7 +583,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             protected void cleanup() {
                 super.cleanup();
                 if (close)
-                    sink.close();
+                    sink.end();
             }
 
             EmitterTransform<T> self = this;

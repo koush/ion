@@ -93,7 +93,7 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testJsonObject() throws Exception {
-        JsonObject ret = Ion.with(getContext(),"https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        JsonObject ret = Ion.with(getContext(),"https://raw.githubusercontent.com/koush/AndroidAsync/master/AndroidAsync/test/assets/test.json")
                 .asJsonObject().get();
         assertEquals("bar", ret.get("foo").getAsString());
     }

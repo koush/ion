@@ -10,36 +10,28 @@ buildscript {
         classpath 'com.android.tools.build:gradle:0.12.+'
     }
 }
-apply plugin: 'com.android.library'
+apply plugin: 'com.android.application'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:20.+'
-    compile project(':AndroidAsync:AndroidAsync')
-    compile 'com.google.code.gson:gson:+'
+    compile 'com.github.chrisbanes.photoview:library:+'
+    compile project(':ion:ion')
 }
 
 android {
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
-
-            java {
-                srcDir 'src/'
-            }
+            res.srcDirs = ['res/']
+            java.srcDirs = ['src/']
         }
-        androidTest.setRoot('test')
-        androidTest.manifest.srcFile 'test/AndroidManifest.xml'
-        androidTest.java.srcDirs=['test/src/']
-        androidTest.res.srcDirs=['test/res/']
-        androidTest.assets.srcDirs=['test/assets/']
     }
 
     compileSdkVersion 19
-    buildToolsVersion '20.0.0'
+    buildToolsVersion "20.0.0"
 
     defaultConfig {
         minSdkVersion 9

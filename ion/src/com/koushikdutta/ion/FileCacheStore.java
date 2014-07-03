@@ -46,7 +46,7 @@ public class FileCacheStore {
                 parser.write(sink, value, new CompletedCallback() {
                     @Override
                     public void onCompleted(Exception ex) {
-                        sink.close();
+                        sink.end();
                         if (ex != null) {
                             file.delete();
                             ret.setComplete(ex);

@@ -1,2 +1,2 @@
-include ':AndroidAsync'
-project(':AndroidAsync').projectDir = new File('../../AndroidAsync/AndroidAsync')
+include ':AndroidAsync:AndroidAsync'
+project(':AndroidAsync:AndroidAsync').projectDir = new File('../../AndroidAsync/AndroidAsync')

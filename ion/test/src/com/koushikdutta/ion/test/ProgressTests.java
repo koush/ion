@@ -28,28 +28,29 @@ public class ProgressTests extends AndroidTestCase {
         final Semaphore semaphore = new Semaphore(0);
         final Semaphore progressSemaphore = new Semaphore(0);
         final Md5 md5 = Md5.createInstance();
-        Ion.with(getContext(), "https://github.com/koush/AndroidAsync/raw/master/AndroidAsyncTest/testdata/6691924d7d24237d3b3679310157d640")
-                .setHandler(null)
-                .setTimeout(600000)
-                .progress(new ProgressCallback() {
-                    @Override
-                    public void onProgress(long downloaded, long total) {
-                        // depending on gzip, etc. the total may vary... the actual length of the uncompressed data
-                        // is 100000
-                        assertTrue(total > 90000 && total < 110000);
-                        progressSemaphore.release();
-                    }
-                })
-                .write(new ByteArrayOutputStream())
-                .setCallback(new FutureCallback<ByteArrayOutputStream>() {
-                    @Override
-                    public void onCompleted(Exception e, ByteArrayOutputStream result) {
-                        byte[] bytes = result.toByteArray();
-                        md5.update(new ByteBufferList(bytes));
-                        assertEquals(md5.digest(), dataNameAndHash);
-                        semaphore.release();
-                    }
-                });
+        Ion.with(getContext())
+        .load("https://raw.githubusercontent.com/koush/AndroidAsync/master/AndroidAsync/test/assets/6691924d7d24237d3b3679310157d640")
+        .setHandler(null)
+        .setTimeout(600000)
+        .progress(new ProgressCallback() {
+            @Override
+            public void onProgress(long downloaded, long total) {
+                // depending on gzip, etc. the total may vary... the actual length of the uncompressed data
+                // is 100000
+                assertTrue(total > 90000 && total < 110000);
+                progressSemaphore.release();
+            }
+        })
+        .write(new ByteArrayOutputStream())
+        .setCallback(new FutureCallback<ByteArrayOutputStream>() {
+            @Override
+            public void onCompleted(Exception e, ByteArrayOutputStream result) {
+                byte[] bytes = result.toByteArray();
+                md5.update(new ByteBufferList(bytes));
+                assertEquals(md5.digest(), dataNameAndHash);
+                semaphore.release();
+            }
+        });
         assertTrue(semaphore.tryAcquire(600000, TimeUnit.MILLISECONDS));
         assertTrue(progressSemaphore.tryAcquire(10000, TimeUnit.MILLISECONDS));
     }

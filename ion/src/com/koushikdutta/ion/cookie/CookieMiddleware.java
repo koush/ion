@@ -2,11 +2,9 @@ package com.koushikdutta.ion.cookie;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.SimpleMiddleware;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 
