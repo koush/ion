@@ -31,8 +31,6 @@ android {
                 srcDir 'src/'
             }
         }
-        androidTest.setRoot('test')
-        androidTest.manifest.srcFile 'test/AndroidManifest.xml'
         androidTest.java.srcDirs=['test/src/']
         androidTest.res.srcDirs=['test/res/']
         androidTest.assets.srcDirs=['test/assets/']
