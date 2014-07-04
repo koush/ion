@@ -291,57 +291,58 @@ class IonDrawable extends Drawable {
         return error = resources.getDrawable(errorResource);
     }
 
+    private Drawable tryGetPlaceholderResource() {
+        if (placeholder != null)
+            return placeholder;
+        if (placeholderResource == 0)
+            return null;
+        return placeholder = resources.getDrawable(placeholderResource);
+    }
+
     @Override
     public int getIntrinsicWidth() {
+        // check eventual image size...
+        if (resizeWidth > 0)
+            return resizeWidth;
+        // first check if image was loaded
         if (info != null) {
             if (info.decoder != null)
                 return info.originalSize.x;
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
         }
-        if (resizeWidth > 0)
-            return resizeWidth;
+        // no image, but there was an error
         if (info != null) {
             Drawable error = tryGetErrorResource();
             if (error != null)
                 return error.getIntrinsicWidth();
         }
-        if (placeholder != null) {
+        // check placeholder
+        Drawable placeholder = tryGetPlaceholderResource();
+        if (placeholder != null)
             return placeholder.getIntrinsicWidth();
-        } else if (placeholderResource != 0) {
-            Drawable d = resources.getDrawable(placeholderResource);
-            assert d != null;
-            return d.getIntrinsicWidth();
-        }
+        // we're SOL
         return -1;
     }
 
     @Override
     public int getIntrinsicHeight() {
+        if (resizeHeight > 0)
+            return resizeHeight;
         if (info != null) {
             if (info.decoder != null)
                 return info.originalSize.y;
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
         }
-        if (resizeHeight > 0)
-            return resizeHeight;
         if (info != null) {
-            if (error != null) {
+            Drawable error = tryGetErrorResource();
+            if (error != null)
                 return error.getIntrinsicHeight();
-            } else if (errorResource != 0) {
-                Drawable d = resources.getDrawable(errorResource);
-                assert d != null;
-                return d.getIntrinsicHeight();
-            }
         }
-        if (placeholder != null) {
+        Drawable placeholder = tryGetPlaceholderResource();
+        if (placeholder != null)
             return placeholder.getIntrinsicHeight();
-        } else if (placeholderResource != 0) {
-            Drawable d = resources.getDrawable(placeholderResource);
-            assert d != null;
-            return d.getIntrinsicHeight();
-        }
         return -1;
     }
 
@@ -365,15 +366,32 @@ class IonDrawable extends Drawable {
         }
     };
 
+    private void drawDrawable(Canvas canvas, Drawable d) {
+        int iw = d.getIntrinsicWidth();
+        int ih = d.getIntrinsicHeight();
+
+        int w = getIntrinsicWidth();
+        int h = getIntrinsicHeight();
+
+        int wp = (w - iw) / 2;
+        int hp = (h - ih) / 2;
+
+        Rect b = copyBounds();
+        b.left += wp;
+        b.right = b.left + iw;
+        b.top += hp;
+        b.bottom = b.top + ih;
+        d.setBounds(b);
+        d.draw(canvas);
+    }
+
     @Override
     public void draw(Canvas canvas) {
         // TODO: handle animated drawables
         if (info == null) {
-            if (placeholder == null && placeholderResource != 0)
-                placeholder = resources.getDrawable(placeholderResource);
+            Drawable placeholder = tryGetPlaceholderResource();
             if (placeholder != null) {
-                placeholder.setBounds(getBounds());
-                placeholder.draw(canvas);
+                drawDrawable(canvas, placeholder);
             }
             return;
         }
@@ -389,11 +407,11 @@ class IonDrawable extends Drawable {
         }
 
         if (destAlpha != 255) {
-            if (placeholder == null && placeholderResource != 0)
-                placeholder = resources.getDrawable(placeholderResource);
+            Drawable placeholder = tryGetPlaceholderResource();
             if (placeholder != null) {
-                placeholder.setBounds(getBounds());
-                placeholder.draw(canvas);
+                drawDrawable(canvas, placeholder);
+//                placeholder.setBounds(getBounds());
+//                placeholder.draw(canvas);
             }
         }
 
@@ -565,8 +583,7 @@ class IonDrawable extends Drawable {
             Drawable error = tryGetErrorResource();
             if (error != null) {
                 error.setAlpha((int)destAlpha);
-                error.setBounds(getBounds());
-                error.draw(canvas);
+                drawDrawable(canvas, error);
                 error.setAlpha(0xFF);
             }
         }
