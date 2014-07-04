@@ -1,5 +1,9 @@
 package com.koushikdutta.ion.builder;
 
+import android.graphics.Bitmap;
+
+import com.koushikdutta.ion.bitmap.BitmapInfo;
+
 /**
  * Created by koush on 6/10/13.
  */
@@ -7,6 +11,8 @@ public interface Builders {
 
     public interface IV {
         public interface F<A extends F<?>> extends ImageViewBuilder<A>, BitmapBuilder<A>, LoadImageViewFutureBuilder {
+            BitmapInfo getBitmapInfo();
+            Bitmap getBitmap();
         }
     }
 

@@ -59,7 +59,6 @@ import com.koushikdutta.ion.future.ResponseFuture;
 import com.koushikdutta.ion.gson.GsonArrayParser;
 import com.koushikdutta.ion.gson.GsonBody;
 import com.koushikdutta.ion.gson.GsonObjectParser;
-import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 import com.koushikdutta.ion.gson.PojoBody;
 
@@ -811,13 +810,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public IonBitmapRequestBuilder withBitmap() {
-        return new IonBitmapRequestBuilder(this);
+    public IonImageViewRequestBuilder withBitmap() {
+        return new IonImageViewRequestBuilder(this);
     }
 
     @Override
     public ImageViewFuture intoImageView(ImageView imageView) {
-        return new IonBitmapRequestBuilder(this).intoImageView(imageView);
+        return new IonImageViewRequestBuilder(this).intoImageView(imageView);
     }
 
     @Override
@@ -828,17 +827,17 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public BitmapInfo asCachedBitmap() {
-        return new IonBitmapRequestBuilder(this).asCachedBitmap();
+        return new IonImageViewRequestBuilder(this).asCachedBitmap();
     }
 
     @Override
     public LocallyCachedStatus isLocallyCached() {
-        return new IonBitmapRequestBuilder(this).isLocallyCached();
+        return new IonImageViewRequestBuilder(this).isLocallyCached();
     }
 
     @Override
     public Future<Bitmap> asBitmap() {
-        return new IonBitmapRequestBuilder(this).asBitmap();
+        return new IonImageViewRequestBuilder(this).asBitmap();
     }
 
     String logTag;

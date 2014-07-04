@@ -163,7 +163,7 @@ public class Ion {
     Config config = new Config();
     IonBitmapCache bitmapCache;
     Context context;
-    IonBitmapRequestBuilder bitmapBuilder = new IonBitmapRequestBuilder(this);
+    IonImageViewRequestBuilder bitmapBuilder = new IonImageViewRequestBuilder(this);
 
     private Ion(Context context, String name) {
         httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));

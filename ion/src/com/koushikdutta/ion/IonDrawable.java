@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -56,6 +57,10 @@ class IonDrawable extends Drawable {
         if (errorResource != 0)
             return resources.getDrawable(errorResource);
         return null;
+    }
+
+    public BitmapInfo getBitmapInfo() {
+        return info;
     }
 
     public static class ImageViewFutureImpl extends SimpleFuture<ImageView> implements ImageViewFuture {

@@ -1,9 +1,7 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.os.Build;
-import android.os.Looper;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
@@ -12,25 +10,18 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
-import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
+import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
-import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
-import com.koushikdutta.ion.future.ImageViewFuture;
 
 import java.util.ArrayList;
 
 /**
  * Created by koush on 5/23/13.
  */
-class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, BitmapFutureBuilder, Builders.Any.BF {
-    private static final IonDrawable.ImageViewFutureImpl FUTURE_IMAGEVIEW_NULL_URI = new IonDrawable.ImageViewFutureImpl() {
-        {
-            setComplete(new NullPointerException("uri"));
-        }
-    };
+abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.Any.BF {
     private static final SimpleFuture<Bitmap> FUTURE_BITMAP_NULL_URI = new SimpleFuture<Bitmap>() {
         {
             setComplete(new NullPointerException("uri"));
@@ -39,16 +30,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     IonRequestBuilder builder;
     Ion ion;
-    ContextReference.ImageViewContextReference imageViewPostRef;
     ArrayList<Transform> transforms;
-    Drawable placeholderDrawable;
-    int placeholderResource;
-    Drawable errorDrawable;
-    int errorResource;
-    Animation inAnimation;
-    Animation loadAnimation;
-    int loadAnimationResource;
-    int inAnimationResource;
     ScaleMode scaleMode = ScaleMode.FitXY;
     int resizeWidth;
     int resizeHeight;
@@ -58,17 +40,8 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
     PostProcess postProcess;
 
     void reset() {
-        placeholderDrawable = null;
-        placeholderResource = 0;
-        errorDrawable = null;
-        errorResource = 0;
         ion = null;
-        imageViewPostRef = null;
         transforms = null;
-        inAnimation = null;
-        inAnimationResource = 0;
-        loadAnimation = null;
-        loadAnimationResource = 0;
         scaleMode = ScaleMode.FitXY;
         resizeWidth = 0;
         resizeHeight = 0;
@@ -101,29 +74,8 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         imageView.startAnimation(animation);
     }
 
-    private IonRequestBuilder ensureBuilder() {
-        if (builder == null)
-            builder = new IonRequestBuilder(ContextReference.fromContext(imageViewPostRef.getContext().getApplicationContext()), ion);
+    protected IonRequestBuilder ensureBuilder() {
         return builder;
-    }
-
-    @Override
-    public ImageViewFuture load(String uri) {
-        ensureBuilder();
-        builder.load(uri);
-        return intoImageView(imageViewPostRef.get());
-    }
-
-    @Override
-    public Future<ImageView> load(String method, String url) {
-        ensureBuilder();
-        builder.load(method, url);
-        return intoImageView(imageViewPostRef.get());
-    }
-
-    IonBitmapRequestBuilder withImageView(ImageView imageView) {
-        imageViewPostRef = new ContextReference.ImageViewContextReference(imageView);
-        return this;
     }
 
     @Override
@@ -195,7 +147,6 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
     @Override
     public BitmapInfo asCachedBitmap() {
-        assert Thread.currentThread() == Looper.getMainLooper().getThread() || imageViewPostRef == null;
         final String downloadKey = computeDownloadKey();
         String bitmapKey = computeBitmapKey(downloadKey);
         return builder.ion.bitmapCache.get(bitmapKey);
@@ -230,60 +181,6 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         return ret;
     }
 
-    private IonDrawable setIonDrawable(ImageView imageView, BitmapInfo info, int loadedFrom) {
-        IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView)
-        .ion(ion)
-        .setBitmap(info, loadedFrom)
-        .setSize(resizeWidth, resizeHeight)
-        .setError(errorResource, errorDrawable)
-        .setPlaceholder(placeholderResource, placeholderDrawable)
-        .setInAnimation(inAnimation, inAnimationResource)
-        .setDisableFadeIn(disableFadeIn);
-        imageView.setImageDrawable(ret);
-        return ret;
-    }
-
-    @Override
-    public ImageViewFuture intoImageView(ImageView imageView) {
-        assert Thread.currentThread() == Looper.getMainLooper().getThread();
-        if (imageView == null)
-            throw new NullPointerException("imageView");
-
-        // no uri? just set a placeholder and bail
-        if (builder.uri == null) {
-            setIonDrawable(imageView, null, 0).unregister();
-            return FUTURE_IMAGEVIEW_NULL_URI;
-        }
-
-        // executeCache the request, see if we get a bitmap from cache.
-        BitmapFetcher bitmapFetcher = executeCache();
-        if (bitmapFetcher.info != null) {
-            doAnimation(imageView, null, 0);
-            IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher.info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
-            drawable.unregister();
-            IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
-            imageViewFuture.reset();
-            imageViewFuture.setComplete(bitmapFetcher.info.exception, imageView);
-            return imageViewFuture;
-        }
-
-        // nothing from cache, check to see if there's too many imageview loads
-        // already in progress
-        if (BitmapFetcher.shouldDeferImageView(ion)) {
-            bitmapFetcher.defer();
-        }
-        else {
-            bitmapFetcher.execute();
-        }
-
-        IonDrawable drawable = setIonDrawable(imageView, null, 0);
-        doAnimation(imageView, loadAnimation, loadAnimationResource);
-        IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
-        imageViewFuture.reset();
-        drawable.register(ion, bitmapFetcher.bitmapKey);
-        return imageViewFuture;
-    }
-
     @Override
     public Future<Bitmap> asBitmap() {
         if (builder.uri == null) {
@@ -304,65 +201,6 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.contextReference);
         ion.bitmapsPending.add(bitmapFetcher.bitmapKey, ret);
         return ret;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder crossfade() {
-        ImageView iv = imageViewPostRef.get();
-        Drawable drawable = iv.getDrawable();
-        if (drawable instanceof IonDrawable) {
-            IonDrawable ionDrawable = (IonDrawable)drawable;
-            drawable = ionDrawable.getCurrentDrawable();
-        }
-        return placeholder(drawable);
-    }
-
-    @Override
-    public IonBitmapRequestBuilder placeholder(Drawable drawable) {
-        placeholderDrawable = drawable;
-        return this;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder placeholder(int resourceId) {
-        placeholderResource = resourceId;
-        return this;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder error(Drawable drawable) {
-        errorDrawable = drawable;
-        return this;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder error(int resourceId) {
-        errorResource = resourceId;
-        return this;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder animateIn(Animation in) {
-        inAnimation = in;
-        return this;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder animateLoad(Animation load) {
-        loadAnimation = load;
-        return this;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder animateLoad(int animationResource) {
-        loadAnimationResource = animationResource;
-        return this;
-    }
-
-    @Override
-    public IonBitmapRequestBuilder animateIn(int animationResource) {
-        inAnimationResource = animationResource;
-        return this;
     }
 
     @Override
