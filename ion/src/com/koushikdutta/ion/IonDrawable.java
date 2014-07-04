@@ -370,17 +370,19 @@ class IonDrawable extends Drawable {
         int iw = d.getIntrinsicWidth();
         int ih = d.getIntrinsicHeight();
 
-        int w = getIntrinsicWidth();
-        int h = getIntrinsicHeight();
-
-        int wp = (w - iw) / 2;
-        int hp = (h - ih) / 2;
-
         Rect b = copyBounds();
-        b.left += wp;
-        b.right = b.left + iw;
-        b.top += hp;
-        b.bottom = b.top + ih;
+        int w = b.width();
+        int h = b.height();
+        if (iw >= 0) {
+            int wp = (w - iw) / 2;
+            b.left += wp;
+            b.right = b.left + iw;
+        }
+        if (ih >= 0) {
+            int hp = (h - ih) / 2;
+            b.top += hp;
+            b.bottom = b.top + ih;
+        }
         d.setBounds(b);
         d.draw(canvas);
     }
