@@ -11,7 +11,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.text.TextUtils;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
@@ -41,11 +40,6 @@ class IonDrawable extends Drawable {
     private int resizeWidth;
     private int resizeHeight;
     private Ion ion;
-
-    public IonDrawable cancel() {
-        requestCount++;
-        return this;
-    }
 
     public IonDrawable ion(Ion ion) {
         this.ion = ion;
@@ -113,7 +107,6 @@ class IonDrawable extends Drawable {
         private ImageViewFutureImpl imageViewFuture = new ImageViewFutureImpl();
         private Animation inAnimation;
         private int inAnimationResource;
-        private int requestId;
 
         public IonDrawableCallback(IonDrawable drawable, ImageView imageView) {
             ionDrawableRef = new WeakReference<IonDrawable>(drawable);
@@ -136,10 +129,6 @@ class IonDrawable extends Drawable {
             if (imageView.getDrawable() != drawable)
                 return;
 
-            // see if the ImageView is still waiting for the same request
-            if (drawable.requestCount != requestId)
-                return;
-
             imageView.setImageDrawable(null);
             drawable.setBitmap(result, result.loadedFrom);
             imageView.setImageDrawable(drawable);
@@ -154,26 +143,20 @@ class IonDrawable extends Drawable {
         }
     }
 
-    int requestCount;
-    public void register(Ion ion, String bitmapKey) {
-        callback.requestId = ++requestCount;
-        String previousKey = callback.bitmapKey;
-        if (TextUtils.equals(previousKey, bitmapKey))
-            return;
-        callback.bitmapKey = bitmapKey;
-        ion.bitmapsPending.add(bitmapKey, callback);
-        if (previousKey == null)
-            return;
-
+    public IonDrawable unregister() {
+        String key = callback.bitmapKey;
+        if (key == null)
+            return this;
+        callback.bitmapKey = null;
         // unregister this drawable from the bitmaps that are
         // pending.
 
         // if this drawable was the only thing waiting for this bitmap,
         // then the removeItem call will return the TransformBitmap/LoadBitmap instance
         // that was providing the result.
-        if (ion.bitmapsPending.removeItem(previousKey, callback)) {
+        if (ion.bitmapsPending.removeItem(key, callback)) {
             // find out who owns this thing, to see if it is a candidate for removal
-            Object owner = ion.bitmapsPending.tag(previousKey);
+            Object owner = ion.bitmapsPending.tag(key);
             if (owner instanceof TransformBitmap) {
                 TransformBitmap info = (TransformBitmap)owner;
                 ion.bitmapsPending.remove(info.key);
@@ -189,6 +172,13 @@ class IonDrawable extends Drawable {
         }
 
         ion.processDeferred();
+        return this;
+    }
+
+    public void register(Ion ion, String bitmapKey) {
+        unregister();
+        callback.bitmapKey = bitmapKey;
+        ion.bitmapsPending.add(bitmapKey, callback);
     }
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
@@ -204,8 +194,8 @@ class IonDrawable extends Drawable {
     private int textureDim;
     private int maxLevel;
     public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
+        unregister();
         this.loadedFrom = loadedFrom;
-        requestCount++;
 
         if (this.info == info)
             return this;
@@ -251,21 +241,25 @@ class IonDrawable extends Drawable {
     }
 
     public IonDrawable setError(int resource, Drawable drawable) {
-        if ((drawable != null && drawable == this.error) || (resource != 0 && resource == errorResource))
+        if ((drawable != null && drawable == error) || (resource != 0 && resource == errorResource))
             return this;
 
-        this.errorResource = resource;
-        this.error = drawable;
+        errorResource = resource;
+        if (error != null)
+            error.setCallback(null);
+        error = drawable;
         invalidateSelf();
         return this;
     }
 
     public IonDrawable setPlaceholder(int resource, Drawable drawable) {
-        if ((drawable != null && drawable == this.placeholder) || (resource != 0 && resource == placeholderResource))
+        if ((drawable != null && drawable == placeholder) || (resource != 0 && resource == placeholderResource))
             return this;
 
-        this.placeholderResource = resource;
-        this.placeholder = drawable;
+        placeholderResource = resource;
+        if (placeholder != null)
+            placeholder.setCallback(null);
+        placeholder = drawable;
         invalidateSelf();
 
         return this;
@@ -283,12 +277,31 @@ class IonDrawable extends Drawable {
         invalidateSelf();
     }
 
+    Callback drawableCallback = new Callback() {
+        @Override
+        public void invalidateDrawable(Drawable who) {
+            IonDrawable.this.invalidateSelf();
+        }
+
+        @Override
+        public void scheduleDrawable(Drawable who, Runnable what, long when) {
+            IonDrawable.this.scheduleSelf(what, when);
+        }
+
+        @Override
+        public void unscheduleDrawable(Drawable who, Runnable what) {
+            IonDrawable.this.unscheduleSelf(what);
+        }
+    };
+
     private Drawable tryGetErrorResource() {
         if (error != null)
             return error;
         if (errorResource == 0)
             return null;
-        return error = resources.getDrawable(errorResource);
+        error = resources.getDrawable(errorResource);
+        error.setCallback(drawableCallback);
+        return error;
     }
 
     private Drawable tryGetPlaceholderResource() {
@@ -296,7 +309,9 @@ class IonDrawable extends Drawable {
             return placeholder;
         if (placeholderResource == 0)
             return null;
-        return placeholder = resources.getDrawable(placeholderResource);
+        placeholder = resources.getDrawable(placeholderResource);
+        placeholder.setCallback(drawableCallback);
+        return placeholder;
     }
 
     @Override
@@ -412,8 +427,6 @@ class IonDrawable extends Drawable {
             Drawable placeholder = tryGetPlaceholderResource();
             if (placeholder != null) {
                 drawDrawable(canvas, placeholder);
-//                placeholder.setBounds(getBounds());
-//                placeholder.draw(canvas);
             }
         }
 

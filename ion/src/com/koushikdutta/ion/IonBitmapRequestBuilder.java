@@ -251,7 +251,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
-            setIonDrawable(imageView, null, 0).cancel();
+            setIonDrawable(imageView, null, 0).unregister();
             return FUTURE_IMAGEVIEW_NULL_URI;
         }
 
@@ -260,7 +260,7 @@ class IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder, 
         if (bitmapFetcher.info != null) {
             doAnimation(imageView, null, 0);
             IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher.info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
-            drawable.cancel();
+            drawable.unregister();
             IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
             imageViewFuture.reset();
             imageViewFuture.setComplete(bitmapFetcher.info.exception, imageView);
