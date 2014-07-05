@@ -144,11 +144,4 @@ public class Issues extends AndroidTestCase {
 
         assertEquals(b64, data);
     }
-
-    public void testIssue187() throws Exception {
-        Ion.with(getContext())
-        .load("https://www.google.com/")
-        .setLogging("iontest", Log.VERBOSE)
-        .asString().get();
-    }
 }

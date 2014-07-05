@@ -27,7 +27,7 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
     int resizeHeight;
     boolean animateGif;
     boolean deepZoom;
-    PostProcess postProcess;
+    ArrayList<PostProcess> postProcess;
 
     private boolean fastLoad(String uri) {
         Ion ion = builder.ion;

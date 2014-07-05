@@ -321,9 +321,6 @@ class IonDrawable extends Drawable {
 
     @Override
     public int getIntrinsicWidth() {
-        // check eventual image size...
-        if (resizeWidth > 0)
-            return resizeWidth;
         // first check if image was loaded
         if (info != null) {
             if (info.decoder != null)
@@ -341,14 +338,15 @@ class IonDrawable extends Drawable {
         Drawable placeholder = tryGetPlaceholderResource();
         if (placeholder != null)
             return placeholder.getIntrinsicWidth();
+        // check eventual image size...
+        if (resizeWidth > 0)
+            return resizeWidth;
         // we're SOL
         return -1;
     }
 
     @Override
     public int getIntrinsicHeight() {
-        if (resizeHeight > 0)
-            return resizeHeight;
         if (info != null) {
             if (info.decoder != null)
                 return info.originalSize.y;
@@ -363,6 +361,8 @@ class IonDrawable extends Drawable {
         Drawable placeholder = tryGetPlaceholderResource();
         if (placeholder != null)
             return placeholder.getIntrinsicHeight();
+        if (resizeHeight > 0)
+            return resizeHeight;
         return -1;
     }
 
@@ -387,23 +387,33 @@ class IonDrawable extends Drawable {
     };
 
     private void drawDrawable(Canvas canvas, Drawable d) {
-        int iw = d.getIntrinsicWidth();
-        int ih = d.getIntrinsicHeight();
+        if (d == null)
+            return;
 
-        Rect b = copyBounds();
-        int w = b.width();
-        int h = b.height();
-        if (iw >= 0) {
-            int wp = (w - iw) / 2;
-            b.left += wp;
-            b.right = b.left + iw;
+        if (false) {
+            // this centers and draws the drawable
+            int iw = d.getIntrinsicWidth();
+            int ih = d.getIntrinsicHeight();
+
+            Rect b = copyBounds();
+            int w = b.width();
+            int h = b.height();
+            if (iw >= 0) {
+                int wp = (w - iw) / 2;
+                b.left += wp;
+                b.right = b.left + iw;
+            }
+            if (ih >= 0) {
+                int hp = (h - ih) / 2;
+                b.top += hp;
+                b.bottom = b.top + ih;
+            }
+            d.setBounds(b);
         }
-        if (ih >= 0) {
-            int hp = (h - ih) / 2;
-            b.top += hp;
-            b.bottom = b.top + ih;
+        else {
+            // fill canvas with image.
+            d.setBounds(getBounds());
         }
-        d.setBounds(b);
         d.draw(canvas);
     }
 
@@ -411,10 +421,7 @@ class IonDrawable extends Drawable {
     public void draw(Canvas canvas) {
         // TODO: handle animated drawables
         if (info == null) {
-            Drawable placeholder = tryGetPlaceholderResource();
-            if (placeholder != null) {
-                drawDrawable(canvas, placeholder);
-            }
+            drawDrawable(canvas, tryGetPlaceholderResource());
             return;
         }
 

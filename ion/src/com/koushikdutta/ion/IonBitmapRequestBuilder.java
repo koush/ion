@@ -37,7 +37,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     boolean disableFadeIn;
     boolean animateGif = true;
     boolean deepZoom;
-    PostProcess postProcess;
+    ArrayList<PostProcess> postProcess;
 
     void reset() {
         ion = null;
@@ -90,9 +90,9 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
 
     @Override
     public IonBitmapRequestBuilder postProcess(PostProcess postProcess) {
-        if (this.postProcess != null)
-            throw new IllegalStateException("only one post processor may be used.");
-        this.postProcess = postProcess;
+        if (this.postProcess == null)
+            this.postProcess = new ArrayList<PostProcess>();
+        this.postProcess.add(postProcess);
         return transform(new TransformBitmap.PostProcessNullTransform(postProcess.key()));
     }
 

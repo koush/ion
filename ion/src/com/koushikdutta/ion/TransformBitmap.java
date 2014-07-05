@@ -33,9 +33,9 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
     }
 
     ArrayList<Transform> transforms;
-    PostProcess postProcess;
+    ArrayList<PostProcess> postProcess;
 
-    public static void getBitmapSnapshot(final Ion ion, final String transformKey, final PostProcess postProcess) {
+    public static void getBitmapSnapshot(final Ion ion, final String transformKey, final ArrayList<PostProcess> postProcess) {
         // don't do this if this is already loading
         if (ion.bitmapsPending.tag(transformKey) != null)
             return;
@@ -57,8 +57,11 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                     BitmapInfo info = new BitmapInfo(transformKey, "image/jpeg", new Bitmap[] { bitmap }, size);
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
 
-                    if (postProcess != null)
-                        postProcess.postProcess(info);
+                    if (postProcess != null) {
+                        for (PostProcess p: postProcess) {
+                            p.postProcess(info);
+                        }
+                    }
 
                     callback.report(null, info);
                 }
@@ -77,7 +80,7 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
     }
 
     String downloadKey;
-    public TransformBitmap(Ion ion, String transformKey, String downloadKey, ArrayList<Transform> transforms, PostProcess postProcess) {
+    public TransformBitmap(Ion ion, String transformKey, String downloadKey, ArrayList<Transform> transforms, ArrayList<PostProcess> postProcess) {
         super(ion, transformKey, true);
         this.transforms = transforms;
         this.downloadKey = downloadKey;
@@ -123,8 +126,11 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                     info.delays = result.delays;
                     info.loadedFrom = result.loadedFrom;
 
-                    if (postProcess != null)
-                        postProcess.postProcess(info);
+                    if (postProcess != null) {
+                        for (PostProcess p: postProcess) {
+                            p.postProcess(info);
+                        }
+                    }
 
                     report(null, info);
                 }
