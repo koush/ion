@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.test.AndroidTestCase;
 import android.util.Base64;
 import android.util.Log;
-import android.widget.TextView;
 
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.FutureCallback;
@@ -12,7 +11,7 @@ import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
-import com.koushikdutta.async.util.*;
+import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
 
 import java.io.File;
@@ -144,4 +143,22 @@ public class Issues extends AndroidTestCase {
 
         assertEquals(b64, data);
     }
+
+    /*
+    public void testSSLv3Workaround() throws Exception {
+        Ion.getDefault(getContext())
+        .getHttpClient()
+        .getSSLSocketMiddleware()
+        .addEngineConfigurator(new AsyncSSLEngineConfigurator() {
+            @Override
+            public void configureEngine(SSLEngine engine) {
+                engine.setEnabledProtocols(new String[] { "SSLv3" });
+            }
+        });
+        Ion.with(getContext())
+        .load("https://members.easynews.com/dl/893b36f51a28bb066a7401e2850ecf2401cdd97a1.jpg/Kittens-and-Puppies-13_graylady.jpg")
+        .asString()
+        .get();
+    }
+    */
 }

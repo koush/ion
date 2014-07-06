@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
@@ -102,7 +103,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
-            setIonDrawable(imageView, null, 0).unregister();
+            setIonDrawable(imageView, null, 0).cancel();
             return FUTURE_IMAGEVIEW_NULL_URI;
         }
 
@@ -111,7 +112,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         if (bitmapFetcher.info != null) {
             doAnimation(imageView, null, 0);
             IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher.info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
-            drawable.unregister();
+            drawable.cancel();
             IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
             imageViewFuture.reset();
             imageViewFuture.setComplete(bitmapFetcher.info.exception, imageView);
@@ -179,6 +180,20 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
             drawable = ionDrawable.getCurrentDrawable();
         }
         return placeholder(drawable);
+    }
+
+    @Override
+    protected void finalizeResize() {
+        if (resizeWidth > 0 && resizeHeight > 0)
+            return;
+        ImageView iv = imageViewPostRef.get();
+        ViewGroup.LayoutParams lp = iv.getLayoutParams();
+        if (lp == null)
+            return;
+        if (resizeWidth <= 0 && lp.width > 0)
+            resizeWidth = lp.width;
+        if (resizeHeight <= 0 && lp.height > 0)
+            resizeHeight = lp.height;
     }
 
     @Override

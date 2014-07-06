@@ -13,6 +13,7 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.Transform;
+import com.koushikdutta.ion.builder.BitmapBuilder;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 
@@ -106,10 +107,21 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         return FileCache.toKeyString(downloadKey);
     }
 
+    protected void finalizeResize() {
+    }
+
     public String computeBitmapKey(String downloadKey) {
         assert downloadKey != null;
 
-        if (resizeHeight > 0 || resizeWidth > 0) {
+        if (resizeHeight > 0 || resizeWidth > 0 || scaleMode != ScaleMode.FitXY) {
+            finalizeResize();
+            if (resizeWidth < 0 && resizeHeight < 0) {
+                throw new IllegalStateException("must provide valid resize dimensions if using" +
+                "centerCrop or centerInside\n\n" +
+                "Valid values: (<=0, Y) or (X, <=0), or (X, Y), where:\n" +
+                "X and Y are greater than 0. Specifying <=0 values will scale proportionately.\n" +
+                "Values can also be implied through layout parameters.");
+            }
             if (transforms == null)
                 transforms = new ArrayList<Transform>();
             transforms.add(0, new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
@@ -239,6 +251,16 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         resizeWidth = width;
         resizeHeight = height;
         return this;
+    }
+
+    @Override
+    public IonBitmapRequestBuilder resizeWidth(int width) {
+        return resize(width, 0);
+    }
+
+    @Override
+    public IonBitmapRequestBuilder resizeHeight(int height) {
+        return resize(0, height);
     }
 
     @Override

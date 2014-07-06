@@ -9,9 +9,9 @@ import com.koushikdutta.ion.bitmap.Transform;
 import java.io.FileOutputStream;
 
 class DefaultTransform implements Transform {
-    ScaleMode scaleMode;
-    int resizeWidth;
-    int resizeHeight;
+    final ScaleMode scaleMode;
+    final int resizeWidth;
+    final int resizeHeight;
 
     public DefaultTransform(int width, int height, ScaleMode scaleMode) {
         resizeWidth = width;
@@ -24,6 +24,17 @@ class DefaultTransform implements Transform {
         Bitmap.Config config = b.getConfig();
         if (config == null)
             config = Bitmap.Config.ARGB_8888;
+        int resizeWidth = this.resizeWidth;
+        int resizeHeight = this.resizeHeight;
+        if (resizeWidth <= 0) {
+            float ratio = (float)b.getWidth() / (float)b.getHeight();
+            resizeWidth = (int)(ratio * resizeHeight);
+        }
+        else if (resizeHeight <= 0) {
+            float ratio = (float)b.getHeight() / (float)b.getWidth();
+            resizeHeight = (int)(ratio * resizeWidth);
+        }
+
         Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, config);
         Canvas canvas = new Canvas(ret);
 

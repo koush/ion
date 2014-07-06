@@ -5,13 +5,16 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.text.TextUtils;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
@@ -148,11 +151,16 @@ class IonDrawable extends Drawable {
         }
     }
 
-    public IonDrawable unregister() {
-        String key = callback.bitmapKey;
-        if (key == null)
-            return this;
+    public void cancel() {
+        if (callback.bitmapKey == null)
+            return;
+        ion.bitmapsPending.removeItem(callback.bitmapKey, callback);
         callback.bitmapKey = null;
+    }
+
+    private static void unregister(Ion ion, String key, IonDrawableCallback callback) {
+        if (key == null)
+            return;
         // unregister this drawable from the bitmaps that are
         // pending.
 
@@ -177,13 +185,15 @@ class IonDrawable extends Drawable {
         }
 
         ion.processDeferred();
-        return this;
     }
 
     public void register(Ion ion, String bitmapKey) {
-        unregister();
+        String previousKey = callback.bitmapKey;
+        if (TextUtils.equals(previousKey, bitmapKey))
+            return;
         callback.bitmapKey = bitmapKey;
         ion.bitmapsPending.add(bitmapKey, callback);
+        unregister(ion, previousKey, callback);
     }
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
@@ -199,7 +209,6 @@ class IonDrawable extends Drawable {
     private int textureDim;
     private int maxLevel;
     public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
-        unregister();
         this.loadedFrom = loadedFrom;
 
         if (this.info == info)
@@ -328,6 +337,9 @@ class IonDrawable extends Drawable {
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
         }
+        // check eventual image size...
+        if (resizeWidth > 0)
+            return resizeWidth;
         // no image, but there was an error
         if (info != null) {
             Drawable error = tryGetErrorResource();
@@ -338,9 +350,6 @@ class IonDrawable extends Drawable {
         Drawable placeholder = tryGetPlaceholderResource();
         if (placeholder != null)
             return placeholder.getIntrinsicWidth();
-        // check eventual image size...
-        if (resizeWidth > 0)
-            return resizeWidth;
         // we're SOL
         return -1;
     }
@@ -353,6 +362,8 @@ class IonDrawable extends Drawable {
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
         }
+        if (resizeHeight > 0)
+            return resizeHeight;
         if (info != null) {
             Drawable error = tryGetErrorResource();
             if (error != null)
@@ -361,8 +372,6 @@ class IonDrawable extends Drawable {
         Drawable placeholder = tryGetPlaceholderResource();
         if (placeholder != null)
             return placeholder.getIntrinsicHeight();
-        if (resizeHeight > 0)
-            return resizeHeight;
         return -1;
     }
 
@@ -391,7 +400,23 @@ class IonDrawable extends Drawable {
             return;
 
         if (false) {
-            // this centers and draws the drawable
+            // this centers inside and draws the drawable
+            d.setBounds(0 , 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+            int count = canvas.save();
+            Matrix matrix = new Matrix();
+            matrix.setRectToRect(new RectF(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight()),
+            new RectF(canvas.getClipBounds()), Matrix.ScaleToFit.CENTER);
+            canvas.concat(matrix);
+
+            float scale = (float)canvas.getClipBounds().width() / canvas.getWidth();
+            canvas.scale(scale, scale, d.getIntrinsicWidth() / 2, d.getIntrinsicHeight() / 2);
+
+            d.draw(canvas);
+            canvas.restoreToCount(count);
+            return;
+        }
+        else if (false) {
+            // this centers fits and draws the drawable
             int iw = d.getIntrinsicWidth();
             int ih = d.getIntrinsicHeight();
 
@@ -411,9 +436,10 @@ class IonDrawable extends Drawable {
             d.setBounds(b);
         }
         else {
-            // fill canvas with image.
+            // fitxy the drwable
             d.setBounds(getBounds());
         }
+
         d.draw(canvas);
     }
 
