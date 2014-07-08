@@ -119,6 +119,12 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
             return imageViewFuture;
         }
 
+        IonDrawable drawable = setIonDrawable(imageView, null, 0);
+        doAnimation(imageView, loadAnimation, loadAnimationResource);
+        IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
+        imageViewFuture.reset();
+        drawable.register(ion, bitmapFetcher.bitmapKey);
+
         // nothing from cache, check to see if there's too many imageview loads
         // already in progress
         if (BitmapFetcher.shouldDeferImageView(ion)) {
@@ -128,11 +134,6 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
             bitmapFetcher.execute();
         }
 
-        IonDrawable drawable = setIonDrawable(imageView, null, 0);
-        doAnimation(imageView, loadAnimation, loadAnimationResource);
-        IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
-        imageViewFuture.reset();
-        drawable.register(ion, bitmapFetcher.bitmapKey);
         return imageViewFuture;
     }
 
