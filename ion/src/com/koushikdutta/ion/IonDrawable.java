@@ -152,9 +152,10 @@ class IonDrawable extends Drawable {
     }
 
     public void cancel() {
-        if (callback.bitmapKey == null)
-            return;
-        ion.bitmapsPending.removeItem(callback.bitmapKey, callback);
+//        if (callback.bitmapKey == null)
+//            return;
+//        ion.bitmapsPending.removeItem(callback.bitmapKey, callback);
+        unregister(ion, callback.bitmapKey, callback);
         callback.bitmapKey = null;
     }
 
