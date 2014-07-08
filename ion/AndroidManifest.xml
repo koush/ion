@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
           package="com.koushikdutta.ion"
           android:versionCode="127"
           android:versionName="1.2.7">
-    <uses-sdk android:minSdkVersion="9" android:targetSdkVersion="18" />
+    <uses-sdk
+            tools:node="replace" />
     <application />
 </manifest>
