@@ -152,9 +152,6 @@ class IonDrawable extends Drawable {
     }
 
     public void cancel() {
-//        if (callback.bitmapKey == null)
-//            return;
-//        ion.bitmapsPending.removeItem(callback.bitmapKey, callback);
         unregister(ion, callback.bitmapKey, callback);
         callback.bitmapKey = null;
     }
@@ -179,6 +176,9 @@ class IonDrawable extends Drawable {
                 if (ion.bitmapsPending.removeItem(info.downloadKey, info))
                     owner = ion.bitmapsPending.tag(info.downloadKey);
             }
+            // only cancel deferred loads... LoadBitmap means a download is already in progress.
+            // due to view recycling, cancelling that may be bad, as it may be rerequested again
+            // during the recycle process.
             if (owner instanceof DeferredLoadBitmap) {
                 DeferredLoadBitmap defer = (DeferredLoadBitmap)owner;
                 ion.bitmapsPending.remove(defer.key);
