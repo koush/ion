@@ -32,14 +32,5 @@ android {
 
     compileSdkVersion 19
     buildToolsVersion "20.0.0"
-
-    defaultConfig {
-        minSdkVersion 9
-        targetSdkVersion 21
-    }
 }
 
-// upload to maven task
-//if (System.getenv().I_AM_KOUSH == 'true') {
-//  apply from: 'https://raw.github.com/koush/mvn-repo/master/maven.gradle'
-//}
