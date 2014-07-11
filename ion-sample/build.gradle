@@ -7,7 +7,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:0.12.+'
+        classpath 'com.android.tools.build:gradle:+'
     }
 }
 apply plugin: 'com.android.application'
@@ -19,7 +19,7 @@ repositories {
 dependencies {
     compile 'com.github.chrisbanes.photoview:library:+'
     compile project(':ion:ion')
-//    compile 'com.koushikdutta.ion:ion:1.3.0'
+//    compile 'com.koushikdutta.ion:ion:+'
 }
 
 android {
