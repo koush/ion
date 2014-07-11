@@ -19,6 +19,7 @@ repositories {
 dependencies {
     compile 'com.github.chrisbanes.photoview:library:+'
     compile project(':ion:ion')
+//    compile 'com.koushikdutta.ion:ion:1.3.0'
 }
 
 android {
