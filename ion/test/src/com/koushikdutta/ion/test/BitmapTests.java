@@ -69,7 +69,7 @@ public class BitmapTests extends AndroidTestCase {
 
     public void testCropping() throws Exception {
         Bitmap result = Ion.with(getContext())
-        .load("https://raw.githubusercontent.com/koush/ion/master/ion-test/assets/exif.jpg")
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion/test/assets/exif.jpg")
         .withBitmap()
         .resize(1080, 1845)
         .centerCrop()
