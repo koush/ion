@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:20.+'
+    compile 'com.android.support:support-v4:20+'
     compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:+'
 }
@@ -36,8 +36,16 @@ android {
         androidTest.assets.srcDirs=['test/assets/']
     }
 
+    android {
+        lintOptions {
+            abortOnError false
+        }
+    }
+
     compileSdkVersion 19
     buildToolsVersion '20.0.0'
+
+    publishNonDefault true
 }
 
 // upload to maven task
