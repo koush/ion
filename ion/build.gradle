@@ -45,7 +45,7 @@ android {
     compileSdkVersion 19
     buildToolsVersion '20.0.0'
 
-//    publishNonDefault true
+    publishNonDefault true
 }
 
 // upload to maven task
