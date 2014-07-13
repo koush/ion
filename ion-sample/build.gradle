@@ -18,8 +18,9 @@ repositories {
 
 dependencies {
     compile 'com.github.chrisbanes.photoview:library:+'
-    compile project(':ion:ion')
-//    compile 'com.koushikdutta.ion:ion:1.3.5@jar'
+//    compile project(':ion:ion')
+//    compile 'com.android.support:support-v4:20.+'
+    compile 'com.koushikdutta.ion:ion:1.3.6'
 //    compile 'com.koushikdutta.async:androidasync:1.3.5@jar'
 //    compile 'com.google.code.gson:gson:+'
 }
