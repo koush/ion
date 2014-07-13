@@ -382,7 +382,14 @@ Ion.with(getContext())
 ##### Gradle
 ```groovy
 dependencies {
-   compile 'com.koushikdutta.ion:ion:1.+'
+    compile 'com.koushikdutta.ion:ion:1.+@jar'
+    compile 'com.koushikdutta.async:androidasync:1.+@jar'
+    
+    // support library is optional, grab it if you need it
+    compile 'com.android.support:support-v4:20+'
+
+    // gson is optional. Grab it if you want it.
+    compile 'com.google.code.gson:gson:+'
 }
 ````
 
