@@ -41,7 +41,6 @@ import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -168,10 +167,12 @@ public class Ion {
     IonImageViewRequestBuilder bitmapBuilder = new IonImageViewRequestBuilder(this);
 
     private Ion(Context context, String name) {
-        httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
-        httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
         this.context = context = context.getApplicationContext();
         this.name = name;
+
+        httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
+        httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
+        httpClient.insertMiddleware(new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
 
         File ionCacheDir = new File(context.getCacheDir(), name);
         try {
