@@ -1,4 +1,4 @@
-package com.koushikdutta.ion;
+package com.koushikdutta.ion.conscrypt;
 
 import android.content.Context;
 
@@ -6,16 +6,28 @@ import com.koushikdutta.async.future.Cancellable;
 import com.koushikdutta.async.http.AsyncSSLSocketMiddleware;
 import com.koushikdutta.async.http.SimpleMiddleware;
 
+import java.security.Provider;
+import java.security.Security;
+
 import javax.net.ssl.SSLContext;
 
 /**
  * Created by koush on 7/13/14.
  */
-class ConscryptMiddleware extends SimpleMiddleware {
+public class ConscryptMiddleware extends SimpleMiddleware {
     final static Object lock = new Object();
     static boolean initialized;
     static boolean success;
     boolean instanceInitialized;
+    boolean enabled = true;
+
+    public void enable(boolean enabled) {
+        this.enabled = enabled;
+        if (!enabled) {
+            instanceInitialized = false;
+            middleware.setSSLContext(null);
+        }
+    }
 
     static void initialize(Context context) {
         try {
@@ -33,9 +45,9 @@ class ConscryptMiddleware extends SimpleMiddleware {
         }
     }
 
-    public void initialize() {
+    private void initialize() {
         initialize(context);
-        if (success && !instanceInitialized) {
+        if (success && !instanceInitialized && enabled) {
             instanceInitialized = true;
             try {
                 SSLContext sslContext = SSLContext.getInstance("TLS");
@@ -56,6 +68,7 @@ class ConscryptMiddleware extends SimpleMiddleware {
 
     @Override
     public Cancellable getSocket(GetSocketData data) {
+        // initialize here vs the constructor, or this will potentially block the ui thread.
         initialize();
         return super.getSocket(data);
     }

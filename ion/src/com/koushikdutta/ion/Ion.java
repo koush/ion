@@ -27,6 +27,7 @@ import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
+import com.koushikdutta.ion.conscrypt.ConscryptMiddleware;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 import com.koushikdutta.ion.loader.AssetLoader;
 import com.koushikdutta.ion.loader.AsyncHttpRequestFactory;
@@ -144,6 +145,7 @@ public class Ion {
     }
 
     AsyncHttpClient httpClient;
+    ConscryptMiddleware conscryptMiddleware;
     CookieMiddleware cookieMiddleware;
     ResponseCacheMiddleware responseCache;
     FileCache storeCache;
@@ -172,7 +174,7 @@ public class Ion {
 
         httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
-        httpClient.insertMiddleware(new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
+        httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
 
         File ionCacheDir = new File(context.getCacheDir(), name);
         try {
@@ -459,6 +461,10 @@ public class Ion {
      */
     public CookieMiddleware getCookieMiddleware() {
         return cookieMiddleware;
+    }
+
+    public ConscryptMiddleware getConscryptMiddleware() {
+        return conscryptMiddleware;
     }
 
     /**
