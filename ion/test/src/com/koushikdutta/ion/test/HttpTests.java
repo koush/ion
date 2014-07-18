@@ -1,6 +1,5 @@
 package com.koushikdutta.ion.test;
 
-import android.renderscript.FieldPacker;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
@@ -8,14 +7,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.Multimap;
-import com.koushikdutta.async.http.body.FilePart;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
 import com.koushikdutta.async.http.body.Part;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
@@ -23,16 +20,19 @@ import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.ProgressCallback;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 
-import java.io.ByteArrayOutputStream;
+import org.conscrypt.OpenSSLProvider;
+
 import java.io.File;
 import java.net.HttpCookie;
 import java.net.URI;
+import java.security.Security;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
 
 /**
  * Created by koush on 5/22/13.
@@ -40,7 +40,37 @@ import java.util.concurrent.TimeUnit;
 public class HttpTests extends AndroidTestCase {
     public void testString() throws Exception {
         assertNotNull(Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
-                .asString().get());
+        .asString().get());
+    }
+
+    public void testGoogle() throws Exception {
+//        ConscryptMiddleware.initialize(getContext().getApplicationContext());
+
+        Ion.getDefault(getContext())
+        .getConscryptMiddleware().enable(false);
+
+
+        Security.insertProviderAt(new OpenSSLProvider("MyNameBlah"), 1);
+
+        SSLContext ctx = SSLContext.getInstance("TLS");
+        ctx.init(null, null, null);
+        Ion.getDefault(getContext())
+        .getSpdyMiddleware().setSSLContext(ctx);
+
+        Ion.getDefault(getContext())
+        .getHttpClient().getSSLSocketMiddleware()
+        .setSSLContext(ctx);
+
+        assertNotNull(Ion.with(getContext())
+        .load("https://www.google.com")
+        .setTimeout(1000000)
+        .asString().get(100000, TimeUnit.SECONDS));
+
+
+        assertNotNull(Ion.with(getContext())
+        .load("https://www.google.com")
+        .setTimeout(1000000)
+        .asString().get(100000, TimeUnit.SECONDS));
     }
 
     public void testMultipartFileContentType() throws Exception {

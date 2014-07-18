@@ -36,16 +36,19 @@ android {
         androidTest.assets.srcDirs=['test/assets/']
     }
 
-    android {
-        lintOptions {
-            abortOnError false
-        }
+    lintOptions {
+        abortOnError false
+    }
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 19
     }
 
     compileSdkVersion 19
     buildToolsVersion '20.0.0'
 
-    publishNonDefault true
+//    publishNonDefault true
 }
 
 // upload to maven task

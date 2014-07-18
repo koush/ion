@@ -29,15 +29,18 @@ public class ConscryptMiddleware extends SimpleMiddleware {
         }
     }
 
-    static void initialize(Context context) {
+    public static void initialize(Context context) {
         try {
             synchronized (lock) {
                 if (initialized)
                     return;
                 initialized = true;
                 Context gms = context.createPackageContext("com.google.android.gms", Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
-                Class clazz = gms.getClassLoader().loadClass("com.google.android.gms.common.security.ProviderInstallerImpl");
-                clazz.getMethod("insertProvider", Context.class).invoke(null, context);
+                gms
+                .getClassLoader()
+                .loadClass("com.google.android.gms.common.security.ProviderInstallerImpl")
+                .getMethod("insertProvider", Context.class)
+                .invoke(null, context);
                 success = true;
             }
         }

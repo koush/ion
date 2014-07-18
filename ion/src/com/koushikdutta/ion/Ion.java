@@ -18,6 +18,7 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.http.spdy.SpdyMiddleware;
 import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.async.util.FileUtility;
@@ -167,6 +168,11 @@ public class Ion {
     IonBitmapCache bitmapCache;
     Context context;
     IonImageViewRequestBuilder bitmapBuilder = new IonImageViewRequestBuilder(this);
+    SpdyMiddleware spdyMiddleware;
+
+    public SpdyMiddleware getSpdyMiddleware() {
+        return spdyMiddleware;
+    }
 
     private Ion(Context context, String name) {
         this.context = context = context.getApplicationContext();
@@ -175,6 +181,7 @@ public class Ion {
         httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
         httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
+        httpClient.insertMiddleware(spdyMiddleware = new SpdyMiddleware(httpClient));
 
         File ionCacheDir = new File(context.getCacheDir(), name);
         try {
