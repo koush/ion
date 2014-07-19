@@ -14,7 +14,7 @@ import javax.net.ssl.SSLContext;
  * Created by koush on 7/14/14.
  */
 public class ConscryptTest extends AndroidTestCase {
-    public void testConscrypt() throws Exception {
+    private void testConscrypt() throws Exception {
         Ion.getDefault(getContext())
         .getConscryptMiddleware().enable(false);
 

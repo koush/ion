@@ -40,11 +40,6 @@ android {
         abortOnError false
     }
 
-    defaultConfig {
-        minSdkVersion 9
-        targetSdkVersion 19
-    }
-
     compileSdkVersion 19
     buildToolsVersion '20.0.0'
 

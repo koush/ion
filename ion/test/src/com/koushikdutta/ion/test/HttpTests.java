@@ -43,7 +43,7 @@ public class HttpTests extends AndroidTestCase {
         .asString().get());
     }
 
-    public void testGoogle() throws Exception {
+    private void testGoogleSpdy() throws Exception {
 //        ConscryptMiddleware.initialize(getContext().getApplicationContext());
 
         Ion.getDefault(getContext())

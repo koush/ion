@@ -12,14 +12,14 @@ import java.io.File;
  */
 public class FileTests extends AndroidTestCase {
     public void testFileLoader() throws Exception {
-        File f = new File("/sdcard/test.txt");
+        File f = getContext().getFileStreamPath("test.txt");
         StreamUtility.writeFile(f, "hello world");
 
         assertEquals("hello world", Ion.with(getContext(), f).asString().get());
     }
 
     public void testFileUpload() throws Exception {
-        File f = new File("/sdcard/test.txt");
+        File f = getContext().getFileStreamPath("test.txt");
         StreamUtility.writeFile(f, "hello world");
 
         Ion.with(getContext())
