@@ -588,7 +588,7 @@ public class Ion {
             public AsyncHttpRequest createAsyncHttpRequest(Uri uri, String method, RawHeaders headers) {
                 AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
                 if (!TextUtils.isEmpty(userAgent))
-                    request.getHeaders().setUserAgent(userAgent);
+                    request.getHeaders().set("User-Agent", userAgent);
                 return request;
             }
         };

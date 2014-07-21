@@ -7,6 +7,7 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.AsyncHttpResponse;
+import com.koushikdutta.async.http.HttpUtil;
 import com.koushikdutta.async.http.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.callback.HttpConnectCallback;
 import com.koushikdutta.async.http.libcore.RawHeaders;
@@ -30,9 +31,9 @@ public class HttpLoader extends SimpleLoader {
                 AsyncHttpRequest request = null;
                 if (response != null) {
                     request = response.getRequest();
-                    headers = response.getHeaders().getHeaders();
-                    length = response.getHeaders().getContentLength();
-                    String servedFrom = response.getHeaders().getHeaders().get(ResponseCacheMiddleware.SERVED_FROM);
+                    headers = response.headers();
+                    length = HttpUtil.contentLength(headers);
+                    String servedFrom = response.headers().get(ResponseCacheMiddleware.SERVED_FROM);
                     if (TextUtils.equals(servedFrom, ResponseCacheMiddleware.CACHE))
                         loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
                     else if (TextUtils.equals(servedFrom, ResponseCacheMiddleware.CONDITIONAL_CACHE))

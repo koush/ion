@@ -67,11 +67,23 @@ public class CookieMiddleware extends SimpleMiddleware {
         }
     }
 
+    public static void addCookies(Map<String, List<String>> allCookieHeaders, RawHeaders headers) {
+        for (Map.Entry<String, List<String>> entry : allCookieHeaders.entrySet()) {
+            String key = entry.getKey();
+            if ("Cookie".equalsIgnoreCase(key) || "Cookie2".equalsIgnoreCase(key)) {
+                headers.addAll(key, entry.getValue());
+            }
+        }
+    }
+
     @Override
     public void onSocket(OnSocketData data) {
         try {
-            Map<String, List<String>> cookies = manager.get(URI.create(data.request.getUri().toString()), data.request.getHeaders().getHeaders().toMultimap());
-            data.request.getHeaders().addCookies(cookies);
+            Map<String, List<String>> cookies = manager.get(
+                URI.create(
+                    data.request.getUri().toString()),
+                    data.request.getHeaders().toMultimap());
+            addCookies(cookies, data.request.getHeaders());
         }
         catch (Exception e) {
         }
@@ -80,7 +92,7 @@ public class CookieMiddleware extends SimpleMiddleware {
     @Override
     public void onHeadersReceived(OnHeadersReceivedData data) {
         try {
-            put(URI.create(data.request.getUri().toString()), data.headers.getHeaders());
+            put(URI.create(data.request.getUri().toString()), data.headers);
         }
         catch (Exception e) {
         }
