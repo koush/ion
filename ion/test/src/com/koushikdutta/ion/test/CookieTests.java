@@ -1,10 +1,8 @@
 package com.koushikdutta.ion.test;
 
-import android.net.Uri;
 import android.test.AndroidTestCase;
 
-import com.koushikdutta.async.http.libcore.RawHeaders;
-import com.koushikdutta.async.http.libcore.RequestHeaders;
+import com.koushikdutta.async.http.cache.RawHeaders;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 
@@ -38,10 +36,9 @@ public class CookieTests extends AndroidTestCase {
         manager.put(uri, headers.toMultimap());
 
         RawHeaders newHeaders = new RawHeaders();
-        RequestHeaders requestHeaders = new RequestHeaders(Uri.parse(uri.toString()), newHeaders);
         Map<String, List<String>> cookies = manager.get(uri, newHeaders.toMultimap());
         manager.get(uri, cookies);
-        requestHeaders.addCookies(cookies);
+        CookieMiddleware.addCookies(cookies, newHeaders);
         assertTrue(newHeaders.get("Cookie").contains("foo=goop"));
         assertTrue(newHeaders.get("Cookie").contains("poop=scoop"));
         assertFalse(newHeaders.get("Cookie").contains("bar"));
@@ -70,10 +67,9 @@ public class CookieTests extends AndroidTestCase {
         CookieManager manager = middleware.getCookieManager();
 
         RawHeaders newHeaders = new RawHeaders();
-        RequestHeaders requestHeaders = new RequestHeaders(Uri.parse(uri.toString()), newHeaders);
         Map<String, List<String>> cookies = manager.get(uri, newHeaders.toMultimap());
         manager.get(uri, cookies);
-        requestHeaders.addCookies(cookies);
+        CookieMiddleware.addCookies(cookies, newHeaders);
         assertTrue(newHeaders.get("Cookie").contains("foo=goop"));
         assertTrue(newHeaders.get("Cookie").contains("poop=scoop"));
         assertFalse(newHeaders.get("Cookie").contains("bar"));

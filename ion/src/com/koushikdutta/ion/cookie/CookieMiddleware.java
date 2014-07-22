@@ -6,7 +6,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.koushikdutta.async.http.SimpleMiddleware;
-import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.http.cache.RawHeaders;
 
 import java.net.CookieManager;
 import java.net.CookieStore;

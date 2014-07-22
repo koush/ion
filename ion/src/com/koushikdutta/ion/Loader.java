@@ -6,7 +6,7 @@ import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.http.cache.RawHeaders;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.io.InputStream;

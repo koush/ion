@@ -26,7 +26,7 @@ public class ExceptionTests extends AndroidTestCase {
             @Override
             public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
                 response.responseCode(200);
-                response.getHeaders().getHeaders().set("Content-Length", "10");
+                response.getHeaders().set("Content-Length", "10");
                 Util.writeAll(response, "five!".getBytes(), new CompletedCallback() {
                     @Override
                     public void onCompleted(Exception ex) {

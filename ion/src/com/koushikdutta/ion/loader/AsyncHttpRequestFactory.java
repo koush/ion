@@ -3,7 +3,7 @@ package com.koushikdutta.ion.loader;
 import android.net.Uri;
 
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.http.cache.RawHeaders;
 
 /**
  * Created by koush on 7/15/13.

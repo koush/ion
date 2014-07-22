@@ -1,7 +1,7 @@
 package com.koushikdutta.ion;
 
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.http.cache.RawHeaders;
 
 /**
  * Created by koush on 7/6/13.
