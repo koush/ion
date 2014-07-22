@@ -55,6 +55,11 @@ class DefaultTransform implements Transform {
             destination.set(transx, transy, resizeWidth - transx, resizeHeight - transy);
         }
 
+        if (destination.width()==b.getWidth() && destination.height()==b.getHeight()
+            && destination.top==0 && destination.left==0) {
+            return b;
+        }
+
         canvas.drawBitmap(b, null, destination, null);
         return ret;
     }
