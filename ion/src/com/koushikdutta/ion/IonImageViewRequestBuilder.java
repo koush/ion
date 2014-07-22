@@ -107,6 +107,8 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
             return FUTURE_IMAGEVIEW_NULL_URI;
         }
 
+        withImageView(imageView);
+
         // executeCache the request, see if we get a bitmap from cache.
         BitmapFetcher bitmapFetcher = executeCache();
         if (bitmapFetcher.info != null) {
