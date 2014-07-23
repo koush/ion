@@ -2,6 +2,7 @@ package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.RectF;
 
 import com.koushikdutta.ion.bitmap.Transform;
@@ -18,6 +19,8 @@ class DefaultTransform implements Transform {
         resizeHeight = height;
         this.scaleMode = scaleMode;
     }
+
+    final static Paint bilinearSamplingPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
 
     @Override
     public Bitmap transform(Bitmap b) {
@@ -60,7 +63,7 @@ class DefaultTransform implements Transform {
         Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, config);
         Canvas canvas = new Canvas(ret);
 
-        canvas.drawBitmap(b, null, destination, null);
+        canvas.drawBitmap(b, null, destination, bilinearSamplingPaint);
         return ret;
     }
 
