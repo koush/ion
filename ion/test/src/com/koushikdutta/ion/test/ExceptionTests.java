@@ -25,7 +25,7 @@ public class ExceptionTests extends AndroidTestCase {
         server.get("/contentlength", new HttpServerRequestCallback() {
             @Override
             public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
-                response.responseCode(200);
+                response.code(200);
                 response.getHeaders().set("Content-Length", "10");
                 Util.writeAll(response, "five!".getBytes(), new CompletedCallback() {
                     @Override
@@ -39,7 +39,7 @@ public class ExceptionTests extends AndroidTestCase {
         server.get("/chunked", new HttpServerRequestCallback() {
             @Override
             public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
-                response.responseCode(200);
+                response.code(200);
                 Util.writeAll(response, "five!".getBytes(), new CompletedCallback() {
                     @Override
                     public void onCompleted(Exception ex) {

@@ -27,11 +27,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class Issues extends AndroidTestCase {
     public void testIssue74() throws Exception {
-        String data = Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        String data = Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
         .setLogging("MyLogs", Log.VERBOSE)
         .asString().get();
 
-        String data2 = Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        String data2 = Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
         .setLogging("MyLogs", Log.VERBOSE)
         .asString().get();
 

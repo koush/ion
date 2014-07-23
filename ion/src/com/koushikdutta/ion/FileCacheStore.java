@@ -1,7 +1,6 @@
 package com.koushikdutta.ion;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.callback.CompletedCallback;
@@ -14,13 +13,11 @@ import com.koushikdutta.async.stream.FileDataSink;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.gson.GsonArrayParser;
 import com.koushikdutta.ion.gson.GsonObjectParser;
-import com.koushikdutta.ion.gson.GsonParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 
 import org.w3c.dom.Document;
 
 import java.io.File;
-import java.util.Set;
 
 /**
  * Created by koush on 11/17/13.
@@ -108,7 +105,7 @@ public class FileCacheStore {
                         ret.setComplete((T)null);
                         return;
                     }
-                    ion.build(ion.getContext(), file)
+                    ion.build(ion.getContext()).load(file)
                     .as(parser)
                     .setCallback(ret.getCompletionCallback());
                 }
@@ -125,7 +122,7 @@ public class FileCacheStore {
         try {
             final String key = computeKey();
             final File file = cache.getFile(key);
-            return ion.build(ion.getContext(), file)
+            return ion.build(ion.getContext()).load(file)
             .as(parser)
             .get();
         }

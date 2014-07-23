@@ -17,16 +17,15 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
+import com.koushikdutta.async.http.Headers;
 import com.koushikdutta.async.http.cache.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.spdy.SpdyMiddleware;
-import com.koushikdutta.async.http.cache.RawHeaders;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.async.util.FileUtility;
 import com.koushikdutta.async.util.HashList;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.builder.Builders;
-import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.conscrypt.ConscryptMiddleware;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
@@ -86,30 +85,6 @@ public class Ion {
      */
     public static LoadBuilder<Builders.Any.B> with(android.support.v4.app.Fragment fragment) {
         return getDefault(fragment.getActivity()).build(fragment);
-    }
-
-    /**
-     * Get the default Ion object instance and begin building a request
-     * with the given uri
-     * @param context
-     * @param uri
-     * @return
-     */
-    @Deprecated
-    public static Builders.Any.B with(Context context, String uri) {
-        return getDefault(context).build(context, uri);
-    }
-
-    /**
-     * Get the default Ion object instance and begin building an operation
-     * on the given file
-     * @param context
-     * @param file
-     * @return
-     */
-    @Deprecated
-    public static FutureBuilder with(Context context, File file) {
-        return getDefault(context).build(context, file);
     }
 
     /**
@@ -225,28 +200,6 @@ public class Ion {
 
     public static ExecutorService getIoExecutorService() {
         return ioExecutorService;
-    }
-
-    /**
-     * Begin building an operation on the given file
-     * @param context
-     * @param file
-     * @return
-     */
-    @Deprecated
-    public FutureBuilder build(Context context, File file) {
-        return new IonRequestBuilder(ContextReference.fromContext(context), this).load(file);
-    }
-
-    /**
-     * Begin building a request with the given uri
-     * @param context
-     * @param uri
-     * @return
-     */
-    @Deprecated
-    public Builders.Any.B build(Context context, String uri) {
-        return new IonRequestBuilder(ContextReference.fromContext(context), this).load(uri);
     }
 
     /**
@@ -585,7 +538,7 @@ public class Ion {
 
         AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactory() {
             @Override
-            public AsyncHttpRequest createAsyncHttpRequest(Uri uri, String method, RawHeaders headers) {
+            public AsyncHttpRequest createAsyncHttpRequest(Uri uri, String method, Headers headers) {
                 AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
                 if (!TextUtils.isEmpty(userAgent))
                     request.getHeaders().set("User-Agent", userAgent);

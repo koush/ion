@@ -2,7 +2,7 @@ package com.koushikdutta.ion.test;
 
 import android.test.AndroidTestCase;
 
-import com.koushikdutta.async.http.cache.RawHeaders;
+import com.koushikdutta.async.http.Headers;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 
@@ -22,21 +22,20 @@ public class CookieTests extends AndroidTestCase {
 
         CookieManager manager = new CookieManager(null, null);
 
-        RawHeaders headers = new RawHeaders();
-        headers.setStatusLine("HTTP/1.1 200 OK");
+        Headers headers = new Headers();
         headers.set("Set-Cookie", "foo=bar");
 
         URI uri = URI.create("http://example.com");
-        manager.put(uri, headers.toMultimap());
+        manager.put(uri, headers.getMultiMap());
 
         headers.set("Set-Cookie", "poop=scoop");
-        manager.put(uri, headers.toMultimap());
+        manager.put(uri, headers.getMultiMap());
 
         headers.set("Set-Cookie", "foo=goop");
-        manager.put(uri, headers.toMultimap());
+        manager.put(uri, headers.getMultiMap());
 
-        RawHeaders newHeaders = new RawHeaders();
-        Map<String, List<String>> cookies = manager.get(uri, newHeaders.toMultimap());
+        Headers newHeaders = new Headers();
+        Map<String, List<String>> cookies = manager.get(uri, newHeaders.getMultiMap());
         manager.get(uri, cookies);
         CookieMiddleware.addCookies(cookies, newHeaders);
         assertTrue(newHeaders.get("Cookie").contains("foo=goop"));
@@ -50,8 +49,7 @@ public class CookieTests extends AndroidTestCase {
 
         ion.getCookieMiddleware().clear();
 
-        RawHeaders headers = new RawHeaders();
-        headers.setStatusLine("HTTP/1.1 200 OK");
+        Headers headers = new Headers();
         headers.set("Set-Cookie", "foo=bar");
 
         URI uri = URI.create("http://example.com");
@@ -66,8 +64,8 @@ public class CookieTests extends AndroidTestCase {
         middleware.reinit(getContext(), Ion.getDefault(getContext()).getName());
         CookieManager manager = middleware.getCookieManager();
 
-        RawHeaders newHeaders = new RawHeaders();
-        Map<String, List<String>> cookies = manager.get(uri, newHeaders.toMultimap());
+        Headers newHeaders = new Headers();
+        Map<String, List<String>> cookies = manager.get(uri, newHeaders.getMultiMap());
         manager.get(uri, cookies);
         CookieMiddleware.addCookies(cookies, newHeaders);
         assertTrue(newHeaders.get("Cookie").contains("foo=goop"));

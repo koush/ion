@@ -15,7 +15,7 @@ public class FileTests extends AndroidTestCase {
         File f = getContext().getFileStreamPath("test.txt");
         StreamUtility.writeFile(f, "hello world");
 
-        assertEquals("hello world", Ion.with(getContext(), f).asString().get());
+        assertEquals("hello world", Ion.with(getContext()).load(f).asString().get());
     }
 
     public void testFileUpload() throws Exception {

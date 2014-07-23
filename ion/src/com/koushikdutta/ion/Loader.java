@@ -6,7 +6,7 @@ import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.cache.RawHeaders;
+import com.koushikdutta.async.http.Headers;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.io.InputStream;
@@ -21,7 +21,9 @@ public interface Loader {
         public static final int LOADED_FROM_CONDITIONAL_CACHE = 2;
         public static final int LOADED_FROM_NETWORK = 3;
 
-        public LoaderEmitter(DataEmitter emitter, long length, int loadedFrom, RawHeaders headers, AsyncHttpRequest request) {
+        public LoaderEmitter(DataEmitter emitter, long length, int loadedFrom,
+                             HeadersResponse headers,
+                             AsyncHttpRequest request) {
             this.length = length;
             this.emitter = emitter;
             this.loadedFrom = loadedFrom;
@@ -40,8 +42,8 @@ public interface Loader {
         public int loadedFrom() {
             return loadedFrom;
         }
-        RawHeaders headers;
-        public RawHeaders getHeaders() {
+        HeadersResponse headers;
+        public HeadersResponse getHeaders() {
             return headers;
         }
         AsyncHttpRequest request;

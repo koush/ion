@@ -31,7 +31,8 @@ public class GsonTests extends AndroidTestCase {
     public void testPojoPost() throws Exception {
         TypeToken<Pojo> token = new TypeToken<Pojo>(){};
 
-        JsonObject json = Ion.with(getContext(), "http://koush.clockworkmod.com/test/echo")
+        JsonObject json = Ion.with(getContext())
+        .load("http://koush.clockworkmod.com/test/echo")
         .setJsonObjectBody(new Pojo())
         .asJsonObject().get();
 

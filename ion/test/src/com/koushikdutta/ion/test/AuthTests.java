@@ -53,7 +53,8 @@ public class AuthTests extends AndroidTestCase {
             }
         });
 
-        JsonObject result = Ion.with(getContext(), "http://localhost:5555")
+        JsonObject result = Ion.with(getContext())
+        .load("http://localhost:5555")
         .setTimeout(500)
         .basicAuthentication("foo", "bar")
         .asJsonObject()
