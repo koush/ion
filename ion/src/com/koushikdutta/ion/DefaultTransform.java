@@ -35,9 +35,6 @@ class DefaultTransform implements Transform {
             resizeHeight = (int)(ratio * resizeWidth);
         }
 
-        Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, config);
-        Canvas canvas = new Canvas(ret);
-
         RectF destination = new RectF(0, 0, resizeWidth, resizeHeight);
         if (scaleMode != ScaleMode.FitXY) {
             float ratio;
@@ -59,6 +56,9 @@ class DefaultTransform implements Transform {
             && destination.top==0 && destination.left==0) {
             return b;
         }
+
+        Bitmap ret = Bitmap.createBitmap(resizeWidth, resizeHeight, config);
+        Canvas canvas = new Canvas(ret);
 
         canvas.drawBitmap(b, null, destination, null);
         return ret;
