@@ -6,6 +6,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
+import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.util.FileCache;
@@ -200,7 +201,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         }
 
         // see if we get something back synchronously
-        BitmapFetcher bitmapFetcher = executeCache();
+        final BitmapFetcher bitmapFetcher = executeCache();
         if (bitmapFetcher.info != null) {
             SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
             Bitmap bitmap = bitmapFetcher.info.bitmaps == null ? null : bitmapFetcher.info.bitmaps[0];
@@ -208,10 +209,15 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
             return ret;
         }
 
-        bitmapFetcher.execute();
-        // we're loading, so let's register for the result.
-        BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.contextReference);
-        ion.bitmapsPending.add(bitmapFetcher.bitmapKey, ret);
+        final BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.contextReference);
+        AsyncServer.post(Ion.mainHandler, new Runnable() {
+            @Override
+            public void run() {
+                bitmapFetcher.execute();
+                // we're loading, so let's register for the result.
+                ion.bitmapsPending.add(bitmapFetcher.bitmapKey, ret);
+            }
+        });
         return ret;
     }
 
