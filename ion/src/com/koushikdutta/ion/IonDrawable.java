@@ -336,20 +336,19 @@ class IonDrawable extends Drawable {
                 return info.originalSize.x;
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
+            // no image, but there was an error
+            Drawable error = tryGetErrorResource();
+            if (error != null)
+                return error.getIntrinsicWidth();
+        } else {
+            // check placeholder
+            Drawable placeholder = tryGetPlaceholderResource();
+            if (placeholder != null)
+                return placeholder.getIntrinsicWidth();
         }
         // check eventual image size...
         if (resizeWidth > 0)
             return resizeWidth;
-        // no image, but there was an error
-        if (info != null) {
-            Drawable error = tryGetErrorResource();
-            if (error != null)
-                return error.getIntrinsicWidth();
-        }
-        // check placeholder
-        Drawable placeholder = tryGetPlaceholderResource();
-        if (placeholder != null)
-            return placeholder.getIntrinsicWidth();
         // we're SOL
         return -1;
     }
@@ -361,17 +360,16 @@ class IonDrawable extends Drawable {
                 return info.originalSize.y;
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
-        }
-        if (resizeHeight > 0)
-            return resizeHeight;
-        if (info != null) {
             Drawable error = tryGetErrorResource();
             if (error != null)
                 return error.getIntrinsicHeight();
+        } else {
+            Drawable placeholder = tryGetPlaceholderResource();
+            if (placeholder != null)
+                return placeholder.getIntrinsicHeight();
         }
-        Drawable placeholder = tryGetPlaceholderResource();
-        if (placeholder != null)
-            return placeholder.getIntrinsicHeight();
+        if (resizeHeight > 0)
+            return resizeHeight;
         return -1;
     }
 
