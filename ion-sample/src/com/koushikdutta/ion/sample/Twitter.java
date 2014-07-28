@@ -135,7 +135,8 @@ public class Twitter extends Activity {
 
         // This request loads a URL as JsonArray and invokes
         // a callback on completion.
-        loading = Ion.with(this, url)
+        loading = Ion.with(this)
+        .load(url)
         .setHeader("Authorization", "Bearer " + accessToken)
         .asJsonArray()
         .setCallback(new FutureCallback<JsonArray>() {

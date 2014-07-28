@@ -30,6 +30,11 @@ android {
         }
     }
 
+    defaultConfig {
+        targetSdkVersion 21
+        minSdkVersion 9
+    }
+
     compileSdkVersion 19
     buildToolsVersion "20.0.0"
 }
