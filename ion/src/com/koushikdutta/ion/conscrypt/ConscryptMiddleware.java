@@ -68,6 +68,9 @@ public class ConscryptMiddleware extends SimpleMiddleware {
 
     @Override
     public Cancellable getSocket(GetSocketData data) {
+        if (!enabled) {
+            return null;
+        }
         // initialize here vs the constructor, or this will potentially block the ui thread.
         initialize();
         return super.getSocket(data);
