@@ -128,7 +128,7 @@ public class Issues extends AndroidTestCase {
         String b64 = Base64.encodeToString(random, 0);
 
         String uploadUrl = Ion.with(getContext())
-        .load("http://ion-test.appspot.com/upload_url")
+        .load("https://ion-test.appspot.com/upload_url")
         .asString()
         .get();
 

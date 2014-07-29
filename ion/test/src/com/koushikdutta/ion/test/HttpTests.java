@@ -45,38 +45,8 @@ public class HttpTests extends AndroidTestCase {
         .asString().get());
     }
 
-    public void testGoogleSpdy() throws Exception {
-//        ConscryptMiddleware.initialize(getContext().getApplicationContext());
-
-        Ion.getDefault(getContext())
-        .getConscryptMiddleware().enable(false);
-
-
-        Security.insertProviderAt(new OpenSSLProvider("MyNameBlah"), 1);
-
-        SSLContext ctx = SSLContext.getInstance("TLS");
-        ctx.init(null, null, null);
-        Ion.getDefault(getContext())
-        .getSpdyMiddleware().setSSLContext(ctx);
-
-        Ion.getDefault(getContext())
-        .getHttpClient().getSSLSocketMiddleware()
-        .setSSLContext(ctx);
-
-        assertNotNull(Ion.with(getContext())
-        .load("https://www.google.com")
-        .setTimeout(1000000)
-        .asString().get(100000, TimeUnit.SECONDS));
-
-
-        assertNotNull(Ion.with(getContext())
-        .load("https://www.google.com")
-        .setTimeout(1000000)
-        .asString().get(100000, TimeUnit.SECONDS));
-    }
-
     public void testMultipartFileContentType() throws Exception {
-        File f = new File("/sdcard/ion/testdata");
+        File f = getContext().getFileStreamPath("empty");
         f.getParentFile().mkdirs();
         f.createNewFile();
         AsyncHttpServer httpServer = new AsyncHttpServer();
