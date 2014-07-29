@@ -10,9 +10,6 @@ import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.AsyncServerSocket;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.http.AsyncHttpClient;
-import com.koushikdutta.async.http.AsyncHttpGet;
-import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
 import com.koushikdutta.async.http.body.Part;
@@ -24,17 +21,12 @@ import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 
-import org.conscrypt.OpenSSLProvider;
-
 import java.io.File;
 import java.net.HttpCookie;
 import java.net.URI;
-import java.security.Security;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.SSLContext;
 
 /**
  * Created by koush on 5/22/13.

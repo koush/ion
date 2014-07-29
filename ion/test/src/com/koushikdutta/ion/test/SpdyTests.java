@@ -7,10 +7,7 @@ import android.util.Log;
 import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
 
-import org.conscrypt.OpenSSLProvider;
-
 import java.io.File;
-import java.security.Security;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -19,12 +16,12 @@ import javax.net.ssl.SSLContext;
 /**
  * Created by koush on 7/28/14.
  */
-class SpdyTests extends AndroidTestCase {
+public class SpdyTests extends AndroidTestCase {
     public void testAppEngineSpdy() throws Exception {
 //        Ion.getDefault(getContext())
 //        .getConscryptMiddleware().enable(false);
 
-        Security.insertProviderAt(new OpenSSLProvider("MyNameBlah"), 1);
+//        Security.insertProviderAt(new OpenSSLProvider("MyNameBlah"), 1);
 
         String uploadUrl = Ion.with(getContext())
         .load("https://ion-test.appspot.com/upload_url")
@@ -48,14 +45,25 @@ class SpdyTests extends AndroidTestCase {
         assertEquals(b64, data);
     }
 
+    public void testQueryString() throws Exception {
+        String data = Ion.with(getContext())
+        .load("https://ion-test.appspot.com/querystring")
+        .addQuery("foo", "bar")
+        .setLogging("test", Log.VERBOSE)
+        .asString()
+        .get();
+
+        assertEquals("foo=bar", data);
+    }
+
     public void testGoogleSpdy() throws Exception {
 //        ConscryptMiddleware.initialize(getContext().getApplicationContext());
 
-        Ion.getDefault(getContext())
-        .getConscryptMiddleware().enable(false);
-
-
-        Security.insertProviderAt(new OpenSSLProvider("MyNameBlah"), 1);
+//        Ion.getDefault(getContext())
+//        .getConscryptMiddleware().enable(false);
+//
+//
+//        Security.insertProviderAt(new OpenSSLProvider("MyNameBlah"), 1);
 
         SSLContext ctx = SSLContext.getInstance("TLS");
         ctx.init(null, null, null);
@@ -68,12 +76,14 @@ class SpdyTests extends AndroidTestCase {
 
         assertNotNull(Ion.with(getContext())
         .load("https://www.google.com")
+        .setLogging("test", Log.VERBOSE)
         .setTimeout(1000000)
         .asString().get(100000, TimeUnit.SECONDS));
 
 
         assertNotNull(Ion.with(getContext())
         .load("https://www.google.com")
+        .setLogging("test", Log.VERBOSE)
         .setTimeout(1000000)
         .asString().get(100000, TimeUnit.SECONDS));
     }

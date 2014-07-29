@@ -30,7 +30,12 @@ class ServeHandler(blobstore_handlers.BlobstoreDownloadHandler):
     blob_info = blobstore.BlobInfo.get(resource)
     self.send_blob(blob_info)
 
+class QueryStringHandler(webapp2.RequestHandler):
+  def get(self):
+    self.response.out.write(self.request.query_string)
+
 app = webapp2.WSGIApplication([('/', MainHandler),
+                               ('/querystring', QueryStringHandler),
                                ('/upload_url', UploadUrlHandler),
                                ('/upload', UploadHandler),
                                ('/serve/([^/]+)?', ServeHandler)],
