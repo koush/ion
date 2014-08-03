@@ -6,6 +6,11 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.AsyncServerSocket;
+import com.koushikdutta.async.AsyncSocket;
+import com.koushikdutta.async.Util;
+import com.koushikdutta.async.callback.CompletedCallback;
+import com.koushikdutta.async.callback.ListenCallback;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
@@ -161,4 +166,55 @@ public class Issues extends AndroidTestCase {
         .get();
     }
     */
+
+    AsyncServerSocket server;
+    public void testIssue312() throws Exception {
+        String b64 = "SFRUUC8xLjAgMzAyIEZvdW5kDQpTZXQtQ29va2ll\n" +
+        "OlNFU1NJT049NUJBRDlERTEwQjY0NjgwNDsKTG9j\n" +
+        "YXRpb246IGhvbWUuY2dpCkNvbnRlbnQtdHlwZTog\n" +
+        "dGV4dC9odG1sCgo8aHRtbD48aGVhZD48bWV0YSBo\n" +
+        "dHRwLWVxdWl2PSdyZWZyZXNoJyBjb250ZW50PScw\n" +
+        "OyB1cmw9aG9tZS5jZ2knPjwvbWV0YT48L2hlYWQ+\n" +
+        "PGJvZHk+PC9ib2R5PjwvaHRtbD4K";
+
+        /*
+        HTTP/1.0 302 Found
+        Set-Cookie:SESSION=5BAD9DE10B646804;
+        Location: home.cgi
+        Content-type: text/html
+
+        <html><head><meta http-equiv='refresh' content='0; url=home.cgi'></meta></head><body></body></html>
+         */
+
+        // the above is using newlines, and not CRLF.
+
+        final byte[] responseData = Base64.decode(b64, 0);
+
+
+        server = Ion.getDefault(getContext())
+        .getServer().listen(null, 0, new ListenCallback() {
+            @Override
+            public void onAccepted(final AsyncSocket socket) {
+                Util.writeAll(socket, responseData, new CompletedCallback() {
+                    @Override
+                    public void onCompleted(Exception ex) {
+                        socket.end();
+                        server.stop();
+                    }
+                });
+            }
+            @Override
+            public void onListening(AsyncServerSocket socket) {
+            }
+            @Override
+            public void onCompleted(Exception ex) {
+            }
+        });
+
+        Ion.with(getContext())
+        .load("http://localhost:" + server.getLocalPort())
+        .followRedirect(false)
+        .asString()
+        .get();
+    }
 }
