@@ -83,7 +83,7 @@ public class Ion {
      * @param fragment
      * @return
      */
-    public static LoadBuilder<Builders.Any.B> with(android.support.v4.app.Fragment fragment) {
+    public static LoadBuilder<Builders.Any.B> with(Fragment fragment) {
         return getDefault(fragment.getActivity()).build(fragment);
     }
 
@@ -265,7 +265,7 @@ public class Ion {
      * @param fragment
      * @return
      */
-    public LoadBuilder<Builders.Any.B> build(android.support.v4.app.Fragment fragment) {
+    public LoadBuilder<Builders.Any.B> build(Fragment fragment) {
         return new IonRequestBuilder(new ContextReference.SupportFragmentContextReference(fragment), this);
     }
 
