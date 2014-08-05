@@ -19,7 +19,7 @@ repositories {
 dependencies {
     compile 'com.android.support:support-v4:20.+'
     compile project(':AndroidAsync:AndroidAsync')
-    compile 'com.google.code.gson:gson:2.+'
+    compile 'com.google.code.gson:gson:+'
 }
 
 android {
