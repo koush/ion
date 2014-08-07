@@ -26,6 +26,9 @@ public class PojoBody<T> implements AsyncHttpRequestBody<T> {
         if (token != null)
             this.type = token.getType();
         this.gson = gson;
+
+        if (pojo.getClass().isPrimitive() || pojo instanceof String)
+            throw new AssertionError("must provide a non-primitive type");
     }
 
     byte[] getBodyBytes() {
