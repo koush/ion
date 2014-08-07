@@ -217,4 +217,9 @@ public class Issues extends AndroidTestCase {
         .asString()
         .get();
     }
+
+    public void testIssue318() throws Exception {
+        String response = Ion.with(getContext()).load("http://banpo.hs.kr/custom/custom.do?dcpNo=30524").asString().get();
+        assertNotNull(response);
+    }
 }
