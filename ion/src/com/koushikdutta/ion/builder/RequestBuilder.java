@@ -202,21 +202,23 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
     public F setJsonObjectBody(JsonObject jsonObject);
 
     /**
-     * Specify a JsonObject to send to the HTTP server. If no HTTP method was explicitly
-     * provided in the load call, the default HTTP method, POST, is used.
+     * Specify an object to convert to json and send to the HTTP server. If no HTTP
+     * method was explicitly provided in the load call, the default HTTP method,
+     * POST, is used.
      * @param object Object to serialize with Json and send with the request
      * @param token Type token to assist with generic type serialization
      * @return
      */
-    public <T> F setJsonObjectBody(T object, TypeToken<T> token);
+    public <T> F setJsonPojoBody(T object, TypeToken<T> token);
 
     /**
-     * Specify a JsonObject to send to the HTTP server. If no HTTP method was explicitly
-     * provided in the load call, the default HTTP method, POST, is used.
+     * Specify an object to convert to json and send to the HTTP server. If no HTTP
+     * method was explicitly provided in the load call, the default HTTP method,
+     * POST, is used.
      * @param object Object to serialize with Json and send with the request
      * @return
      */
-    public <T> F setJsonObjectBody(T object);
+    public <T> F setJsonPojoBody(T object);
 
     /**
      * Specify a JsonArray to send to the HTTP server. If no HTTP method was explicitly

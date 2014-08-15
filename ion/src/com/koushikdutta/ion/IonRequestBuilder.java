@@ -878,13 +878,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public IonRequestBuilder setJsonObjectBody(Object object, TypeToken token) {
+    public IonRequestBuilder setJsonPojoBody(Object object, TypeToken token) {
         setBody(new PojoBody(ion.configure().getGson(), object, token));
         return this;
     }
 
     @Override
-    public IonRequestBuilder setJsonObjectBody(Object object) {
+    public IonRequestBuilder setJsonPojoBody(Object object) {
         setBody(new PojoBody(ion.configure().getGson(), object, null));
         return this;
     }
