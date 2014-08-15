@@ -33,7 +33,7 @@ public class GsonTests extends AndroidTestCase {
 
         JsonObject json = Ion.with(getContext())
         .load("http://koush.clockworkmod.com/test/echo")
-        .setJsonObjectBody(new Pojo())
+        .setJsonPojoBody(new Pojo())
         .asJsonObject().get();
 
         assertEquals(json.get("foo").getAsString(), "bar");
