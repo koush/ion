@@ -816,7 +816,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public ImageViewFuture intoImageView(ImageView imageView) {
-        return new IonImageViewRequestBuilder(this).intoImageView(imageView);
+        return new IonImageViewRequestBuilder(this).withImageView(imageView).intoImageView(imageView);
     }
 
     @Override
