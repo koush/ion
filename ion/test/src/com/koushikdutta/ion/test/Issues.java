@@ -12,6 +12,7 @@ import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.ListenCallback;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
@@ -221,5 +222,31 @@ public class Issues extends AndroidTestCase {
     public void testIssue318() throws Exception {
         String response = Ion.with(getContext()).load("http://banpo.hs.kr/custom/custom.do?dcpNo=30524").asString().get();
         assertNotNull(response);
+    }
+
+    public void testIssue329() throws Exception {
+        AsyncHttpServer httpServer = new AsyncHttpServer();
+        httpServer.post("/", new HttpServerRequestCallback() {
+            @Override
+            public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
+                UrlEncodedFormBody body = (UrlEncodedFormBody)request.getBody();
+                response.send(body.get().getString("電"));
+            }
+        });
+
+        AsyncServer asyncServer = new AsyncServer();
+        try {
+            int localPort = httpServer.listen(asyncServer, 0).getLocalPort();
+            String s1 = Ion.with(getContext())
+            .load("http://localhost:" + localPort)
+            .setBodyParameter("電", "電")
+            .asString()
+            .get();
+
+            assertEquals(s1, "電");
+        }
+        finally {
+            asyncServer.stop();
+        }
     }
 }
