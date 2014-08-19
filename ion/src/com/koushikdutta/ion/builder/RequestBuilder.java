@@ -276,4 +276,12 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @return
      */
     public Builders.Any.F setStreamBody(InputStream inputStream, int length);
+
+	/**
+	 * Set the cookie that will be used in {@link com.koushikdutta.ion.loader.AsyncHttpRequestFactory#createAsyncHttpRequest(
+	 * android.net.Uri, String, com.koushikdutta.async.http.libcore.RawHeaders, Object)
+	 * AsyncHttpRequestFactory.createAsyncHttpRequest()}
+	 * @param httpRequestCookie Cookie to create the {@link com.koushikdutta.async.http.AsyncHttpRequest AsyncHttpRequest}
+	 */
+	public void setHttpRequestCookie(Object httpRequestCookie);
 }
