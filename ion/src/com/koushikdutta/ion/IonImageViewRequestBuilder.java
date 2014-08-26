@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.builder.AnimateGifMode;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 import com.koushikdutta.ion.future.ImageViewFuture;

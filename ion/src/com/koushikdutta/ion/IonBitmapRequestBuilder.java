@@ -14,6 +14,7 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.Transform;
+import com.koushikdutta.ion.builder.AnimateGifMode;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 

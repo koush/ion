@@ -1,6 +1,5 @@
 package com.koushikdutta.ion.builder;
 
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.animation.Animation;
 
@@ -77,12 +76,6 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      * @return
      */
     public I disableFadeIn();
-
-    public enum AnimateGifMode {
-        NO_ANIMATE,
-        ANIMATE,
-        ANIMATE_ONCE
-    }
 
     /**
      * Flag to enable or disable animation of GIFs
