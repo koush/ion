@@ -482,7 +482,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             // hook up data progress callbacks
             final long total = emitter.length();
             DataTrackingEmitter tracker;
-            if (!(emitter instanceof DataTrackingEmitter)) {
+            if (!(this.emitter instanceof DataTrackingEmitter)) {
                 tracker = new FilteredDataEmitter();
                 tracker.setDataEmitter(this.emitter);
             }
