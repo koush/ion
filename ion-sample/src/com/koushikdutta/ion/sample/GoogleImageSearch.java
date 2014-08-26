@@ -4,20 +4,21 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.*;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.GridView;
+import android.widget.ImageView;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-
-import java.util.UUID;
 
 /**
  * Created by koush on 6/4/13.
@@ -92,10 +93,6 @@ public class GoogleImageSearch extends Activity {
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
-//        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-//        .detectAll()
-//        .penaltyLog()
-//        .build());
         super.onCreate(savedInstanceState);
 
         Ion.getDefault(this).configure().setLogging("ion-sample", Log.DEBUG);

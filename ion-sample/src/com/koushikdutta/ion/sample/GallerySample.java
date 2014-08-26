@@ -54,10 +54,6 @@ public class GallerySample extends Activity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-//        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-//        .detectAll()
-//        .penaltyLog()
-//        .build());
         super.onCreate(savedInstanceState);
 
         Ion.getDefault(this).configure().setLogging("ion-sample", Log.DEBUG);
