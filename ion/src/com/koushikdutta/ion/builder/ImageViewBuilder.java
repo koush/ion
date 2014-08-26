@@ -78,12 +78,18 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      */
     public I disableFadeIn();
 
+    public enum AnimateGifMode {
+        NO_ANIMATE,
+        ANIMATE,
+        ANIMATE_ONCE
+    }
+
     /**
      * Flag to enable or disable animation of GIFs
-     * @param animateGif
+     * @param mode
      * @return
      */
-    public I animateGif(boolean animateGif);
+    public I animateGif(AnimateGifMode mode);
 
     /**
      * Load the ImageView with a deep zoomable image. This allows extremely large images

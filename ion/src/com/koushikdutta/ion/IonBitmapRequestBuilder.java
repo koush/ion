@@ -14,7 +14,6 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.Transform;
-import com.koushikdutta.ion.builder.BitmapBuilder;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 
@@ -37,7 +36,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     int resizeWidth;
     int resizeHeight;
     boolean disableFadeIn;
-    boolean animateGif = true;
+    AnimateGifMode animateGifMode = AnimateGifMode.ANIMATE;
     boolean deepZoom;
     ArrayList<PostProcess> postProcess;
 
@@ -48,7 +47,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         resizeWidth = 0;
         resizeHeight = 0;
         disableFadeIn = false;
-        animateGif = true;
+        animateGifMode = AnimateGifMode.ANIMATE;
         builder = null;
         deepZoom = false;
         postProcess = null;
@@ -101,8 +100,8 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     private String computeDownloadKey() {
         String downloadKey = builder.uri;
         // although a gif is always same download, the decode (non/animated) result may different
-        if (!animateGif)
-            downloadKey += ":!animateGif";
+        if (animateGifMode != AnimateGifMode.ANIMATE)
+            downloadKey += ":animateGif=" + animateGifMode.name();
         if (deepZoom)
             downloadKey += ":deepZoom";
         return FileCache.toKeyString(downloadKey);
@@ -178,7 +177,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         ret.resizeHeight = resizeHeight;
         ret.builder = builder;
         ret.transforms = transforms;
-        ret.animateGif = animateGif;
+        ret.animateGif = animateGifMode != AnimateGifMode.NO_ANIMATE;
         ret.deepZoom = deepZoom;
         ret.postProcess = postProcess;
 
@@ -295,8 +294,8 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
 	}
 
     @Override
-    public IonBitmapRequestBuilder animateGif(boolean animateGif) {
-        this.animateGif = animateGif;
+    public IonBitmapRequestBuilder animateGif(AnimateGifMode mode) {
+        this.animateGifMode = mode;
         return this;
     }
 

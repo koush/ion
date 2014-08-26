@@ -43,6 +43,7 @@ class IonDrawable extends Drawable {
     private boolean disableFadeIn;
     private int resizeWidth;
     private int resizeHeight;
+    private boolean repeatAnimation;
     private Ion ion;
 
     public IonDrawable ion(Ion ion) {
@@ -242,6 +243,11 @@ class IonDrawable extends Drawable {
         }
 
         callback.bitmapKey = info.key;
+        return this;
+    }
+
+    public IonDrawable setRepeatAnimation(boolean repeatAnimation) {
+        this.repeatAnimation = repeatAnimation;
         return this;
     }
 
@@ -623,7 +629,10 @@ class IonDrawable extends Drawable {
             paint.setAlpha((int)destAlpha);
             canvas.drawBitmap(info.bitmaps[currentFrame % info.bitmaps.length], null, getBounds(), paint);
             paint.setAlpha(0xFF);
-            if (info.delays != null) {
+            // schedule a refresh if this is:
+            // animated AND
+            // the animation is not complete OR is allowed to repeat
+            if (info.delays != null && (repeatAnimation || currentFrame < info.delays.length)) {
                 int delay = info.delays[currentFrame % info.delays.length];
                 if (!invalidateScheduled) {
                     invalidateScheduled = true;

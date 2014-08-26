@@ -86,6 +86,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView)
         .ion(ion)
         .setBitmap(info, loadedFrom)
+        .setRepeatAnimation(animateGifMode == AnimateGifMode.ANIMATE)
         .setSize(resizeWidth, resizeHeight)
         .setError(errorResource, errorDrawable)
         .setPlaceholder(placeholderResource, placeholderDrawable)
