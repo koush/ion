@@ -249,4 +249,14 @@ public class Issues extends AndroidTestCase {
             asyncServer.stop();
         }
     }
+
+    public void testAAIssue225() throws Exception {
+        String ret = Ion.with(getContext())
+        .load("https://content.fastrbooks.com/android-test.txt")
+        .noCache()
+        .asString()
+        .get();
+
+        System.out.println(ret);
+    }
 }

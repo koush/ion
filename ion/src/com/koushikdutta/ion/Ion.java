@@ -155,8 +155,8 @@ public class Ion {
 
         httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
-        httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
         httpClient.insertMiddleware(spdyMiddleware = new SpdyMiddleware(httpClient));
+        httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware(), spdyMiddleware));
 
         File ionCacheDir = new File(context.getCacheDir(), name);
         try {

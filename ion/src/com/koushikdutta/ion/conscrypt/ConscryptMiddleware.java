@@ -6,9 +6,6 @@ import com.koushikdutta.async.future.Cancellable;
 import com.koushikdutta.async.http.AsyncSSLSocketMiddleware;
 import com.koushikdutta.async.http.SimpleMiddleware;
 
-import java.security.Provider;
-import java.security.Security;
-
 import javax.net.ssl.SSLContext;
 
 /**
@@ -25,7 +22,9 @@ public class ConscryptMiddleware extends SimpleMiddleware {
         this.enabled = enabled;
         if (!enabled) {
             instanceInitialized = false;
-            middleware.setSSLContext(null);
+            for (AsyncSSLSocketMiddleware m: middleware) {
+                m.setSSLContext(null);
+            }
         }
     }
 
@@ -55,16 +54,18 @@ public class ConscryptMiddleware extends SimpleMiddleware {
             try {
                 SSLContext sslContext = SSLContext.getInstance("TLS");
                 sslContext.init(null, null, null);
-                middleware.setSSLContext(sslContext);
+                for (AsyncSSLSocketMiddleware m: middleware) {
+                    m.setSSLContext(sslContext);
+                }
             }
             catch (Exception e) {
             }
         }
     }
 
-    AsyncSSLSocketMiddleware middleware;
+    AsyncSSLSocketMiddleware[] middleware;
     Context context;
-    public ConscryptMiddleware(Context context, AsyncSSLSocketMiddleware middleware) {
+    public ConscryptMiddleware(Context context, AsyncSSLSocketMiddleware... middleware) {
         this.middleware = middleware;
         this.context = context.getApplicationContext();
     }
