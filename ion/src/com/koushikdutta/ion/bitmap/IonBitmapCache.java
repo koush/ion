@@ -121,9 +121,24 @@ public class IonBitmapCache {
         return new Point(targetWidth, targetHeight);
     }
 
-    private BitmapFactory.Options prepareBitmapOptions(BitmapFactory.Options o, int minx, int miny) {
+	public static class InvalidBitmapResize extends Exception {
+		public final int width;
+		public final int height;
+
+		public InvalidBitmapResize(int width, int height) {
+			this.width = width;
+			this.height = height;
+		}
+
+		@Override
+		public String toString() {
+			return super.toString() + " size="+width+'x'+height;
+		}
+	}
+
+    private BitmapFactory.Options prepareBitmapOptions(BitmapFactory.Options o, int minx, int miny) throws InvalidBitmapResize {
         if (o.outWidth < 0 || o.outHeight < 0)
-            return null;
+            throw new InvalidBitmapResize(o.outWidth, o.outHeight);
         Point target = computeTarget(minx, miny);
         int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
         BitmapFactory.Options ret = new BitmapFactory.Options();
@@ -134,28 +149,28 @@ public class IonBitmapCache {
         return ret;
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(File file, int minx, int miny) {
+    public BitmapFactory.Options prepareBitmapOptions(File file, int minx, int miny) throws InvalidBitmapResize {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(file.toString(), o);
         return prepareBitmapOptions(o, minx, miny);
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(byte[] bytes, int offset, int length, int minx, int miny) {
+    public BitmapFactory.Options prepareBitmapOptions(byte[] bytes, int offset, int length, int minx, int miny) throws InvalidBitmapResize {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeByteArray(bytes, offset, length, o);
         return prepareBitmapOptions(o, minx, miny);
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(Resources res, int id, int minx, int miny) {
+    public BitmapFactory.Options prepareBitmapOptions(Resources res, int id, int minx, int miny) throws InvalidBitmapResize {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeResource(res, id, o);
         return prepareBitmapOptions(o, minx, miny);
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(InputStream in, int minx, int miny) {
+    public BitmapFactory.Options prepareBitmapOptions(InputStream in, int minx, int miny) throws InvalidBitmapResize {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeStream(in, null, o);

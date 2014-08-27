@@ -58,8 +58,6 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                         file = tempFile;
                     }
                     BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(file, 0, 0);
-                    if (options == null)
-                        throw new Exception("BitmapFactory.Options failed to load");
                     final Point size = new Point(options.outWidth, options.outHeight);
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
                         fin = fileCache.get(key);
