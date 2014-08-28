@@ -11,7 +11,6 @@ import android.graphics.BitmapRegionDecoder;
 import android.graphics.Matrix;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.util.DisplayMetrics;
@@ -22,7 +21,6 @@ import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -121,24 +119,9 @@ public class IonBitmapCache {
         return new Point(targetWidth, targetHeight);
     }
 
-	public static class InvalidBitmapResize extends Exception {
-		public final int width;
-		public final int height;
-
-		public InvalidBitmapResize(int width, int height) {
-			this.width = width;
-			this.height = height;
-		}
-
-		@Override
-		public String toString() {
-			return super.toString() + " size="+width+'x'+height;
-		}
-	}
-
-    private BitmapFactory.Options prepareBitmapOptions(BitmapFactory.Options o, int minx, int miny) throws InvalidBitmapResize {
+	private BitmapFactory.Options prepareBitmapOptions(BitmapFactory.Options o, int minx, int miny) throws BitmapDecodeException {
         if (o.outWidth < 0 || o.outHeight < 0)
-            throw new InvalidBitmapResize(o.outWidth, o.outHeight);
+            throw new BitmapDecodeException(o.outWidth, o.outHeight);
         Point target = computeTarget(minx, miny);
         int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
         BitmapFactory.Options ret = new BitmapFactory.Options();
@@ -149,28 +132,28 @@ public class IonBitmapCache {
         return ret;
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(File file, int minx, int miny) throws InvalidBitmapResize {
+    public BitmapFactory.Options prepareBitmapOptions(File file, int minx, int miny) throws BitmapDecodeException {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(file.toString(), o);
         return prepareBitmapOptions(o, minx, miny);
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(byte[] bytes, int offset, int length, int minx, int miny) throws InvalidBitmapResize {
+    public BitmapFactory.Options prepareBitmapOptions(byte[] bytes, int offset, int length, int minx, int miny) throws BitmapDecodeException {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeByteArray(bytes, offset, length, o);
         return prepareBitmapOptions(o, minx, miny);
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(Resources res, int id, int minx, int miny) throws InvalidBitmapResize {
+    public BitmapFactory.Options prepareBitmapOptions(Resources res, int id, int minx, int miny) throws BitmapDecodeException {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeResource(res, id, o);
         return prepareBitmapOptions(o, minx, miny);
     }
 
-    public BitmapFactory.Options prepareBitmapOptions(InputStream in, int minx, int miny) throws InvalidBitmapResize {
+    public BitmapFactory.Options prepareBitmapOptions(InputStream in, int minx, int miny) throws BitmapDecodeException {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inJustDecodeBounds = true;
         BitmapFactory.decodeStream(in, null, o);
