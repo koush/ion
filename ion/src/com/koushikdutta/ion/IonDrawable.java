@@ -45,6 +45,7 @@ class IonDrawable extends Drawable {
     private int resizeHeight;
     private boolean repeatAnimation;
     private Ion ion;
+    private BitmapFetcher bitmapFetcher;
 
     public IonDrawable ion(Ion ion) {
         this.ion = ion;
@@ -95,9 +96,14 @@ class IonDrawable extends Drawable {
     public ImageViewFutureImpl getFuture() {
         return callback.imageViewFuture;
     }
-    
+
     public IonDrawable setDisableFadeIn(boolean disableFadeIn) {
         this.disableFadeIn = disableFadeIn;
+        return this;
+    }
+
+    public IonDrawable setBitmapFetcher(BitmapFetcher bitmapFetcher) {
+        this.bitmapFetcher = bitmapFetcher;
         return this;
     }
 
@@ -452,7 +458,21 @@ class IonDrawable extends Drawable {
     @Override
     public void draw(Canvas canvas) {
         // TODO: handle animated drawables
+        // check if we have a bitmap, otherwise do the placeholder and bail
         if (info == null) {
+            // check if we can fetch the bitmap
+            if (bitmapFetcher != null) {
+                // check to see if there's too many imageview loads
+                // already in progress
+                if (BitmapFetcher.shouldDeferImageView(ion)) {
+                    bitmapFetcher.defer();
+                }
+                else {
+                    bitmapFetcher.execute();
+                }
+                bitmapFetcher = null;
+            }
+
             drawDrawable(canvas, tryGetPlaceholderResource());
             return;
         }

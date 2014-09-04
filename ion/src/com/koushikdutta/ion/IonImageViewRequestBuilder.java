@@ -83,10 +83,15 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         return this;
     }
 
-    private IonDrawable setIonDrawable(ImageView imageView, BitmapInfo info, int loadedFrom) {
+    private IonDrawable setIonDrawable(ImageView imageView, BitmapFetcher bitmapFetcher, int loadedFrom) {
+        BitmapInfo info = bitmapFetcher.info;
+        if (info != null)
+            bitmapFetcher = null;
+
         IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView)
         .ion(ion)
         .setBitmap(info, loadedFrom)
+        .setBitmapFetcher(bitmapFetcher)
         .setRepeatAnimation(animateGifMode == AnimateGifMode.ANIMATE)
         .setSize(resizeWidth, resizeHeight)
         .setError(errorResource, errorDrawable)
@@ -115,7 +120,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         BitmapFetcher bitmapFetcher = executeCache();
         if (bitmapFetcher.info != null) {
             doAnimation(imageView, null, 0);
-            IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher.info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
+            IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
             drawable.cancel();
             IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
             imageViewFuture.reset();
@@ -123,20 +128,11 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
             return imageViewFuture;
         }
 
-        IonDrawable drawable = setIonDrawable(imageView, null, 0);
+        IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, 0);
         doAnimation(imageView, loadAnimation, loadAnimationResource);
         IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
         imageViewFuture.reset();
         drawable.register(ion, bitmapFetcher.bitmapKey);
-
-        // nothing from cache, check to see if there's too many imageview loads
-        // already in progress
-        if (BitmapFetcher.shouldDeferImageView(ion)) {
-            bitmapFetcher.defer();
-        }
-        else {
-            bitmapFetcher.execute();
-        }
 
         return imageViewFuture;
     }
