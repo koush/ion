@@ -43,6 +43,8 @@ import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -254,6 +256,18 @@ public class Ion {
         return members.size();
     }
 
+    private static Comparator<DeferredLoadBitmap> DEFERRED_COMPARATOR = new Comparator<DeferredLoadBitmap>() {
+        @Override
+        public int compare(DeferredLoadBitmap lhs, DeferredLoadBitmap rhs) {
+            // higher is more recent
+            if (lhs.priority == rhs.priority)
+                return 0;
+            if (lhs.priority < rhs.priority)
+                return 1;
+            return -1;
+        }
+    };
+
     private Runnable processDeferred = new Runnable() {
         @Override
         public void run() {
@@ -273,6 +287,7 @@ public class Ion {
             if (deferred == null)
                 return;
             int count = 0;
+            Collections.sort(deferred, DEFERRED_COMPARATOR);
             for (DeferredLoadBitmap deferredLoadBitmap: deferred) {
                 bitmapsPending.tag(deferredLoadBitmap.key, null);
                 bitmapsPending.tag(deferredLoadBitmap.fetcher.bitmapKey, null);

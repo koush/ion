@@ -5,6 +5,10 @@ import com.koushikdutta.async.util.LruCache;
 class LruBitmapCache extends LruCache<String, BitmapInfo> {
     private SoftReferenceHashtable<String, BitmapInfo> soft = new SoftReferenceHashtable<String, BitmapInfo>();
 
+    public void putSoft(String key, BitmapInfo value) {
+        soft.put(key, value);
+    }
+
     public LruBitmapCache(int maxSize) {
         super(maxSize);
     }

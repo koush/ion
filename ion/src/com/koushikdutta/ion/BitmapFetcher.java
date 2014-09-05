@@ -59,6 +59,7 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
                         callback.report(e, result);
                     }
                 });
+//                System.out.println("fastloading");
                 return true;
             }
         }

@@ -45,6 +45,9 @@ abstract class BitmapCallback {
                 } else if (put()) {
                     ion.getBitmapCache().put(result);
                 }
+                else {
+                    ion.getBitmapCache().putSoft(result);
+                }
 
                 final ArrayList<FutureCallback<BitmapInfo>> callbacks = ion.bitmapsPending.remove(key);
                 if (callbacks == null || callbacks.size() == 0) {

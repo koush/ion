@@ -48,7 +48,7 @@ public class IonBitmapCache {
     }
 
     public IonBitmapCache(Ion ion) {
-        Context context = ion.getContext();
+        Context context = ion.getContext().getApplicationContext();
         this.ion = ion;
         metrics = new DisplayMetrics();
         ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
@@ -81,6 +81,11 @@ public class IonBitmapCache {
         if (maxSize != cache.maxSize())
             cache.setMaxSize(maxSize);
         cache.put(info.key, info);
+    }
+
+    public void putSoft(BitmapInfo info) {
+        assert Thread.currentThread() == Looper.getMainLooper().getThread();
+        cache.putSoft(info.key, info);
     }
 
     public BitmapInfo get(String key) {
