@@ -61,7 +61,7 @@ public class ImageViewSample extends Activity {
 
     public void loadExifRotated() {
         Ion.with(this)
-        .load("https://raw.github.com/koush/ion/master/ion-test/testdata/exif.jpg")
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion/test/assets/exif.jpg")
         .intoImageView(imageView);
     }
 

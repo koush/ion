@@ -145,11 +145,6 @@ public class Ion {
     IonBitmapCache bitmapCache;
     Context context;
     IonImageViewRequestBuilder bitmapBuilder = new IonImageViewRequestBuilder(this);
-    SpdyMiddleware spdyMiddleware;
-
-    public SpdyMiddleware getSpdyMiddleware() {
-        return spdyMiddleware;
-    }
 
     private Ion(Context context, String name) {
         this.context = context = context.getApplicationContext();
@@ -157,8 +152,8 @@ public class Ion {
 
         httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
-        httpClient.insertMiddleware(spdyMiddleware = new SpdyMiddleware(httpClient));
-        httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware(), spdyMiddleware));
+        httpClient.getSSLSocketMiddleware().setSpdyEnabled(true);
+        httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
 
         File ionCacheDir = new File(context.getCacheDir(), name);
         try {
