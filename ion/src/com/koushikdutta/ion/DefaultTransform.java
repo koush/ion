@@ -48,6 +48,8 @@ class DefaultTransform implements Transform {
             else
                 ratio = Math.min(xratio, yratio);
 
+            if (ratio == 0) return b;
+
             float postWidth = b.getWidth() * ratio;
             float postHeight = b.getHeight() * ratio;
             float transx = (resizeWidth - postWidth) / 2;
@@ -55,8 +57,8 @@ class DefaultTransform implements Transform {
             destination.set(transx, transy, resizeWidth - transx, resizeHeight - transy);
         }
 
-        if (destination.width()==b.getWidth() && destination.height()==b.getHeight()
-            && destination.top==0 && destination.left==0) {
+        if (destination.width() == b.getWidth() && destination.height() == b.getHeight()
+            && destination.top == 0 && destination.left == 0) {
             return b;
         }
 

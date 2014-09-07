@@ -1,17 +1,90 @@
 package com.koushikdutta.ion;
 
+import android.graphics.Bitmap;
 import android.graphics.Point;
 
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.bitmap.IonBitmapCache;
+import com.koushikdutta.ion.bitmap.PostProcess;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
 
 abstract class BitmapCallback {
     String key;
     Ion ion;
+
+    public static void saveBitmapSnapshot(Ion ion, BitmapInfo info) {
+        // the transformed bitmap was successfully load it, let's toss it into
+        // the disk lru cache.
+        // but don't persist gifs...
+        if (info.bitmaps.length > 1)
+            return;
+        FileCache cache = ion.responseCache.getFileCache();
+        if (cache == null)
+            return;
+        File tempFile = cache.getTempFile();
+        try {
+            FileOutputStream out = new FileOutputStream(tempFile);
+            Bitmap.CompressFormat format = info.bitmaps[0].hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
+            info.bitmaps[0].compress(format, 100, out);
+            out.close();
+            cache.commitTempFiles(info.key, tempFile);
+        }
+        catch (Exception ex) {
+        }
+        finally {
+            tempFile.delete();
+        }
+    }
+
+    public static void getBitmapSnapshot(final Ion ion, final String transformKey, final ArrayList<PostProcess> postProcess) {
+        // don't do this if this is already loading
+        if (ion.bitmapsPending.tag(transformKey) != null)
+            return;
+        final BitmapCallback callback = new LoadBitmapBase(ion, transformKey, true);
+        Ion.getBitmapLoadExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                if (ion.bitmapsPending.tag(transformKey) != callback) {
+//                    Log.d("IonBitmapLoader", "Bitmap cache load cancelled (no longer needed)");
+                    return;
+                }
+
+                try {
+                    File file = ion.responseCache.getFileCache().getFile(transformKey);
+                    Bitmap bitmap = IonBitmapCache.loadBitmap(file, null);
+                    if (bitmap == null)
+                        throw new Exception("Bitmap failed to load");
+                    BitmapInfo info = new BitmapInfo(transformKey, "image/jpeg", new Bitmap[] { bitmap }, null);
+                    info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
+
+                    if (postProcess != null) {
+                        for (PostProcess p: postProcess) {
+                            p.postProcess(info);
+                        }
+                    }
+
+                    callback.report(null, info);
+                }
+                catch (OutOfMemoryError e) {
+                    callback.report(new Exception(e), null);
+                }
+                catch (Exception e) {
+                    callback.report(e, null);
+                    try {
+                        ion.responseCache.getFileCache().remove(transformKey);
+                    } catch (Exception ex) {
+                    }
+                }
+            }
+        });
+    }
 
     protected BitmapCallback(Ion ion, String key, boolean put) {
         this.key = key;
@@ -61,5 +134,18 @@ abstract class BitmapCallback {
                 onReported();
             }
         });
+
+        // attempt to smart cache stuff to disk
+        if (info == null || info.originalSize == null || info.decoder != null
+            // don't cache anything that requests not to be cached
+            || !put
+            // don't cache dead bitmaps or gifs
+            || info.bitmaps == null || info.bitmaps.length != 1
+            // too big
+            || info.sizeOf() > 512 * 512 * 4) {
+            return;
+        }
+
+        saveBitmapSnapshot(ion, info);
     }
 }

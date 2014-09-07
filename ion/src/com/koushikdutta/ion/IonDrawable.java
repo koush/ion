@@ -1,7 +1,6 @@
 package com.koushikdutta.ion;
 
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -15,15 +14,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.text.TextUtils;
-import android.view.animation.Animation;
 import android.widget.ImageView;
 
-import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
-import com.koushikdutta.ion.future.ImageViewFuture;
 
 import java.lang.ref.WeakReference;
 
@@ -39,15 +34,27 @@ class IonDrawable extends Drawable {
     private Drawable error;
     private Resources resources;
     private int loadedFrom;
-    private IonDrawableCallback callback;
     private boolean disableFadeIn;
     private int resizeWidth;
     private int resizeHeight;
     private boolean repeatAnimation;
     private Ion ion;
     private BitmapFetcher bitmapFetcher;
+    private IonDrawableCallback callback;
+    private FutureCallback<IonDrawable> loadCallback;
+
+    public FutureCallback<IonDrawable> getLoadCallback() {
+        return loadCallback;
+    }
+
+    public IonDrawable setLoadCallback(FutureCallback<IonDrawable> loadCallback) {
+        this.loadCallback = loadCallback;
+        return this;
+    }
 
     public IonDrawable ion(Ion ion) {
+        if (ion == null)
+            throw new AssertionError("null ion");
         this.ion = ion;
         return this;
     }
@@ -68,33 +75,74 @@ class IonDrawable extends Drawable {
         return info;
     }
 
-    public static class ImageViewFutureImpl extends SimpleFuture<ImageView> implements ImageViewFuture {
-        @Override
-        public Future<ImageViewBitmapInfo> withBitmapInfo() {
-            final SimpleFuture<ImageViewBitmapInfo> ret = new SimpleFuture<ImageViewBitmapInfo>();
-            setCallback(new FutureCallback<ImageView>() {
-                @Override
-                public void onCompleted(Exception e, ImageView result) {
-                    ImageViewBitmapInfo val = new ImageViewBitmapInfo();
-                    Drawable d = null;
-                    if (result != null)
-                        d = result.getDrawable();
-                    if (d instanceof IonDrawable) {
-                        IonDrawable id = (IonDrawable)d;
-                        val.info = id.info;
-                    }
-                    val.exception = e;
-                    val.imageView = result;
-                    ret.setComplete(val);
-                }
-            });
-            ret.setParent(this);
-            return ret;
+    // create an internal static class that can act as a callback.
+    // dont let it hold strong references to anything.
+    static class IonDrawableCallback implements FutureCallback<BitmapInfo> {
+        private WeakReference<IonDrawable> ionDrawableRef;
+        private String bitmapKey;
+        private Ion ion;
+        public IonDrawableCallback(IonDrawable drawable) {
+            ionDrawableRef = new WeakReference<IonDrawable>(drawable);
+//            imageViewRef = new ContextReference.ImageViewContextReference(imageView);
         }
-    }
 
-    public ImageViewFutureImpl getFuture() {
-        return callback.imageViewFuture;
+        public void register(Ion ion, String bitmapKey) {
+            String previousKey = this.bitmapKey;
+            Ion previousIon = this.ion;
+            if (TextUtils.equals(previousKey, bitmapKey) && this.ion == ion)
+                return;
+            this.ion = ion;
+            this.bitmapKey = bitmapKey;
+            if (ion != null)
+                ion.bitmapsPending.add(bitmapKey, this);
+            unregister(previousIon, previousKey);
+        }
+
+        private void unregister(Ion ion, String key) {
+            if (key == null)
+                return;
+            // unregister this drawable from the bitmaps that are
+            // pending.
+
+            // if this drawable was the only thing waiting for this bitmap,
+            // then the removeItem call will return the TransformBitmap/LoadBitmap instance
+            // that was providing the result.
+            if (ion.bitmapsPending.removeItem(key, this)) {
+                // find out who owns this thing, to see if it is a candidate for removal
+                Object owner = ion.bitmapsPending.tag(key);
+                if (owner instanceof TransformBitmap) {
+                    TransformBitmap info = (TransformBitmap)owner;
+                    ion.bitmapsPending.remove(info.key);
+                    // this transform is also backed by a LoadBitmap* or a DeferredLoadBitmap, grab that
+                    // if it is the only waiter
+                    if (ion.bitmapsPending.removeItem(info.downloadKey, info))
+                        owner = ion.bitmapsPending.tag(info.downloadKey);
+                }
+                // only cancel deferred loads... LoadBitmap means a download is already in progress.
+                // due to view recycling, cancelling that may be bad, as it may be rerequested again
+                // during the recycle process.
+                if (owner instanceof DeferredLoadBitmap) {
+                    DeferredLoadBitmap defer = (DeferredLoadBitmap)owner;
+                    ion.bitmapsPending.remove(defer.key);
+                }
+            }
+
+            ion.processDeferred();
+        }
+
+        @Override
+        public void onCompleted(Exception e, BitmapInfo result) {
+            assert Thread.currentThread() == Looper.getMainLooper().getThread();
+            assert result != null;
+            // see if the imageview is still alive and cares about this result
+            IonDrawable drawable = ionDrawableRef.get();
+            if (drawable == null)
+                return;
+            drawable.setBitmap(result, result.loadedFrom);
+            FutureCallback<IonDrawable> callback = drawable.loadCallback;
+            if (callback != null)
+                callback.onCompleted(e, drawable);
+        }
     }
 
     public IonDrawable setDisableFadeIn(boolean disableFadeIn) {
@@ -104,112 +152,22 @@ class IonDrawable extends Drawable {
 
     public IonDrawable setBitmapFetcher(BitmapFetcher bitmapFetcher) {
         this.bitmapFetcher = bitmapFetcher;
+        if (ion == null)
+            throw new AssertionError("null ion");
         return this;
-    }
-
-    public IonDrawable setInAnimation(Animation inAnimation, int inAnimationResource) {
-        callback.inAnimation = inAnimation;
-        callback.inAnimationResource = inAnimationResource;
-        return this;
-    }
-
-    // create an internal static class that can act as a callback.
-    // dont let it hold strong references to anything.
-    static class IonDrawableCallback implements FutureCallback<BitmapInfo> {
-        private WeakReference<IonDrawable> ionDrawableRef;
-        private ContextReference.ImageViewContextReference imageViewRef;
-        private String bitmapKey;
-        private ImageViewFutureImpl imageViewFuture = new ImageViewFutureImpl();
-        private Animation inAnimation;
-        private int inAnimationResource;
-
-        public IonDrawableCallback(IonDrawable drawable, ImageView imageView) {
-            ionDrawableRef = new WeakReference<IonDrawable>(drawable);
-            imageViewRef = new ContextReference.ImageViewContextReference(imageView);
-        }
-
-        @Override
-        public void onCompleted(Exception e, BitmapInfo result) {
-            assert Thread.currentThread() == Looper.getMainLooper().getThread();
-            assert result != null;
-            // see if the imageview is still alive and cares about this result
-            ImageView imageView = imageViewRef.get();
-            if (imageView == null)
-                return;
-
-            IonDrawable drawable = ionDrawableRef.get();
-            if (drawable == null)
-                return;
-
-            if (imageView.getDrawable() != drawable)
-                return;
-
-            imageView.setImageDrawable(null);
-            drawable.setBitmap(result, result.loadedFrom);
-            imageView.setImageDrawable(drawable);
-            IonBitmapRequestBuilder.doAnimation(imageView, inAnimation, inAnimationResource);
-
-            if (null != imageViewRef.isAlive()) {
-                imageViewFuture.cancelSilently();
-                return;
-            }
-
-            imageViewFuture.setComplete(e, imageView);
-        }
     }
 
     public void cancel() {
-        unregister(ion, callback.bitmapKey, callback);
-        callback.bitmapKey = null;
-    }
-
-    private static void unregister(Ion ion, String key, IonDrawableCallback callback) {
-        if (key == null)
-            return;
-        // unregister this drawable from the bitmaps that are
-        // pending.
-
-        // if this drawable was the only thing waiting for this bitmap,
-        // then the removeItem call will return the TransformBitmap/LoadBitmap instance
-        // that was providing the result.
-        if (ion.bitmapsPending.removeItem(key, callback)) {
-            // find out who owns this thing, to see if it is a candidate for removal
-            Object owner = ion.bitmapsPending.tag(key);
-            if (owner instanceof TransformBitmap) {
-                TransformBitmap info = (TransformBitmap)owner;
-                ion.bitmapsPending.remove(info.key);
-                // this transform is also backed by a LoadBitmap* or a DeferredLoadBitmap, grab that
-                // if it is the only waiter
-                if (ion.bitmapsPending.removeItem(info.downloadKey, info))
-                    owner = ion.bitmapsPending.tag(info.downloadKey);
-            }
-            // only cancel deferred loads... LoadBitmap means a download is already in progress.
-            // due to view recycling, cancelling that may be bad, as it may be rerequested again
-            // during the recycle process.
-            if (owner instanceof DeferredLoadBitmap) {
-                DeferredLoadBitmap defer = (DeferredLoadBitmap)owner;
-                ion.bitmapsPending.remove(defer.key);
-            }
-        }
-
-        ion.processDeferred();
-    }
-
-    public void register(Ion ion, String bitmapKey) {
-        String previousKey = callback.bitmapKey;
-        if (TextUtils.equals(previousKey, bitmapKey))
-            return;
-        callback.bitmapKey = bitmapKey;
-        ion.bitmapsPending.add(bitmapKey, callback);
-        unregister(ion, previousKey, callback);
+        callback.register(null, null);
+        bitmapFetcher = null;
     }
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
-    public IonDrawable(Resources resources, ImageView imageView) {
+    public IonDrawable(Resources resources) {
         this.resources = resources;
         paint = new Paint(DEFAULT_PAINT_FLAGS);
-        callback = new IonDrawableCallback(this, imageView);
+        callback = new IonDrawableCallback(this);
     }
 
     int currentFrame;
@@ -226,10 +184,8 @@ class IonDrawable extends Drawable {
         currentFrame = 0;
         invalidateScheduled = false;
         invalidateSelf();
-        if (info == null) {
-            callback.bitmapKey = null;
+        if (info == null)
             return this;
-        }
 
         if (info.decoder != null) {
             // find number of tiles across to fit
@@ -248,7 +204,6 @@ class IonDrawable extends Drawable {
             textureDim = TILE_DIM << maxLevel;
         }
 
-        callback.bitmapKey = info.key;
         return this;
     }
 
@@ -462,6 +417,13 @@ class IonDrawable extends Drawable {
         if (info == null) {
             // check if we can fetch the bitmap
             if (bitmapFetcher != null) {
+                if (bitmapFetcher.sampleWidth == 0 && bitmapFetcher.sampleHeight == 0) {
+                    bitmapFetcher.sampleWidth = canvas.getWidth();
+                    bitmapFetcher.sampleHeight = canvas.getHeight();
+                    bitmapFetcher.recomputeDecodeKey();
+                }
+                callback.register(ion, bitmapFetcher.bitmapKey);
+
                 // check to see if there's too many imageview loads
                 // already in progress
                 if (BitmapFetcher.shouldDeferImageView(ion)) {
@@ -725,7 +687,7 @@ class IonDrawable extends Drawable {
         Drawable current = imageView.getDrawable();
         IonDrawable ret;
         if (current == null || !(current instanceof IonDrawable))
-            ret = new IonDrawable(imageView.getResources(), imageView);
+            ret = new IonDrawable(imageView.getResources());
         else
             ret = (IonDrawable)current;
         // invalidate self doesn't seem to trigger the dimension check to be called by imageview.
