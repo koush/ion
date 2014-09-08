@@ -63,8 +63,6 @@ public class StreamLoader extends SimpleLoader {
                 try {
                     in = getInputStream(context, uri);
                     BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(in, resizeWidth, resizeHeight);
-                    if (options == null)
-                        throw new Exception("BitmapFactory.Options failed to load");
                     StreamUtility.closeQuietly(in);
                     Point size = new Point(options.outWidth, options.outHeight);
                     BitmapInfo info;
