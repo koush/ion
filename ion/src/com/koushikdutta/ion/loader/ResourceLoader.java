@@ -75,8 +75,6 @@ public class ResourceLoader extends StreamLoader {
                 try {
                     Resource res = lookupResource(context, uri);
                     BitmapFactory.Options options = ion.getBitmapCache().prepareBitmapOptions(res.res, res.id, resizeWidth, resizeHeight);
-                    if (options == null)
-                        throw new Exception("BitmapFactory.Options failed to load");
                     Point size = new Point(options.outWidth, options.outHeight);
                     BitmapInfo info;
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
