@@ -102,6 +102,8 @@ class ImageViewFutureImpl extends TransformFuture<ImageView, IonDrawable> implem
     }
 
     public static void applyScaleMode(ImageView imageView, ScaleMode scaleMode) {
+        if (scaleMode == null)
+            return;
         switch (scaleMode) {
             case CenterCrop:
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);

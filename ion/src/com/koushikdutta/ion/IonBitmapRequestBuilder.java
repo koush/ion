@@ -125,6 +125,9 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
                 transforms = new ArrayList<Transform>();
             transforms.add(0, new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
         }
+        else if (scaleMode != null) {
+            throw new IllegalStateException("Must call resize when using " + scaleMode);
+        }
     }
 
     public String computeBitmapKey(String decodeKey) {
