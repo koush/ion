@@ -34,7 +34,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     IonRequestBuilder builder;
     Ion ion;
     ArrayList<Transform> transforms;
-    ScaleMode scaleMode = ScaleMode.FitXY;
+    ScaleMode scaleMode;
     int resizeWidth;
     int resizeHeight;
     boolean disableFadeIn;
@@ -45,7 +45,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     void reset() {
         ion = null;
         transforms = null;
-        scaleMode = ScaleMode.FitXY;
+        scaleMode = null;
         resizeWidth = 0;
         resizeHeight = 0;
         disableFadeIn = false;
@@ -120,25 +120,11 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     }
 
     public void addDefaultTransform() {
-        transforms = addDefaultTransforms(transforms, resizeWidth, resizeHeight, scaleMode);
-    }
-
-    public static ArrayList<Transform> addDefaultTransforms(ArrayList<Transform> transforms,
-        int resizeWidth, int resizeHeight, ScaleMode scaleMode) {
-        if (resizeHeight > 0 || resizeWidth > 0
-        || scaleMode == ScaleMode.CenterCrop || scaleMode == ScaleMode.CenterInside) {
-            if (resizeWidth < 0 && resizeHeight < 0) {
-                throw new IllegalStateException("must provide valid resize dimensions if using" +
-                "centerCrop or centerInside\n\n" +
-                "Valid values: (<=0, Y) or (X, <=0), or (X, Y), where:\n" +
-                "X and Y are greater than 0. Specifying <=0 values will scale proportionately.\n" +
-                "Values can also be implied through layout parameters.");
-            }
+        if (resizeHeight > 0 || resizeWidth > 0) {
             if (transforms == null)
                 transforms = new ArrayList<Transform>();
             transforms.add(0, new DefaultTransform(resizeWidth, resizeHeight, scaleMode));
         }
-        return transforms;
     }
 
     public String computeBitmapKey(String decodeKey) {
@@ -244,26 +230,37 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         return ret;
     }
 
+    private void checkNoTransforms(String name) {
+        if (hasTransforms()) {
+            throw new IllegalStateException("Can't apply " + name + " after transform has been called."
+             + name + " is applied to the original resized bitmap.");
+        }
+    }
+
     @Override
     public IonBitmapRequestBuilder centerCrop() {
-        if (hasTransforms()) {
-            throw new IllegalStateException("Can't apply centerCrop after transform has been called." +
-            "centerCrop is applied to the original resized bitmap.");
-        }
-//        if (resizeWidth <= 0 || resizeHeight <= 0)
-//            throw new IllegalStateException("must call resize first");
+        checkNoTransforms("centerCrop");
         scaleMode = ScaleMode.CenterCrop;
         return this;
     }
 
     @Override
+    public IonBitmapRequestBuilder fitXY() {
+        checkNoTransforms("fitXY");
+        scaleMode = ScaleMode.FitXY;
+        return this;
+    }
+
+    @Override
+    public IonBitmapRequestBuilder fitCenter() {
+        checkNoTransforms("fitCenter");
+        scaleMode = ScaleMode.FitCenter;
+        return this;
+    }
+
+    @Override
     public IonBitmapRequestBuilder centerInside() {
-        if (hasTransforms()) {
-            throw new IllegalStateException("Can't apply centerInside after transform has been called." +
-            "centerInside is applied to the original resized bitmap.");
-        }
-        if (resizeWidth <= 0 || resizeHeight <= 0)
-            throw new IllegalStateException("must call resize first");
+        checkNoTransforms("centerInside");
         scaleMode = ScaleMode.CenterInside;
         return this;
     }
@@ -297,7 +294,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         this.disableFadeIn = true;
         return this;
     }
-	
+
 	public IonBitmapRequestBuilder smartSize(boolean smartSize) {
         //don't want to disable device resize if user has already resized the Bitmap.
         if (resizeWidth > 0 || resizeHeight > 0)

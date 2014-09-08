@@ -113,7 +113,10 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         // will request the actual size on measure
         if (resizeHeight == 0 && resizeWidth == 0) {
             // set the sample size hints from the current dimensions
-            // but don't actually apply a transform
+            // but don't actually apply a transform.
+            // this may be zero, in which case IonDrawable
+            // will eventually try again with real dimensions
+            // during draw.
             resizeWidth = imageView.getMeasuredWidth();
             resizeHeight = imageView.getMeasuredHeight();
         }

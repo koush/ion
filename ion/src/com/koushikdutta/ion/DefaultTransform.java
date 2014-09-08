@@ -7,8 +7,6 @@ import android.graphics.RectF;
 
 import com.koushikdutta.ion.bitmap.Transform;
 
-import java.io.FileOutputStream;
-
 class DefaultTransform implements Transform {
     final ScaleMode scaleMode;
     final int resizeWidth;
@@ -39,7 +37,26 @@ class DefaultTransform implements Transform {
         }
 
         RectF destination = new RectF(0, 0, resizeWidth, resizeHeight);
-        if (scaleMode != ScaleMode.FitXY) {
+        ScaleMode scaleMode = this.scaleMode;
+
+        // fixup ScaleMode to sane values.
+        if (scaleMode == null) {
+            // no scale mode means that we are stretching, disregarding aspect ratio
+            scaleMode = ScaleMode.FitXY;
+        }
+        else if (scaleMode == ScaleMode.CenterInside) {
+            // center inside, but bitmap bounds exceed the resize dimensions...
+            // so change it to fit center.
+            if (resizeWidth <= b.getWidth() || resizeHeight <= b.getHeight())
+                scaleMode = ScaleMode.FitCenter;
+        }
+
+        if (scaleMode == ScaleMode.CenterInside) {
+            float marginx = (resizeWidth - b.getWidth()) / 2f;
+            float marginy = (resizeHeight - b.getHeight()) / 2f;
+            destination.set(marginx, marginy, marginx + b.getWidth(), marginy + b.getHeight());
+        }
+        else if (scaleMode != ScaleMode.FitXY) {
             float ratio;
             float xratio = (float)resizeWidth / (float)b.getWidth();
             float yratio = (float)resizeHeight / (float)b.getHeight();

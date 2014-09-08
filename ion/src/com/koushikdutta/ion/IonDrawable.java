@@ -693,6 +693,8 @@ class IonDrawable extends Drawable {
         // invalidate self doesn't seem to trigger the dimension check to be called by imageview.
         // are drawable dimensions supposed to be immutable?
         imageView.setImageDrawable(null);
+        ret.unscheduleSelf(ret.invalidate);
+        ret.invalidateScheduled = false;
         return ret;
     }
 }

@@ -106,6 +106,9 @@ class ImageViewFutureImpl extends TransformFuture<ImageView, IonDrawable> implem
             case CenterCrop:
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 break;
+            case FitCenter:
+                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                break;
             case CenterInside:
                 imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
                 break;
