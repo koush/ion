@@ -42,12 +42,15 @@ import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import javax.net.ssl.SSLContext;
 
 /**
  * Created by koush on 5/21/13.
@@ -506,6 +509,11 @@ public class Ion {
 
         public ResponseCacheMiddleware getResponseCache() {
             return responseCache;
+        }
+
+        public SSLContext createSSLContext(String algorithm) throws NoSuchAlgorithmException {
+            conscryptMiddleware.initialize();
+            return SSLContext.getInstance(algorithm);
         }
 
         /**

@@ -2,12 +2,10 @@ package com.koushikdutta.ion.conscrypt;
 
 import android.content.Context;
 
+import com.koushikdutta.async.AsyncSSLSocketWrapper;
 import com.koushikdutta.async.future.Cancellable;
 import com.koushikdutta.async.http.AsyncSSLSocketMiddleware;
 import com.koushikdutta.async.http.SimpleMiddleware;
-
-import java.security.Provider;
-import java.security.Security;
 
 import javax.net.ssl.SSLContext;
 
@@ -45,14 +43,15 @@ public class ConscryptMiddleware extends SimpleMiddleware {
         }
     }
 
-    private void initialize() {
+    public void initialize() {
         initialize(context);
         if (success && !instanceInitialized && enabled) {
             instanceInitialized = true;
             try {
                 SSLContext sslContext = SSLContext.getInstance("TLS");
                 sslContext.init(null, null, null);
-                middleware.setSSLContext(sslContext);
+                if (middleware.getSSLContext() != AsyncSSLSocketWrapper.getDefaultSSLContext())
+                    middleware.setSSLContext(sslContext);
             }
             catch (Exception e) {
             }
