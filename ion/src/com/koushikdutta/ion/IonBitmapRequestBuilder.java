@@ -177,6 +177,10 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     }
 
     BitmapFetcher executeCache() {
+        return executeCache(resizeWidth, resizeHeight);
+    }
+
+    BitmapFetcher executeCache(int sampleWidth, int sampleHeight) {
         final String decodeKey = computeDecodeKey();
         String bitmapKey = computeBitmapKey(decodeKey);
 
@@ -185,8 +189,8 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         ret.bitmapKey = bitmapKey;
         ret.decodeKey = decodeKey;
         ret.hasTransforms = hasTransforms();
-        ret.sampleWidth = resizeWidth;
-        ret.sampleHeight = resizeHeight;
+        ret.sampleWidth = sampleWidth;
+        ret.sampleHeight = sampleHeight;
         ret.builder = builder;
         ret.transforms = transforms;
         ret.animateGif = animateGifMode != AnimateGifMode.NO_ANIMATE;

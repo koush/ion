@@ -109,6 +109,8 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
         withImageView(imageView);
 
+        int sampleWidth = resizeWidth;
+        int sampleHeight = resizeHeight;
         // see if we need default transforms, or this if the imageview
         // will request the actual size on measure
         if (resizeHeight == 0 && resizeWidth == 0) {
@@ -117,15 +119,15 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
             // this may be zero, in which case IonDrawable
             // will eventually try again with real dimensions
             // during draw.
-            resizeWidth = imageView.getMeasuredWidth();
-            resizeHeight = imageView.getMeasuredHeight();
+            sampleWidth = imageView.getMeasuredWidth();
+            sampleHeight = imageView.getMeasuredHeight();
         }
         else {
             addDefaultTransform();
         }
 
         // executeCache the request, see if we get a bitmap from cache.
-        BitmapFetcher bitmapFetcher = executeCache();
+        BitmapFetcher bitmapFetcher = executeCache(sampleWidth, sampleHeight);
         if (bitmapFetcher.info != null) {
             doAnimation(imageView, null, 0);
             IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
