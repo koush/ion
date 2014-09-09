@@ -304,10 +304,6 @@ class IonDrawable extends Drawable {
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
         }
-        // check placeholder
-        Drawable placeholder = tryGetPlaceholderResource();
-        if (placeholder != null)
-            return placeholder.getIntrinsicWidth();
         // check eventual image size...
         if (resizeWidth > 0)
             return resizeWidth;
@@ -317,6 +313,10 @@ class IonDrawable extends Drawable {
             if (error != null)
                 return error.getIntrinsicWidth();
         }
+        // check placeholder
+        Drawable placeholder = tryGetPlaceholderResource();
+        if (placeholder != null)
+            return placeholder.getIntrinsicWidth();
         // we're SOL
         return -1;
     }
@@ -329,9 +329,6 @@ class IonDrawable extends Drawable {
             if (info.bitmaps != null)
                 return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
         }
-        Drawable placeholder = tryGetPlaceholderResource();
-        if (placeholder != null)
-            return placeholder.getIntrinsicHeight();
         if (resizeHeight > 0)
             return resizeHeight;
         if (info != null) {
@@ -339,6 +336,9 @@ class IonDrawable extends Drawable {
             if (error != null)
                 return error.getIntrinsicHeight();
         }
+        Drawable placeholder = tryGetPlaceholderResource();
+        if (placeholder != null)
+            return placeholder.getIntrinsicHeight();
         return -1;
     }
 
