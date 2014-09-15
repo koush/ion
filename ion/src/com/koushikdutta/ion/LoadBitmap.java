@@ -51,8 +51,10 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                     return;
                 }
 
-                ByteBuffer bb = result.getAll();
+                ByteBuffer bb = null;
                 try {
+                    bb = result.getAll();
+
                     Bitmap[] bitmaps;
                     int[] delays;
                     BitmapFactory.Options options = ion.bitmapCache.prepareBitmapOptions(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
@@ -100,7 +102,8 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                     report(e, null);
                 }
                 finally {
-                    ByteBufferList.reclaim(bb);
+                    if (bb != null)
+                        ByteBufferList.reclaim(bb);
                 }
             }
         });
