@@ -2,6 +2,7 @@ package com.koushikdutta.ion.builder;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.StateListDrawable;
 import android.view.animation.Animation;
 
 /**
