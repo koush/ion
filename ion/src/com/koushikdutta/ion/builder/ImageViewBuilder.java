@@ -37,6 +37,20 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
     public I error(int resourceId);
 
     /**
+     * Layer a {@link android.graphics.drawable.StateListDrawable} over the bitmap
+     * @param drawable
+     * @return
+     */
+    public I stateList(StateListDrawable drawable);
+
+    /**
+     * Layer a {@link android.graphics.drawable.StateListDrawable} over the bitmap
+     * @param resourceId should reference a {@code <state-list-drawable>}
+     * @return
+     */
+    public I stateList(int resourceId);
+
+    /**
      * If an ImageView is loaded successfully from a remote source or file storage,
      * animate it in using the given Animation. The default animation is to fade
      * in.
