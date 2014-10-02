@@ -97,6 +97,8 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
         if(stateDrawable == null && stateResource != 0) {
             stateDrawable = (StateListDrawable) ion.getContext().getResources().getDrawable(stateResource);
+        }
+        if(stateDrawable != null) {
             LayerDrawable layerDrawable = new LayerDrawable(new Drawable[] {ret, stateDrawable});
             imageView.setImageDrawable(layerDrawable);
         }
