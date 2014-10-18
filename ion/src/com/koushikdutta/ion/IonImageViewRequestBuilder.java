@@ -78,7 +78,9 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     }
 
     private IonDrawable setIonDrawable(ImageView imageView, BitmapFetcher bitmapFetcher, int loadedFrom) {
-        BitmapInfo info = bitmapFetcher.info;
+        BitmapInfo info = null;
+        if (bitmapFetcher != null)
+            info = bitmapFetcher.info;
         if (info != null)
             bitmapFetcher = null;
 
