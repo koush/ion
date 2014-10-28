@@ -3,11 +3,12 @@ package com.koushikdutta.ion;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.os.Looper;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.ImageView;
-
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.builder.Builders;
@@ -28,6 +29,8 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     int placeholderResource;
     Drawable errorDrawable;
     int errorResource;
+    StateListDrawable stateDrawable;
+    int stateResource;
     Animation inAnimation;
     Animation loadAnimation;
     int loadAnimationResource;
@@ -84,14 +87,24 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
     private IonDrawable setIonDrawable(ImageView imageView, BitmapInfo info, int loadedFrom) {
         IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView)
-        .ion(ion)
-        .setBitmap(info, loadedFrom)
-        .setSize(resizeWidth, resizeHeight)
-        .setError(errorResource, errorDrawable)
-        .setPlaceholder(placeholderResource, placeholderDrawable)
-        .setInAnimation(inAnimation, inAnimationResource)
-        .setDisableFadeIn(disableFadeIn);
-        imageView.setImageDrawable(ret);
+                .ion(ion)
+                .setBitmap(info, loadedFrom)
+                .setSize(resizeWidth, resizeHeight)
+                .setError(errorResource, errorDrawable)
+                .setPlaceholder(placeholderResource, placeholderDrawable)
+                .setInAnimation(inAnimation, inAnimationResource)
+                .setDisableFadeIn(disableFadeIn);
+
+        if(stateDrawable == null && stateResource != 0) {
+            stateDrawable = (StateListDrawable) ion.getContext().getResources().getDrawable(stateResource);
+        }
+        if(stateDrawable != null) {
+            LayerDrawable layerDrawable = new LayerDrawable(new Drawable[] {ret, stateDrawable});
+            imageView.setImageDrawable(layerDrawable);
+        }
+        else {
+            imageView.setImageDrawable(ret);
+        }
         return ret;
     }
 
@@ -220,6 +233,18 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     @Override
     public IonImageViewRequestBuilder error(int resourceId) {
         errorResource = resourceId;
+        return this;
+    }
+
+    @Override
+    public IonImageViewRequestBuilder stateList(StateListDrawable drawable) {
+        stateDrawable = drawable;
+        return this;
+    }
+
+    @Override
+    public IonImageViewRequestBuilder stateList(int resourceId) {
+        stateResource = resourceId;
         return this;
     }
 
