@@ -72,7 +72,7 @@ public class VideoLoader extends SimpleLoader {
                         if (ratio != 0)
                             bmp = Bitmap.createScaledBitmap(bmp, (int)(bmp.getWidth() * ratio), (int)(bmp.getHeight() * ratio), true);
                     }
-                    BitmapInfo info = new BitmapInfo(key, type.mimeType, new Bitmap[] { bmp }, originalSize);
+                    BitmapInfo info = new BitmapInfo(key, type.mimeType, bmp, originalSize);
                     info.loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 } catch (Exception e) {

@@ -1,7 +1,6 @@
 package com.koushikdutta.ion.loader;
 
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,10 +19,7 @@ import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
-import com.koushikdutta.ion.gif.GifAction;
-import com.koushikdutta.ion.gif.GifDecoder;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 
 /**
@@ -90,7 +86,7 @@ public class ResourceLoader extends StreamLoader {
                         Bitmap bitmap = IonBitmapCache.loadBitmap(res.res, res.id, options);
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");
-                        info = new BitmapInfo(key, options.outMimeType, new Bitmap[] { bitmap }, size);
+                        info = new BitmapInfo(key, options.outMimeType, bitmap, size);
                     }
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);

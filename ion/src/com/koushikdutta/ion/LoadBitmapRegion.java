@@ -22,7 +22,7 @@ public class LoadBitmapRegion extends BitmapCallback {
                     Bitmap bitmap = IonBitmapCache.loadRegion(decoder, region, inSampleSize);
                     if (bitmap == null)
                         throw new Exception("failed to load bitmap region");
-                    BitmapInfo info = new BitmapInfo(key, null, new Bitmap[] { bitmap }, new Point(bitmap.getWidth(), bitmap.getHeight()));
+                    BitmapInfo info = new BitmapInfo(key, null, bitmap, new Point(bitmap.getWidth(), bitmap.getHeight()));
                     report(null, info);
                 }
                 catch (Exception e) {

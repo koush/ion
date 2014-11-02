@@ -1,17 +1,12 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
-import android.graphics.Point;
 
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
-import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.Transform;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInfo> {
@@ -65,18 +60,13 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
 
                 BitmapInfo info;
                 try {
-                    Bitmap bitmaps[] = new Bitmap[result.bitmaps.length];
-                    for (int i = 0; i < result.bitmaps.length; i++) {
-                        bitmaps[i] = result.bitmaps[i];
-                        for (Transform transform : transforms) {
-                            Bitmap bitmap = transform.transform(bitmaps[i]);
-                            if (bitmap == null)
-                                throw new Exception("failed to transform bitmap");
-                            bitmaps[i] = bitmap;
-                        }
+                    Bitmap bitmap = result.bitmap;
+                    for (Transform transform : transforms) {
+                        bitmap = transform.transform(bitmap);
+                        if (bitmap == null)
+                            throw new Exception("failed to transform bitmap");
                     }
-                    info = new BitmapInfo(key, result.mimeType, bitmaps, result.originalSize);
-                    info.delays = result.delays;
+                    info = new BitmapInfo(key, result.mimeType, bitmap, result.originalSize);
                     info.loadedFrom = result.loadedFrom;
 
                     if (postProcess != null) {

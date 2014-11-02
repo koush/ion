@@ -1,25 +1,18 @@
 package com.koushikdutta.ion.gif;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
-import java.util.Arrays;
-
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
-import android.util.Log;
 
-public class GifDecoder extends Thread{
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+public class GifDecoder implements Cloneable {
 
 	public static final int STATUS_PARSING = 0;
 	public static final int STATUS_FORMAT_ERROR = 1;
 	public static final int STATUS_OPEN_ERROR = 2;
 	public static final int STATUS_FINISH = -1;
 	
-	private InputStream in;
 	private int status;
 
 	public int width; // full image width
@@ -43,10 +36,7 @@ public class GifDecoder extends Thread{
 
 	private int ix, iy, iw, ih; // current image rectangle
 	private int lrx, lry, lrw, lrh;
-	private GifFrame currentFrame = null;
 
-	private boolean isShow = false;
-	
 
 	private byte[] block = new byte[256]; // current data block
 	private int blockSize = 0; // block size
@@ -65,61 +55,123 @@ public class GifDecoder extends Thread{
 	private byte[] pixelStack;
 	private byte[] pixels;
 
-	private GifFrame gifFrame; // frames read from current file
-	private int frameCount;
-
-	private GifAction action = null;
-	
-	
 	private byte[] gifData = null;
 	private int gifDataOffset;
 	private int gifDataLength;
 
+    private int readBytes;
+    private int currentFrame;
 
-	public GifDecoder(byte[] data,GifAction act){
-		this(data, 0, data.length, act);
+    GifFrame lastFrame;
+    GifFrame beforeLastFrame;
+    int[] dest;
+
+    public GifDecoder mutate() {
+        try {
+            GifDecoder ret = (GifDecoder)clone();
+            block = new byte[256];
+            prefix = null;
+            suffix = null;
+            pixelStack = null;
+            pixels = null;
+            return ret;
+        }
+        catch (CloneNotSupportedException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public ByteBuffer getByteBuffer() {
+        return ByteBuffer.wrap(gifData, gifDataOffset, gifDataLength);
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getGifDataLength() {
+        return gifDataLength;
+    }
+
+    public GifFrame getLastFrame() {
+        return lastFrame;
+    }
+
+    public GifFrame getBeforeLastFrame() {
+        return beforeLastFrame;
+    }
+
+    public GifDecoder(ByteBuffer bb) {
+        this(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
+    }
+
+    public GifDecoder(byte[] data){
+		this(data, 0, data.length);
 	}
 
-	public GifDecoder(byte[] data,int offset,int length,GifAction act){
-		gifData = data;
-		action = act;
-		gifDataOffset = offset;
-		gifDataLength = length;
-	}
-	
-	public GifDecoder(InputStream is,GifAction act){
-		in = is;
-		action = act;
-	}
+	public GifDecoder(byte[] data,int offset,int length) {
+        gifData = data;
+        gifDataOffset = offset;
+        gifDataLength = length;
 
-	public void run(){
-		if(in != null){
-                  readStream();
-		}else if(gifData != null){
-                  readByte();
-		}
-	}
-	
-	public void free(){
-		GifFrame fg = gifFrame;
-		while(fg != null){
-            if (fg.image != null) {
-                fg.image.recycle();
+        restart();
+    }
+
+    public void restart() {
+        readBytes = 0;
+        status = STATUS_PARSING;
+        gct = null;
+        lct = null;
+        readHeader();
+    }
+
+    public synchronized GifFrame nextFrame() {
+        // read GIF file content blocks
+        while (!err() && status == STATUS_PARSING) {
+            int code = read();
+            switch (code) {
+                case 0x2C: // image separator
+                    return lastFrame = readImage();
+                case 0x21: // extension
+                    code = read();
+                    switch (code) {
+                        case 0xf9: // graphics control extension
+                            readGraphicControlExt();
+                            break;
+                        case 0xff: // application extension
+                            readBlock();
+                            String app = "";
+                            for (int i = 0; i < 11; i++) {
+                                app += (char) block[i];
+                            }
+                            if (app.equals("NETSCAPE2.0")) {
+                                readNetscapeExt();
+                            } else {
+                                skip(); // don't care
+                            }
+                            break;
+                        default: // uninteresting extension
+                            skip();
+                    }
+                    break;
+                case 0x3b: // terminator
+                    status = STATUS_FINISH;
+                    return null;
+                case 0x00: // bad byte, but keep going and see what happens
+                    break;
+                default:
+                    status = STATUS_FORMAT_ERROR;
             }
-			fg.image = null;
-			fg = null;
-			gifFrame = gifFrame.nextFrame;
-			fg = gifFrame;
-		}
-		if(in != null){
-			try{
-			in.close();
-			}catch(Exception ex){}
-			in = null;
-		}
-		gifData = null;
-	}
-	
+        }
+
+        status = STATUS_FORMAT_ERROR;
+        return null;
+    }
+
 	public int getStatus(){
 		return status;
 	}
@@ -127,80 +179,43 @@ public class GifDecoder extends Thread{
 	public boolean parseOk(){
 		return status == STATUS_FINISH;
 	}
-	
-	public int getDelay(int n) {
-		delay = -1;
-		if ((n >= 0) && (n < frameCount)) {
-			GifFrame f = getFrame(n);
-			if (f != null)
-				delay = f.delay;
-		}
-		return delay;
-	}
-	
-	public int[] getDelays(){
-		GifFrame f = gifFrame;
-		int[] d = new int[frameCount];
-		int i = 0;
-		while(f != null && i < frameCount){
-			d[i] = f.delay;
-			f = f.nextFrame;
-			i++;
-		}
-		return d;
-	}
-	
-	public int getFrameCount() {
-		return frameCount;
-	}
-
-	public Bitmap getImage() {
-		return getFrameImage(0);
-	}
 
 	public int getLoopCount() {
 		return loopCount;
 	}
 
-    int[] lastPixels;
-    int[] dest;
 	private Bitmap setPixels() {
         if (dest == null)
             dest = new int[width * height];
+
 		// fill in starting image contents based on last image's dispose code
-		if (lastDispose > 0) {
-			if (lastDispose == 3) {
-				// use image before last
-				int n = frameCount - 2;
-				if (n > 0) {
-					Bitmap lastImage = getFrameImage(n - 1);
-                    if (lastPixels == null)
-                        lastPixels = new int[width * height];
-                    lastImage.getPixels(lastPixels, 0, width, 0, 0, width, height);
-				}
-                else {
-                    lastPixels = null;
+        switch (lastDispose) {
+            // no dispose
+            case 1:
+                // dest already contains the last bitmap pixels, just reuse it.
+                break;
+            case 2:
+                // fill last image rect area with background color
+                int c = 0;
+                if (!transparency) {
+                    c = lastBgColor;
                 }
-            }
-			if (lastPixels != null) {
-                dest = Arrays.copyOf(lastPixels, lastPixels.length);
-                // copy pixels
-				if (lastDispose == 2) {
-					// fill last image rect area with background color
-					int c = 0;
-					if (!transparency) {
-						c = lastBgColor;
-					}
-					for (int i = 0; i < lrh; i++) {
-						int n1 = (lry + i) * width + lrx;
-						int n2 = n1 + lrw;
-						for (int k = n1; k < n2; k++) {
-							dest[k] = c;
-						}
-					}
-				}
-			}
-		}
+                for (int i = 0; i < lrh; i++) {
+                    int n1 = (lry + i) * width + lrx;
+                    int n2 = n1 + lrw;
+                    for (int k = n1; k < n2; k++) {
+                        dest[k] = c;
+                    }
+                }
+                break;
+            case 3:
+                // use the image before last
+                beforeLastFrame.image.getPixels(dest, 0, width, 0, 0, width, height);
+                break;
+            default:
+                // wtf?
+                break;
+        }
 
 		// copy each source line to the appropriate place in the destination
 		int pass = 1;
@@ -239,97 +254,14 @@ public class GifDecoder extends Thread{
 				while (dx < dlim) {
 					// map color and insert in destination
 					int index = ((int) pixels[sx++]) & 0xff;
-					int c = act[index];
-					if (c != 0) {
-						dest[dx] = c;
+					if (!transparency || index != transIndex) {
+						dest[dx] = act[index];
 					}
 					dx++;
 				}
 			}
 		}
 		return Bitmap.createBitmap(dest, width, height, Config.ARGB_4444);
-	}
-
-	public Bitmap getFrameImage(int n) {
-		GifFrame frame = getFrame(n);	
-		if (frame == null)
-			return null;
-		else
-			return frame.image;
-	}
-
-	public GifFrame getCurrentFrame(){
-		return currentFrame;
-	}
-	
-	public GifFrame getFrame(int n) {
-		GifFrame frame = gifFrame;
-		int i = 0;
-		while (frame != null) {
-			if (i == n) {
-				return frame;
-			} else {
-				frame = frame.nextFrame;
-			}
-			i++;
-		}
-		return null;
-	}
-
-	public void reset(){
-		currentFrame = gifFrame;
-	}
-	
-	public GifFrame next() {	
-		if(isShow == false){
-			isShow = true;
-			return gifFrame;
-		}else{	
-			if(status == STATUS_PARSING){
-				if(currentFrame.nextFrame != null)
-					currentFrame = currentFrame.nextFrame;			
-				//currentFrame = gifFrame;
-			}else{			
-				currentFrame = currentFrame.nextFrame;
-				if (currentFrame == null) {
-					currentFrame = gifFrame;
-				}
-			}
-			return currentFrame;
-		}
-	}
-
-	private int readByte(){
-		in = new ByteArrayInputStream(gifData,gifDataOffset,gifDataLength);
-		gifData = null;
-		return readStream();
-	}
-	
-	private int readStream(){
-		init();
-		if(in != null){
-			readHeader();
-			if(!err()){
-				readContents();
-				if(frameCount < 0){
-					status = STATUS_FORMAT_ERROR;
-					action.parseOk(false,-1);
-				}else{
-					status = STATUS_FINISH;
-					action.parseOk(true,-1);
-				}
-			}
-			try {
-				in.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			
-		}else {
-			status = STATUS_OPEN_ERROR;
-			action.parseOk(false,-1);
-		}
-		return status;
 	}
 
 	private void decodeImageData() {
@@ -445,24 +377,24 @@ public class GifDecoder extends Thread{
 		return status != STATUS_PARSING;
 	}
 
-	private void init() {
-		status = STATUS_PARSING;
-		frameCount = 0;
-		gifFrame = null;
-		gct = null;
-		lct = null;
+	private int read() {
+        if (readBytes >= gifDataLength)
+            return 0;
+        return gifData[gifDataOffset + readBytes++] & 0xFF;
 	}
 
-	private int read() {
-		int curByte = 0;
-		try {
-			
-			curByte = in.read();
-		} catch (Exception e) {
-			status = STATUS_FORMAT_ERROR;
-		}
-		return curByte;
-	}
+    private int read(byte[] bytes, int offset, int length) throws IOException {
+        if (readBytes >= gifDataLength)
+            return -1;
+        int toCopy = Math.min(gifDataLength - readBytes, length);
+        System.arraycopy(gifData, gifDataOffset + readBytes, bytes, offset, toCopy);
+        readBytes += toCopy;
+        return toCopy;
+    }
+
+    private int read(byte[] bytes) throws IOException {
+        return read(bytes, 0, bytes.length);
+    }
 	
 	private int readBlock() {
 		blockSize = read();
@@ -471,7 +403,7 @@ public class GifDecoder extends Thread{
 			try {
 				int count = 0;
 				while (n < blockSize) {
-					count = in.read(block, n, blockSize - n);
+					count = read(block, n, blockSize - n);
 					if (count == -1) {
 						break;
 					}
@@ -493,7 +425,7 @@ public class GifDecoder extends Thread{
 		byte[] c = new byte[nbytes];
 		int n = 0;
 		try {
-			n = in.read(c);
+			n = read(c);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -511,48 +443,6 @@ public class GifDecoder extends Thread{
 			}
 		}
 		return tab;
-	}
-
-	private void readContents() {
-		// read GIF file content blocks
-		boolean done = false;
-		while (!(done || err())) {
-			int code = read();
-			switch (code) {
-			case 0x2C: // image separator
-				readImage();
-				break;
-			case 0x21: // extension
-				code = read();
-				switch (code) {
-				case 0xf9: // graphics control extension
-					readGraphicControlExt();
-					break;
-				case 0xff: // application extension
-					readBlock();
-					String app = "";
-					for (int i = 0; i < 11; i++) {
-						app += (char) block[i];
-					}
-					if (app.equals("NETSCAPE2.0")) {
-						readNetscapeExt();
-					} else {
-						skip(); // don't care
-					}
-					break;
-				default: // uninteresting extension
-					skip();
-				}
-				break;
-			case 0x3b: // terminator
-				done = true;
-				break;
-			case 0x00: // bad byte, but keep going and see what happens
-				break;
-			default:
-				status = STATUS_FORMAT_ERROR;
-			}
-		}
 	}
 
 	private void readGraphicControlExt() {
@@ -584,7 +474,7 @@ public class GifDecoder extends Thread{
 		}
 	}
 
-	private void readImage() {
+	private GifFrame readImage() {
 		ix = readShort(); // (sub)image position & size
 		iy = readShort();
 		iw = readShort();
@@ -604,51 +494,26 @@ public class GifDecoder extends Thread{
 				bgColor = 0;
 			}
 		}
-		int save = 0;
-		if (transparency) {
-			save = act[transIndex];
-			act[transIndex] = 0; // set transparent color if specified
-		}
 		if (act == null) {
 			status = STATUS_FORMAT_ERROR; // no color table defined
 		}
 		if (err()) {
-			return;
+			return null;
 		}
-        try {
-    		decodeImageData(); // decode pixel data
-    		skip();
-    		if (err()) {
-    			return;
-    		}
-    		frameCount++;
-    		// create new image to receive frame data
-    		// createImage(width, height);
-    		Bitmap image = setPixels(); // transfer pixel data to image
-    		if (gifFrame == null) {
-    			gifFrame = new GifFrame(image, delay);
-    			currentFrame = gifFrame;
-    		} else {
-    			GifFrame f = gifFrame;
-    			while(f.nextFrame != null){
-    				f = f.nextFrame;
-    			}
-    			f.nextFrame = new GifFrame(image, delay);
-    		}
-    		// frames.addElement(new GifFrame(image, delay)); // add image to frame
-    		// list
-    		if (transparency) {
-    			act[transIndex] = save;
-    		}
-    		resetFrame();
-    		if (!action.parseOk(true, frameCount)) {
-                status = STATUS_FINISH;
-                return;
-            }
-        }catch (OutOfMemoryError e) {
-            Log.e("GifDecoder", ">>> log  : " + e.toString());
-            e.printStackTrace();
+        decodeImageData(); // decode pixel data
+        skip();
+        if (err()) {
+            return null;
         }
+        currentFrame++;
+        // create new image to receive frame data
+        // createImage(width, height);
+        Bitmap image = setPixels(); // transfer pixel data to image
+        GifFrame gifFrame = new GifFrame(image, delay);
+        // frames.addElement(new GifFrame(image, delay)); // add image to frame
+        // list
+        resetFrame();
+        return gifFrame;
 	}
 
 	private void readLSD() {
@@ -688,7 +553,7 @@ public class GifDecoder extends Thread{
 		lry = iy;
 		lrw = iw;
 		lrh = ih;
-        lastPixels = dest;
+        beforeLastFrame = lastFrame;
 		lastBgColor = bgColor;
 		dispose = 0;
 		transparency = false;

@@ -92,7 +92,7 @@ public class IonBitmapCache {
 
         // see if this thing has an immediate cache hit
         BitmapInfo ret = cache.getBitmapInfo(key);
-        if (ret == null || ret.bitmaps != null)
+        if (ret == null || ret.exception == null)
             return ret;
 
         // if this bitmap load previously errored out, see if it is time to retry

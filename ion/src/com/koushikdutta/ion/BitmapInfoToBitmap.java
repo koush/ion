@@ -21,6 +21,6 @@ class BitmapInfoToBitmap extends TransformFuture<Bitmap, BitmapInfo> {
         if (result.exception != null)
             setComplete(result.exception);
         else
-            setComplete(result.bitmaps[0]);
+            setComplete(result.bitmap);
     }
 }

@@ -17,8 +17,6 @@ import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
-import com.koushikdutta.ion.gif.GifAction;
-import com.koushikdutta.ion.gif.GifDecoder;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -66,7 +64,7 @@ public class FileLoader extends StreamLoader {
                         Bitmap bitmap = IonBitmapCache.loadBitmap(file, options);
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");
-                        info = new BitmapInfo(key, options.outMimeType, new Bitmap[] { bitmap }, size);
+                        info = new BitmapInfo(key, options.outMimeType, bitmap, size);
                     }
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);

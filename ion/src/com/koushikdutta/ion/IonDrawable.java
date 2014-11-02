@@ -19,6 +19,8 @@ import android.widget.ImageView;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.gif.GifDecoder;
+import com.koushikdutta.ion.gif.GifFrame;
 
 import java.lang.ref.WeakReference;
 
@@ -42,6 +44,7 @@ class IonDrawable extends Drawable {
     private BitmapFetcher bitmapFetcher;
     private IonDrawableCallback callback;
     private FutureCallback<IonDrawable> loadCallback;
+    private IonGifDecoder gifDecoder;
 
     public FutureCallback<IonDrawable> getLoadCallback() {
         return loadCallback;
@@ -64,8 +67,12 @@ class IonDrawable extends Drawable {
             if (placeholderResource != 0)
                 return resources.getDrawable(placeholderResource);
         }
-        if (info != null && info.bitmaps != null)
-            return new BitmapDrawable(resources, info.bitmaps[0]);
+        if (info != null) {
+            if (info.bitmap != null)
+                return new BitmapDrawable(resources, info.bitmap);
+            else if (info.gifDecoder != null)
+                return new BitmapDrawable(resources, info.gifDecoder.nextFrame().image);
+        }
         if (errorResource != 0)
             return resources.getDrawable(errorResource);
         return null;
@@ -145,6 +152,38 @@ class IonDrawable extends Drawable {
         }
     }
 
+    class IonGifDecoder {
+        GifDecoder gifDecoder;
+        public IonGifDecoder(BitmapInfo info){
+            gifDecoder = info.gifDecoder.mutate();
+        }
+
+        Runnable loader = new Runnable() {
+            @Override
+            public void run() {
+                gifDecoder.nextFrame();
+                Ion.mainHandler.post(postLoad);
+            }
+        };
+
+        Runnable postLoad = new Runnable() {
+            @Override
+            public void run() {
+                isLoading = false;
+                if (!invalidateScheduled)
+                    invalidateSelf();
+            }
+        };
+
+        boolean isLoading;
+        public synchronized void scheduleNextFrame() {
+            if (isLoading)
+                return;
+            isLoading = true;
+            Ion.getBitmapLoadExecutorService().execute(loader);
+        }
+    }
+
     public IonDrawable setDisableFadeIn(boolean disableFadeIn) {
         this.disableFadeIn = disableFadeIn;
         return this;
@@ -170,7 +209,6 @@ class IonDrawable extends Drawable {
         callback = new IonDrawableCallback(this);
     }
 
-    int currentFrame;
     private boolean invalidateScheduled;
     private int textureDim;
     private int maxLevel;
@@ -181,8 +219,9 @@ class IonDrawable extends Drawable {
         cancel();
         this.loadedFrom = loadedFrom;
         this.info = info;
-        currentFrame = 0;
+        gifDecoder = null;
         invalidateScheduled = false;
+        unscheduleSelf(invalidate);
         invalidateSelf();
         if (info == null)
             return this;
@@ -202,6 +241,9 @@ class IonDrawable extends Drawable {
             // now, we know the entire image will fit in a square image of
             // this dimension:
             textureDim = TILE_DIM << maxLevel;
+        }
+        else if (info.gifDecoder != null) {
+            gifDecoder = new IonGifDecoder(info);
         }
 
         return this;
@@ -301,9 +343,11 @@ class IonDrawable extends Drawable {
         if (info != null) {
             if (info.decoder != null)
                 return info.originalSize.x;
-            if (info.bitmaps != null)
-                return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
+            if (info.bitmap != null)
+                return info.bitmap.getScaledWidth(resources.getDisplayMetrics().densityDpi);
         }
+        if (gifDecoder != null)
+            return gifDecoder.gifDecoder.getWidth();
         // check eventual image size...
         if (resizeWidth > 0)
             return resizeWidth;
@@ -326,9 +370,11 @@ class IonDrawable extends Drawable {
         if (info != null) {
             if (info.decoder != null)
                 return info.originalSize.y;
-            if (info.bitmaps != null)
-                return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
+            if (info.bitmap != null)
+                return info.bitmap.getScaledHeight(resources.getDisplayMetrics().densityDpi);
         }
+        if (gifDecoder != null)
+            return gifDecoder.gifDecoder.getHeight();
         if (resizeHeight > 0)
             return resizeHeight;
         if (info != null) {
@@ -347,7 +393,6 @@ class IonDrawable extends Drawable {
         @Override
         public void run() {
             invalidateScheduled = false;
-            currentFrame++;
             invalidateSelf();
         }
     };
@@ -355,7 +400,7 @@ class IonDrawable extends Drawable {
     private static final double LOG_2 = Math.log(2);
     private static final int TILE_DIM = 256;
 
-    FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
+    private FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
         @Override
         public void onCompleted(Exception e, BitmapInfo result) {
             invalidateSelf();
@@ -494,8 +539,8 @@ class IonDrawable extends Drawable {
 //            System.out.println(info.key + " visible: " + new Rect(visibleLeft, visibleTop, visibleRight, visibleBottom));
 
             final boolean DEBUG_ZOOM = false;
-            if (info.bitmaps != null && info.bitmaps[0] != null) {
-                canvas.drawBitmap(info.bitmaps[0], null, getBounds(), paint);
+            if (info.bitmap != null) {
+                canvas.drawBitmap(info.bitmap, null, getBounds(), paint);
                 if (DEBUG_ZOOM) {
                     paint.setColor(Color.RED);
                     paint.setAlpha(0x80);
@@ -537,10 +582,10 @@ class IonDrawable extends Drawable {
 //                    System.out.println("rendering: " + texRect + " for: " + bounds);
                     String tileKey = FileCache.toKeyString(info.key, ",", level, ",", x, ",", y);
                     BitmapInfo tile = ion.bitmapCache.get(tileKey);
-                    if (tile != null && tile.bitmaps != null) {
+                    if (tile != null && tile.bitmap != null) {
                         // render it
 //                        System.out.println("bitmap is: " + tile.bitmaps[0].getWidth() + "x" + tile.bitmaps[0].getHeight());
-                        canvas.drawBitmap(tile.bitmaps[0], null, texRect, paint);
+                        canvas.drawBitmap(tile.bitmap, null, texRect, paint);
                         continue;
                     }
 
@@ -566,7 +611,7 @@ class IonDrawable extends Drawable {
                     while (parentLevel >= 0) {
                         tileKey = FileCache.toKeyString(info.key, ",", parentLevel, ",", parentX, ",", parentY);
                         tile = ion.bitmapCache.get(tileKey);
-                        if (tile != null && tile.bitmaps != null)
+                        if (tile != null && tile.bitmap != null)
                             break;
                         if (parentX % 2 == 1) {
                             parentLeft += 1 << parentUp;
@@ -581,7 +626,7 @@ class IonDrawable extends Drawable {
                     }
 
                     // well, i give up
-                    if (tile == null || tile.bitmaps == null)
+                    if (tile == null || tile.bitmap == null)
                         continue;
 
 
@@ -596,7 +641,7 @@ class IonDrawable extends Drawable {
                     int sourceLeft = subTextureDim * parentLeft;
                     int sourceTop = subTextureDim * parentTop;
                     Rect sourceRect = new Rect(sourceLeft, sourceTop, sourceLeft + subTextureDim, sourceTop + subTextureDim);
-                    canvas.drawBitmap(tile.bitmaps[0], sourceRect, texRect, paint);
+                    canvas.drawBitmap(tile.bitmap, sourceRect, texRect, paint);
 
                     if (DEBUG_ZOOM) {
                         paint.setColor(Color.RED);
@@ -607,21 +652,28 @@ class IonDrawable extends Drawable {
                 }
             }
         }
-        else if (info.bitmaps != null) {
+        else if (info.bitmap != null) {
             paint.setAlpha((int)destAlpha);
-            canvas.drawBitmap(info.bitmaps[currentFrame % info.bitmaps.length], null, getBounds(), paint);
+            canvas.drawBitmap(info.bitmap, null, getBounds(), paint);
             paint.setAlpha(0xFF);
-            // schedule a refresh if this is:
-            // animated AND
-            // the animation is not complete OR is allowed to repeat
-            if (info.delays != null && (repeatAnimation || currentFrame < info.delays.length)) {
-                int delay = info.delays[currentFrame % info.delays.length];
+        }
+        else if (info.gifDecoder != null) {
+            GifFrame lastFrame = gifDecoder.gifDecoder.getLastFrame();
+            if (lastFrame != null) {
+                paint.setAlpha((int)destAlpha);
+                canvas.drawBitmap(lastFrame.image, null, getBounds(), paint);
+                paint.setAlpha(0xFF);
+
+                long delay = lastFrame.delay;
                 if (!invalidateScheduled) {
                     invalidateScheduled = true;
                     unscheduleSelf(invalidate);
                     scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
                 }
             }
+            if (gifDecoder.gifDecoder.getStatus() == GifDecoder.STATUS_FINISH && repeatAnimation)
+                gifDecoder.gifDecoder.restart();
+            gifDecoder.scheduleNextFrame();
         }
         else {
             Drawable error = tryGetErrorResource();
@@ -679,7 +731,7 @@ class IonDrawable extends Drawable {
 
     @Override
     public int getOpacity() {
-        return (info == null || info.bitmaps == null || info.bitmaps[0].hasAlpha() || paint.getAlpha() < 255) ?
+        return (info == null || info.bitmap == null || info.bitmap.hasAlpha() || paint.getAlpha() < 255) ?
                 PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
     }
 

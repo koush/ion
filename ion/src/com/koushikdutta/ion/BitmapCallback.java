@@ -20,10 +20,7 @@ abstract class BitmapCallback {
     Ion ion;
 
     public static void saveBitmapSnapshot(Ion ion, BitmapInfo info) {
-        // the transformed bitmap was successfully load it, let's toss it into
-        // the disk lru cache.
-        // but don't persist gifs...
-        if (info.bitmaps.length > 1)
+        if (info.bitmap == null)
             return;
         FileCache cache = ion.responseCache.getFileCache();
         if (cache == null)
@@ -31,8 +28,8 @@ abstract class BitmapCallback {
         File tempFile = cache.getTempFile();
         try {
             FileOutputStream out = new FileOutputStream(tempFile);
-            Bitmap.CompressFormat format = info.bitmaps[0].hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
-            info.bitmaps[0].compress(format, 100, out);
+            Bitmap.CompressFormat format = info.bitmap.hasAlpha() ? Bitmap.CompressFormat.PNG : Bitmap.CompressFormat.JPEG;
+            info.bitmap.compress(format, 100, out);
             out.close();
             cache.commitTempFiles(info.key, tempFile);
         }
@@ -61,7 +58,7 @@ abstract class BitmapCallback {
                     Bitmap bitmap = IonBitmapCache.loadBitmap(file, null);
                     if (bitmap == null)
                         throw new Exception("Bitmap failed to load");
-                    BitmapInfo info = new BitmapInfo(transformKey, "image/jpeg", new Bitmap[] { bitmap }, null);
+                    BitmapInfo info = new BitmapInfo(transformKey, "image/jpeg", bitmap, null);
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
 
                     if (postProcess != null) {
@@ -140,7 +137,7 @@ abstract class BitmapCallback {
             // don't cache anything that requests not to be cached
             || !put
             // don't cache dead bitmaps or gifs
-            || info.bitmaps == null || info.bitmaps.length != 1
+            || info.bitmap == null
             // too big
             || info.sizeOf() > 512 * 512 * 4) {
             return;

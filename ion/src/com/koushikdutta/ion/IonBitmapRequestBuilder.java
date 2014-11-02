@@ -158,7 +158,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         String bitmapKey = computeBitmapKey(decodeKey);
         BitmapInfo info = builder.ion.bitmapCache.get(bitmapKey);
         // memory cache
-        if (info != null && info.bitmaps != null)
+        if (info != null && info.exception == null)
             return LocallyCachedStatus.CACHED;
         FileCache fileCache = ion.responseCache.getFileCache();
         if (hasTransforms() && fileCache.exists(bitmapKey))
@@ -220,8 +220,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         final BitmapFetcher bitmapFetcher = executeCache();
         if (bitmapFetcher.info != null) {
             SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
-            Bitmap bitmap = bitmapFetcher.info.bitmaps == null ? null : bitmapFetcher.info.bitmaps[0];
-            ret.setComplete(bitmapFetcher.info.exception, bitmap);
+            ret.setComplete(bitmapFetcher.info.exception, bitmapFetcher.info.bitmap);
             return ret;
         }
 
