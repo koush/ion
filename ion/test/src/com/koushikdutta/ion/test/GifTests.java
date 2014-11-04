@@ -3,7 +3,6 @@ package com.koushikdutta.ion.test;
 import android.test.AndroidTestCase;
 
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.gif.GifAction;
 import com.koushikdutta.ion.gif.GifDecoder;
 import com.koushikdutta.ion.gif.GifFrame;
 
