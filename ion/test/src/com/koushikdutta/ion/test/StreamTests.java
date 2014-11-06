@@ -23,11 +23,12 @@ import java.util.Random;
  */
 public class StreamTests extends AndroidTestCase {
     byte[] random = new byte[100000];
+    int port;
     @Override
     protected void setUp() throws Exception {
         super.setUp();
         AsyncHttpServer server = new AsyncHttpServer();
-        server.listen(5555);
+        port = server.listen(0).getLocalPort();
         server.get("/", new HttpServerRequestCallback() {
             @Override
             public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
@@ -55,7 +56,7 @@ public class StreamTests extends AndroidTestCase {
     public void testStream() throws Exception {
         new Random(39548394).nextBytes(random);
         Ion.with(getContext())
-        .load("http://localhost:5555/")
+        .load("http://localhost:" + port + "/")
         .write(new FileOutputStream(getContext().getFileStreamPath("test")), true)
         .get();
 
@@ -66,7 +67,7 @@ public class StreamTests extends AndroidTestCase {
     public void testInputStream() throws Exception {
         new Random(39548394).nextBytes(random);
         InputStream is = Ion.with(getContext())
-        .load("http://localhost:5555/")
+        .load("http://localhost:" + port + "/")
         .asInputStream()
         .get();
 
