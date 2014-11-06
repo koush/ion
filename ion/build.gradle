@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:20.+'
+    compile 'com.android.support:support-v4:21.+'
     compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:2.3'
 }
@@ -42,8 +42,13 @@ android {
         }
     }
 
-    compileSdkVersion 19
-    buildToolsVersion '20.0.0'
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 21
+    }
+
+    compileSdkVersion 21
+    buildToolsVersion '21.1.0'
 
     publishNonDefault true
 }
