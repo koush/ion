@@ -37,7 +37,13 @@ public class ConscryptMiddleware extends SimpleMiddleware {
             synchronized (lock) {
                 if (initialized)
                     return;
+
                 initialized = true;
+
+                // GMS Conscrypt is already initialized, from outside ion. Leave it alone.
+                if (Security.getProvider(GMS_PROVIDER) != null)
+                    return;
+
                 SSLContext originalDefault = SSLContext.getDefault();
                 Context gms = context.createPackageContext("com.google.android.gms", Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
                 gms
@@ -47,14 +53,10 @@ public class ConscryptMiddleware extends SimpleMiddleware {
                 .invoke(null, context);
 
                 Provider[] providers = Security.getProviders();
-                for (Provider provider: providers) {
-                    if (GMS_PROVIDER.equals(provider.getName())) {
-                        Security.removeProvider(GMS_PROVIDER);
-                        Security.insertProviderAt(provider, providers.length);
-                        SSLContext.setDefault(originalDefault);
-                        break;
-                    }
-                }
+                Provider provider = Security.getProvider(GMS_PROVIDER);
+                Security.removeProvider(GMS_PROVIDER);
+                Security.insertProviderAt(provider, providers.length);
+                SSLContext.setDefault(originalDefault);
                 success = true;
             }
         }
