@@ -52,7 +52,22 @@ public interface BitmapBuilder<B extends BitmapBuilder<?>> {
      * bounds.
      * @return
      */
+    public B fitCenter();
+
+    /**
+     * Center the image inside of the bounds specified by the ImageView or resize
+     * operation.
+     * @return
+     */
     public B centerInside();
+
+    /**
+     * Fit the image inside the bounds specified by the ImageView or the resize
+     * operation. This will scale the image so that both dimensions are as large as the
+     * requested bounds.
+     * @return
+     */
+    public B fitXY();
 
     /**
      * Enable/disable automatic resizing to the dimensions of the device when loading the image.

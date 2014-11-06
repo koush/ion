@@ -17,15 +17,14 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.ResponseCacheMiddleware;
-import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.async.http.Headers;
+import com.koushikdutta.async.http.cache.ResponseCacheMiddleware;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.async.util.FileUtility;
 import com.koushikdutta.async.util.HashList;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.builder.Builders;
-import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
 import com.koushikdutta.ion.conscrypt.ConscryptMiddleware;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
@@ -44,6 +43,8 @@ import java.io.File;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
@@ -88,30 +89,6 @@ public class Ion {
      */
     public static LoadBuilder<Builders.Any.B> with(android.support.v4.app.Fragment fragment) {
         return getDefault(fragment.getActivity()).build(fragment);
-    }
-
-    /**
-     * Get the default Ion object instance and begin building a request
-     * with the given uri
-     * @param context
-     * @param uri
-     * @return
-     */
-    @Deprecated
-    public static Builders.Any.B with(Context context, String uri) {
-        return getDefault(context).build(context, uri);
-    }
-
-    /**
-     * Get the default Ion object instance and begin building an operation
-     * on the given file
-     * @param context
-     * @param file
-     * @return
-     */
-    @Deprecated
-    public static FutureBuilder with(Context context, File file) {
-        return getDefault(context).build(context, file);
     }
 
     /**
@@ -177,6 +154,7 @@ public class Ion {
 
         httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
+        httpClient.getSSLSocketMiddleware().setSpdyEnabled(true);
         httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
 
         File ionCacheDir = new File(context.getCacheDir(), name);
@@ -221,28 +199,6 @@ public class Ion {
 
     public static ExecutorService getIoExecutorService() {
         return ioExecutorService;
-    }
-
-    /**
-     * Begin building an operation on the given file
-     * @param context
-     * @param file
-     * @return
-     */
-    @Deprecated
-    public FutureBuilder build(Context context, File file) {
-        return new IonRequestBuilder(ContextReference.fromContext(context), this).load(file);
-    }
-
-    /**
-     * Begin building a request with the given uri
-     * @param context
-     * @param uri
-     * @return
-     */
-    @Deprecated
-    public Builders.Any.B build(Context context, String uri) {
-        return new IonRequestBuilder(ContextReference.fromContext(context), this).load(uri);
     }
 
     /**
@@ -297,6 +253,18 @@ public class Ion {
         return members.size();
     }
 
+    private static Comparator<DeferredLoadBitmap> DEFERRED_COMPARATOR = new Comparator<DeferredLoadBitmap>() {
+        @Override
+        public int compare(DeferredLoadBitmap lhs, DeferredLoadBitmap rhs) {
+            // higher is more recent
+            if (lhs.priority == rhs.priority)
+                return 0;
+            if (lhs.priority < rhs.priority)
+                return 1;
+            return -1;
+        }
+    };
+
     private Runnable processDeferred = new Runnable() {
         @Override
         public void run() {
@@ -316,6 +284,7 @@ public class Ion {
             if (deferred == null)
                 return;
             int count = 0;
+            Collections.sort(deferred, DEFERRED_COMPARATOR);
             for (DeferredLoadBitmap deferredLoadBitmap: deferred) {
                 bitmapsPending.tag(deferredLoadBitmap.key, null);
                 bitmapsPending.tag(deferredLoadBitmap.fetcher.bitmapKey, null);
@@ -586,10 +555,10 @@ public class Ion {
 
         AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactory() {
             @Override
-            public AsyncHttpRequest createAsyncHttpRequest(Uri uri, String method, RawHeaders headers) {
+            public AsyncHttpRequest createAsyncHttpRequest(Uri uri, String method, Headers headers) {
                 AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
                 if (!TextUtils.isEmpty(userAgent))
-                    request.getHeaders().setUserAgent(userAgent);
+                    request.getHeaders().set("User-Agent", userAgent);
                 return request;
             }
         };

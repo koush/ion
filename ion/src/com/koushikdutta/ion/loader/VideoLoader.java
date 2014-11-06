@@ -4,6 +4,7 @@ import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
@@ -36,7 +37,7 @@ public class VideoLoader extends SimpleLoader {
     }
 
     @Override
-    public Future<BitmapInfo> loadBitmap(Context context, Ion ion, final String key, final String uri, int resizeWidth, int resizeHeight, boolean animateGif) {
+    public Future<BitmapInfo> loadBitmap(Context context, Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight, boolean animateGif) {
         if (!uri.startsWith(ContentResolver.SCHEME_FILE))
             return null;
 
@@ -62,7 +63,16 @@ public class VideoLoader extends SimpleLoader {
                         bmp = createVideoThumbnail(file.getAbsolutePath());
                     if (bmp == null)
                         throw new Exception("video bitmap failed to load");
-                    BitmapInfo info = new BitmapInfo(key, type.mimeType, new Bitmap[] { bmp }, new Point(bmp.getWidth(), bmp.getHeight()));
+                    // downsample this if its obscenely large
+                    Point originalSize = new Point(bmp.getWidth(), bmp.getHeight());
+                    if (bmp.getWidth() > resizeWidth * 2 && bmp.getHeight() > resizeHeight * 2) {
+                        float xratio = (float)resizeWidth / bmp.getWidth();
+                        float yratio = (float)resizeHeight / bmp.getHeight();
+                        float ratio = Math.min(xratio, yratio);
+                        if (ratio != 0)
+                            bmp = Bitmap.createScaledBitmap(bmp, (int)(bmp.getWidth() * ratio), (int)(bmp.getHeight() * ratio), true);
+                    }
+                    BitmapInfo info = new BitmapInfo(key, type.mimeType, bmp, originalSize);
                     info.loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 } catch (Exception e) {

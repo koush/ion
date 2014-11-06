@@ -26,11 +26,13 @@ public class ConscryptMiddleware extends SimpleMiddleware {
         this.enabled = enabled;
         if (!enabled) {
             instanceInitialized = false;
-            middleware.setSSLContext(null);
+            for (AsyncSSLSocketMiddleware m: middleware) {
+                m.setSSLContext(null);
+            }
         }
     }
 
-    static void initialize(Context context) {
+    public static void initialize(Context context) {
         try {
             synchronized (lock) {
                 if (initialized)
@@ -78,17 +80,20 @@ public class ConscryptMiddleware extends SimpleMiddleware {
                 if (sslContext == null)
                     sslContext = SSLContext.getInstance("TLS");
                 sslContext.init(null, null, null);
-                if (middleware.getSSLContext() != AsyncSSLSocketWrapper.getDefaultSSLContext())
-                    middleware.setSSLContext(sslContext);
+                for (AsyncSSLSocketMiddleware m: middleware) {
+                    // only set the SSL context if it is not the default SSL context
+                    if (m.getSSLContext() != AsyncSSLSocketWrapper.getDefaultSSLContext())
+                        m.setSSLContext(sslContext);
+                }
             }
             catch (Exception e) {
             }
         }
     }
 
-    AsyncSSLSocketMiddleware middleware;
+    AsyncSSLSocketMiddleware[] middleware;
     Context context;
-    public ConscryptMiddleware(Context context, AsyncSSLSocketMiddleware middleware) {
+    public ConscryptMiddleware(Context context, AsyncSSLSocketMiddleware... middleware) {
         this.middleware = middleware;
         this.context = context.getApplicationContext();
     }

@@ -106,7 +106,8 @@ public class TwitterGson extends Activity {
     // Lets grab the authentication
     String accessToken;
     private void getCredentials() {
-        Ion.with(this, "https://api.twitter.com/oauth2/token")
+        Ion.with(this)
+        .load("https://api.twitter.com/oauth2/token")
         // embedding twitter api key and secret is a bad idea, but this isn't a real twitter app :)
         .basicAuthentication("e4LrcHB55R3WamRYHpNfA", "MIABn1DU5db3Aj0xXzhthsf4aUKMAdoWJTMxJJcY")
         .setBodyParameter("grant_type", "client_credentials")
@@ -144,7 +145,8 @@ public class TwitterGson extends Activity {
 
         // This request loads a URL as JsonArray and invokes
         // a callback on completion.
-        loading = Ion.with(this, url)
+        loading = Ion.with(this)
+        .load(url)
         .setHeader("Authorization", "Bearer " + accessToken)
         .as(new TypeToken<List<Tweet>>() {
         })

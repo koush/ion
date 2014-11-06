@@ -27,14 +27,6 @@ class RequestBodyUploadObserver implements AsyncHttpRequestBody {
         final int length = body.length();
         body.write(request, new DataSink() {
             int totalWritten;
-            @Override
-            public void write(ByteBuffer bb) {
-                int start = bb.remaining();
-                sink.write(bb);
-                int wrote = start - bb.remaining();
-                totalWritten += wrote;
-                callback.onProgress(totalWritten, length);
-            }
 
             @Override
             public void write(ByteBufferList bb) {
@@ -58,11 +50,6 @@ class RequestBodyUploadObserver implements AsyncHttpRequestBody {
             @Override
             public boolean isOpen() {
                 return sink.isOpen();
-            }
-
-            @Override
-            public void close() {
-                sink.close();
             }
 
             @Override

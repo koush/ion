@@ -4,12 +4,12 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.builder.AnimateGifMode;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
 import com.koushikdutta.ion.future.ImageViewFuture;
@@ -18,12 +18,6 @@ import com.koushikdutta.ion.future.ImageViewFuture;
  * Created by koush on 7/4/14.
  */
 public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implements Builders.IV.F, ImageViewFutureBuilder {
-    private static final IonDrawable.ImageViewFutureImpl FUTURE_IMAGEVIEW_NULL_URI = new IonDrawable.ImageViewFutureImpl() {
-        {
-            setComplete(new NullPointerException("uri"));
-        }
-    };
-
     Drawable placeholderDrawable;
     int placeholderResource;
     Drawable errorDrawable;
@@ -78,18 +72,26 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     }
 
     IonImageViewRequestBuilder withImageView(ImageView imageView) {
-        imageViewPostRef = new ContextReference.ImageViewContextReference(imageView);
+        if (imageViewPostRef == null || imageViewPostRef.get() != imageView)
+            imageViewPostRef = new ContextReference.ImageViewContextReference(imageView);
         return this;
     }
 
-    private IonDrawable setIonDrawable(ImageView imageView, BitmapInfo info, int loadedFrom) {
+    private IonDrawable setIonDrawable(ImageView imageView, BitmapFetcher bitmapFetcher, int loadedFrom) {
+        BitmapInfo info = null;
+        if (bitmapFetcher != null)
+            info = bitmapFetcher.info;
+        if (info != null)
+            bitmapFetcher = null;
+
         IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView)
         .ion(ion)
         .setBitmap(info, loadedFrom)
+        .setBitmapFetcher(bitmapFetcher)
+        .setRepeatAnimation(animateGifMode == AnimateGifMode.ANIMATE)
         .setSize(resizeWidth, resizeHeight)
         .setError(errorResource, errorDrawable)
         .setPlaceholder(placeholderResource, placeholderDrawable)
-        .setInAnimation(inAnimation, inAnimationResource)
         .setDisableFadeIn(disableFadeIn);
         imageView.setImageDrawable(ret);
         return ret;
@@ -104,37 +106,49 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
             setIonDrawable(imageView, null, 0).cancel();
-            return FUTURE_IMAGEVIEW_NULL_URI;
+            return ImageViewFutureImpl.FUTURE_IMAGEVIEW_NULL_URI;
         }
 
         withImageView(imageView);
 
+        int sampleWidth = resizeWidth;
+        int sampleHeight = resizeHeight;
+        // see if we need default transforms, or this if the imageview
+        // will request the actual size on measure
+        if (resizeHeight == 0 && resizeWidth == 0) {
+            // set the sample size hints from the current dimensions
+            // but don't actually apply a transform.
+            // this may be zero, in which case IonDrawable
+            // will eventually try again with real dimensions
+            // during draw.
+            sampleWidth = imageView.getMeasuredWidth();
+            sampleHeight = imageView.getMeasuredHeight();
+        }
+        else {
+            addDefaultTransform();
+        }
+
         // executeCache the request, see if we get a bitmap from cache.
-        BitmapFetcher bitmapFetcher = executeCache();
+        BitmapFetcher bitmapFetcher = executeCache(sampleWidth, sampleHeight);
         if (bitmapFetcher.info != null) {
             doAnimation(imageView, null, 0);
-            IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher.info, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
+            IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
             drawable.cancel();
-            IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
+            ImageViewFutureImpl imageViewFuture = ImageViewFutureImpl.getOrCreateImageViewFuture(imageViewPostRef, drawable)
+            .setInAnimation(inAnimation, inAnimationResource)
+            .setScaleMode(scaleMode);
+            ImageViewFutureImpl.applyScaleMode(imageView, scaleMode);
             imageViewFuture.reset();
             imageViewFuture.setComplete(bitmapFetcher.info.exception, imageView);
             return imageViewFuture;
         }
 
-        IonDrawable drawable = setIonDrawable(imageView, null, 0);
+        IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, 0);
         doAnimation(imageView, loadAnimation, loadAnimationResource);
-        IonDrawable.ImageViewFutureImpl imageViewFuture = drawable.getFuture();
+        ImageViewFutureImpl imageViewFuture = ImageViewFutureImpl.getOrCreateImageViewFuture(imageViewPostRef, drawable)
+        .setInAnimation(inAnimation, inAnimationResource)
+        .setScaleMode(scaleMode);
         imageViewFuture.reset();
-        drawable.register(ion, bitmapFetcher.bitmapKey);
-
-        // nothing from cache, check to see if there's too many imageview loads
-        // already in progress
-        if (BitmapFetcher.shouldDeferImageView(ion)) {
-            bitmapFetcher.defer();
-        }
-        else {
-            bitmapFetcher.execute();
-        }
 
         return imageViewFuture;
     }
@@ -183,20 +197,6 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
             drawable = ionDrawable.getCurrentDrawable();
         }
         return placeholder(drawable);
-    }
-
-    @Override
-    protected void finalizeResize() {
-        if (resizeWidth > 0 && resizeHeight > 0)
-            return;
-        ImageView iv = imageViewPostRef.get();
-        ViewGroup.LayoutParams lp = iv.getLayoutParams();
-        if (lp == null)
-            return;
-        if (resizeWidth <= 0 && lp.width > 0)
-            resizeWidth = lp.width;
-        if (resizeHeight <= 0 && lp.height > 0)
-            resizeHeight = lp.height;
     }
 
     @Override

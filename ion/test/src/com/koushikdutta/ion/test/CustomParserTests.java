@@ -10,7 +10,8 @@ import com.koushikdutta.ion.Ion;
  */
 public class CustomParserTests extends AndroidTestCase {
     public void testCustomParser() throws Exception {
-        assertNotNull(Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        assertNotNull(Ion.with(getContext())
+        .load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
         .as(new StringParser()).get());
     }
 }

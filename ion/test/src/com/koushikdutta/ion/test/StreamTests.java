@@ -32,7 +32,7 @@ public class StreamTests extends AndroidTestCase {
         server.get("/", new HttpServerRequestCallback() {
             @Override
             public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
-                response.responseCode(200);
+                response.code(200);
                 ByteBuffer b = ByteBufferList.obtain(random.length);
                 b.put(random);
                 b.flip();

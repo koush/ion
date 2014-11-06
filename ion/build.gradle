@@ -1,13 +1,9 @@
-task wrapper(type: Wrapper) {
-    gradleVersion = '1.6'
-}
-
 buildscript {
     repositories {
-        mavenCentral()
+        maven { url 'http://repo1.maven.org/maven2' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:+'
+        classpath 'com.android.tools.build:gradle:0.14.1'
     }
 }
 apply plugin: 'com.android.library'
@@ -17,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:21.+'
+    compile 'com.android.support:support-v4:21.0.0'
     compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:2.3'
 }
@@ -36,21 +32,17 @@ android {
         androidTest.assets.srcDirs=['test/assets/']
     }
 
-    android {
-        lintOptions {
-            abortOnError false
-        }
+    lintOptions {
+        abortOnError false
     }
 
     defaultConfig {
-        minSdkVersion 9
         targetSdkVersion 21
+        minSdkVersion 9
     }
 
     compileSdkVersion 21
     buildToolsVersion '21.1.0'
-
-    publishNonDefault true
 }
 
 // upload to maven task

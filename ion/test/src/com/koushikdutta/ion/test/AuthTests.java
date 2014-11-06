@@ -36,7 +36,7 @@ public class AuthTests extends AndroidTestCase {
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
                 try {
                     JsonObject json = new JsonObject();
-                    String authorization = request.getHeaders().getHeaders().get("Authorization").replace("Basic ", "");
+                    String authorization = request.getHeaders().get("Authorization").replace("Basic ", "");
                     authorization = new String(Base64.decode(authorization, Base64.DEFAULT));
                     String[] parts = authorization.split(":");
                     assertTrue(parts.length == 2);
@@ -53,7 +53,8 @@ public class AuthTests extends AndroidTestCase {
             }
         });
 
-        JsonObject result = Ion.with(getContext(), "http://localhost:5555")
+        JsonObject result = Ion.with(getContext())
+        .load("http://localhost:5555")
         .setTimeout(500)
         .basicAuthentication("foo", "bar")
         .asJsonObject()

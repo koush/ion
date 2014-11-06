@@ -3,21 +3,15 @@ package com.koushikdutta.ion;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
-import com.koushikdutta.ion.gif.GifAction;
 import com.koushikdutta.ion.gif.GifDecoder;
 
-import java.net.URI;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferList> {
     int resizeWidth;
@@ -55,39 +49,26 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                 try {
                     bb = result.getAll();
 
-                    Bitmap[] bitmaps;
-                    int[] delays;
+                    Bitmap bitmap;
+                    GifDecoder gifDecoder;
                     BitmapFactory.Options options = ion.bitmapCache.prepareBitmapOptions(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), resizeWidth, resizeHeight);
                     final Point size = new Point(options.outWidth, options.outHeight);
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
-                        GifDecoder decoder = new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), new GifAction() {
-                            @Override
-                            public boolean parseOk(boolean parseStatus, int frameIndex) {
-                                return animateGif;
-                            }
-                        });
-                        decoder.run();
-                        if (decoder.getFrameCount() == 0)
-                            throw new Exception("failed to load gif");
-                        bitmaps = new Bitmap[decoder.getFrameCount()];
-                        delays = decoder.getDelays();
-                        for (int i = 0; i < decoder.getFrameCount(); i++) {
-                            Bitmap bitmap = decoder.getFrameImage(i);
-                            if (bitmap == null)
-                                throw new Exception("failed to load gif frame");
-                            bitmaps[i] = bitmap;
-                        }
+//                        new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
+                        bitmap = null;
+                        gifDecoder = new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
+                        gifDecoder.nextFrame();
+                        bb = null;
                     }
                     else {
-                        Bitmap bitmap = IonBitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), options);
+                        bitmap = IonBitmapCache.loadBitmap(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining(), options);
+                        gifDecoder = null;
                         if (bitmap == null)
                             throw new Exception("failed to load bitmap");
-                        bitmaps = new Bitmap[] { bitmap };
-                        delays = null;
                     }
 
-                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
-                    info.delays = delays;
+                    BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmap, size);
+                    info.gifDecoder = gifDecoder;
                     if (emitterTransform != null)
                         info.loadedFrom = emitterTransform.loadedFrom();
                     else
@@ -102,12 +83,9 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                     report(e, null);
                 }
                 finally {
-                    if (bb != null)
-                        ByteBufferList.reclaim(bb);
+                    ByteBufferList.reclaim(bb);
                 }
             }
         });
     }
 }
-
-    

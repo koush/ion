@@ -33,11 +33,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class Issues extends AndroidTestCase {
     public void testIssue74() throws Exception {
-        String data = Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        String data = Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
         .setLogging("MyLogs", Log.VERBOSE)
         .asString().get();
 
-        String data2 = Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        String data2 = Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
         .setLogging("MyLogs", Log.VERBOSE)
         .asString().get();
 
@@ -60,7 +60,7 @@ public class Issues extends AndroidTestCase {
         httpServer.get("/", new HttpServerRequestCallback() {
             @Override
             public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
-                response.getHeaders().getHeaders().set("Cache-Control", "max-age=300");
+                response.getHeaders().set("Cache-Control", "max-age=300");
                 response.send(request.getQuery().size() + "");
             }
         });
@@ -134,7 +134,7 @@ public class Issues extends AndroidTestCase {
         String b64 = Base64.encodeToString(random, 0);
 
         String uploadUrl = Ion.with(getContext())
-        .load("http://ion-test.appspot.com/upload_url")
+        .load("https://ion-test.appspot.com/upload_url")
         .asString()
         .get();
 
@@ -248,5 +248,15 @@ public class Issues extends AndroidTestCase {
         finally {
             asyncServer.stop();
         }
+    }
+
+    public void testAAIssue225() throws Exception {
+        String ret = Ion.with(getContext())
+        .load("https://content.fastrbooks.com/android-test.txt")
+        .noCache()
+        .asString()
+        .get();
+
+        System.out.println(ret);
     }
 }

@@ -7,9 +7,10 @@ import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.AsyncHttpResponse;
-import com.koushikdutta.async.http.ResponseCacheMiddleware;
+import com.koushikdutta.async.http.HttpUtil;
+import com.koushikdutta.async.http.cache.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.callback.HttpConnectCallback;
-import com.koushikdutta.async.http.libcore.RawHeaders;
+import com.koushikdutta.ion.HeadersResponse;
 import com.koushikdutta.ion.Ion;
 
 /**
@@ -26,19 +27,20 @@ public class HttpLoader extends SimpleLoader {
             public void onConnectCompleted(Exception ex, AsyncHttpResponse response) {
                 long length = -1;
                 int loadedFrom = LoaderEmitter.LOADED_FROM_NETWORK;
-                RawHeaders headers = null;
+                HeadersResponse headers = null;
                 AsyncHttpRequest request = null;
                 if (response != null) {
                     request = response.getRequest();
-                    headers = response.getHeaders().getHeaders();
-                    length = response.getHeaders().getContentLength();
-                    String servedFrom = response.getHeaders().getHeaders().get(ResponseCacheMiddleware.SERVED_FROM);
+                    headers = new HeadersResponse(response.code(), response.message(), response.headers());
+                    length = HttpUtil.contentLength(headers.getHeaders());
+                    String servedFrom = response.headers().get(ResponseCacheMiddleware.SERVED_FROM);
                     if (TextUtils.equals(servedFrom, ResponseCacheMiddleware.CACHE))
                         loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
                     else if (TextUtils.equals(servedFrom, ResponseCacheMiddleware.CONDITIONAL_CACHE))
                         loadedFrom = LoaderEmitter.LOADED_FROM_CONDITIONAL_CACHE;
                 }
-                callback.onCompleted(ex, new LoaderEmitter(response, length, loadedFrom, headers, request));
+                callback.onCompleted(ex,
+                    new LoaderEmitter(response, length, loadedFrom, headers, request));
             }
         });
     }

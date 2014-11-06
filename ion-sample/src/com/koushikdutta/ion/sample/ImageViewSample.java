@@ -18,7 +18,6 @@ public class ImageViewSample extends Activity {
         Ion.with(this)
         .load("http://media.salon.com/2013/05/original.jpg")
         .withBitmap()
-        .resize(512, 512)
         .centerCrop()
         .intoImageView(imageView);
     }
@@ -27,8 +26,15 @@ public class ImageViewSample extends Activity {
         Ion.with(this)
         .load("http://media.salon.com/2013/05/original.jpg")
         .withBitmap()
-        .resize(512, 512)
         .centerInside()
+        .intoImageView(imageView);
+    }
+
+    public void loadFitCenter() {
+        Ion.with(this)
+        .load("http://media.salon.com/2013/05/original.jpg")
+        .withBitmap()
+        .fitCenter()
         .intoImageView(imageView);
     }
 
@@ -36,7 +42,6 @@ public class ImageViewSample extends Activity {
         Ion.with(this)
         .load("https://raw2.github.com/koush/ion/master/ion-sample/mark.gif")
         .withBitmap()
-        .resize(512, 512)
         .centerCrop()
         .intoImageView(imageView);
     }
@@ -45,8 +50,7 @@ public class ImageViewSample extends Activity {
         Ion.with(this)
         .load("https://raw2.github.com/koush/ion/master/ion-sample/mark.gif")
         .withBitmap()
-        .resize(512, 512)
-        .centerInside()
+        .fitCenter()
         .intoImageView(imageView);
     }
 
@@ -54,14 +58,13 @@ public class ImageViewSample extends Activity {
         Ion.with(this)
         .load("android.resource://" + getPackageName() + "/" + R.drawable.borg)
         .withBitmap()
-        .resize(512, 512)
-        .centerInside()
+        .fitCenter()
         .intoImageView(imageView);
     }
 
     public void loadExifRotated() {
         Ion.with(this)
-        .load("https://raw.github.com/koush/ion/master/ion-test/testdata/exif.jpg")
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion/test/assets/exif.jpg")
         .intoImageView(imageView);
     }
 
@@ -79,13 +82,17 @@ public class ImageViewSample extends Activity {
         setContentView(R.layout.image_view);
 
         imageView = (ImageView)findViewById(R.id.image);
+//        imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+//        imageView.setImageResource(R.drawable.charles);
+//        if (true) return;
         fitChoices = (Spinner)findViewById(R.id.fit_choices);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item);
         adapter.add("centerCrop");
+        adapter.add("fitCenter");
         adapter.add("centerInside");
         adapter.add("gif centerCrop");
-        adapter.add("gif centerInside");
+        adapter.add("gif fitCenter");
         adapter.add("gif resource");
         adapter.add("exif rotated");
         adapter.add("twitter drawable resource");
@@ -96,16 +103,18 @@ public class ImageViewSample extends Activity {
                 if (position == 0)
                     loadCenterCrop();
                 else if (position == 1)
-                    loadCenterInside();
+                    loadFitCenter();
                 else if (position == 2)
-                    loadGifCenterCrop();
+                    loadCenterInside();
                 else if (position == 3)
-                    loadGifCenterInside();
+                    loadGifCenterCrop();
                 else if (position == 4)
-                    loadGifResource();
+                    loadGifCenterInside();
                 else if (position == 5)
-                    loadExifRotated();
+                    loadGifResource();
                 else if (position == 6)
+                    loadExifRotated();
+                else if (position == 7)
                     loadTwitterResource();
             }
 

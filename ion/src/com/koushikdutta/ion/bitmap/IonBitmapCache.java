@@ -46,7 +46,7 @@ public class IonBitmapCache {
     }
 
     public IonBitmapCache(Ion ion) {
-        Context context = ion.getContext();
+        Context context = ion.getContext().getApplicationContext();
         this.ion = ion;
         metrics = new DisplayMetrics();
         ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
@@ -81,13 +81,18 @@ public class IonBitmapCache {
         cache.put(info.key, info);
     }
 
+    public void putSoft(BitmapInfo info) {
+        assert Thread.currentThread() == Looper.getMainLooper().getThread();
+        cache.putSoft(info.key, info);
+    }
+
     public BitmapInfo get(String key) {
         if (key == null)
             return null;
 
         // see if this thing has an immediate cache hit
         BitmapInfo ret = cache.getBitmapInfo(key);
-        if (ret == null || ret.bitmaps != null)
+        if (ret == null || ret.exception == null)
             return ret;
 
         // if this bitmap load previously errored out, see if it is time to retry

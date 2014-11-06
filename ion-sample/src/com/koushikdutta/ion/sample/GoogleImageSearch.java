@@ -46,7 +46,6 @@ public class GoogleImageSearch extends Activity {
 
             // select the image view
             Ion.with(iv)
-            .resize(256, 256)
             .centerCrop()
             .placeholder(R.drawable.placeholder)
             .error(R.drawable.error)

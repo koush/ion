@@ -81,7 +81,7 @@ public class ProgressTests extends AndroidTestCase {
             });
 
             final Semaphore semaphore = new Semaphore(0);
-            Ion.with(getContext(), "http://localhost:5000/")
+            Ion.with(getContext()).load("http://localhost:5000/")
                     .uploadProgress(new ProgressCallback() {
                         @Override
                         public void onProgress(long downloaded, long total) {

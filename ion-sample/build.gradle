@@ -18,11 +18,7 @@ repositories {
 
 dependencies {
     compile 'com.github.chrisbanes.photoview:library:+'
-//    compile project(':ion:ion')
-//    compile 'com.android.support:support-v4:20.+'
-    compile 'com.koushikdutta.ion:ion:1.3.7'
-//    compile 'com.koushikdutta.async:androidasync:1.3.5@jar'
-//    compile 'com.google.code.gson:gson:+'
+    compile project(':ion:ion')
 }
 
 android {
@@ -32,6 +28,11 @@ android {
             res.srcDirs = ['res/']
             java.srcDirs = ['src/']
         }
+    }
+
+    defaultConfig {
+        targetSdkVersion 21
+        minSdkVersion 9
     }
 
     compileSdkVersion 19

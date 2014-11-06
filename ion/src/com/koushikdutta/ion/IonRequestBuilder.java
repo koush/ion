@@ -30,6 +30,7 @@ import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpRequest;
+import com.koushikdutta.async.http.Headers;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
 import com.koushikdutta.async.http.body.DocumentBody;
@@ -40,7 +41,6 @@ import com.koushikdutta.async.http.body.Part;
 import com.koushikdutta.async.http.body.StreamBody;
 import com.koushikdutta.async.http.body.StringBody;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
-import com.koushikdutta.async.http.libcore.RawHeaders;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.ByteBufferListParser;
@@ -112,10 +112,10 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return loadInternal(method, url);
     }
 
-    RawHeaders headers;
-    private RawHeaders getHeaders() {
+    Headers headers;
+    private Headers getHeaders() {
         if (headers == null) {
-            headers = new RawHeaders();
+            headers = new Headers();
             AsyncHttpRequest.setDefaultHeaders(headers, uri == null ? null : Uri.parse(uri));
         }
         return headers;
@@ -146,7 +146,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder addHeaders(Map<String, List<String>> params) {
-        RawHeaders headers = getHeaders();
+        Headers headers = getHeaders();
         for (Map.Entry<String, List<String>> entry: params.entrySet()) {
             headers.addAll(entry.getKey(), entry.getValue());
         }
@@ -401,7 +401,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         AsyncHttpRequest finalRequest;
         int loadedFrom;
         Runnable cancelCallback;
-        RawHeaders headers;
+        HeadersResponse headers;
         DataEmitter emitter;
 
         public Response<T> getResponse(Exception e, T result) {
@@ -469,7 +469,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             this.finalRequest = emitter.getRequest();
 
             if (headersCallback != null) {
-                final RawHeaders headers = emitter.getHeaders();
+                final HeadersResponse headers = emitter.getHeaders();
                 // what do we do on loaders that don't have headers? files, content://, etc.
                 AsyncServer.post(handler, new Runnable() {
                     @Override
@@ -967,7 +967,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public Builders.Any.B setHeader(NameValuePair... header) {
-        RawHeaders headers = getHeaders();
+        Headers headers = getHeaders();
         for (NameValuePair h: header) {
             headers.set(h.getName(), h.getValue());
         }

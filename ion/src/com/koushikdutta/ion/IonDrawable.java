@@ -1,7 +1,6 @@
 package com.koushikdutta.ion;
 
 import android.content.res.Resources;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -15,15 +14,13 @@ import android.graphics.drawable.Drawable;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.text.TextUtils;
-import android.view.animation.Animation;
 import android.widget.ImageView;
 
-import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
-import com.koushikdutta.ion.future.ImageViewFuture;
+import com.koushikdutta.ion.gif.GifDecoder;
+import com.koushikdutta.ion.gif.GifFrame;
 
 import java.lang.ref.WeakReference;
 
@@ -39,13 +36,28 @@ class IonDrawable extends Drawable {
     private Drawable error;
     private Resources resources;
     private int loadedFrom;
-    private IonDrawableCallback callback;
     private boolean disableFadeIn;
     private int resizeWidth;
     private int resizeHeight;
+    private boolean repeatAnimation;
     private Ion ion;
+    private BitmapFetcher bitmapFetcher;
+    private IonDrawableCallback callback;
+    private FutureCallback<IonDrawable> loadCallback;
+    private IonGifDecoder gifDecoder;
+
+    public FutureCallback<IonDrawable> getLoadCallback() {
+        return loadCallback;
+    }
+
+    public IonDrawable setLoadCallback(FutureCallback<IonDrawable> loadCallback) {
+        this.loadCallback = loadCallback;
+        return this;
+    }
 
     public IonDrawable ion(Ion ion) {
+        if (ion == null)
+            throw new AssertionError("null ion");
         this.ion = ion;
         return this;
     }
@@ -55,8 +67,12 @@ class IonDrawable extends Drawable {
             if (placeholderResource != 0)
                 return resources.getDrawable(placeholderResource);
         }
-        if (info != null && info.bitmaps != null)
-            return new BitmapDrawable(resources, info.bitmaps[0]);
+        if (info != null) {
+            if (info.bitmap != null)
+                return new BitmapDrawable(resources, info.bitmap);
+            else if (info.gifDecoder != null)
+                return new BitmapDrawable(resources, info.gifDecoder.nextFrame().image);
+        }
         if (errorResource != 0)
             return resources.getDrawable(errorResource);
         return null;
@@ -66,59 +82,59 @@ class IonDrawable extends Drawable {
         return info;
     }
 
-    public static class ImageViewFutureImpl extends SimpleFuture<ImageView> implements ImageViewFuture {
-        @Override
-        public Future<ImageViewBitmapInfo> withBitmapInfo() {
-            final SimpleFuture<ImageViewBitmapInfo> ret = new SimpleFuture<ImageViewBitmapInfo>();
-            setCallback(new FutureCallback<ImageView>() {
-                @Override
-                public void onCompleted(Exception e, ImageView result) {
-                    ImageViewBitmapInfo val = new ImageViewBitmapInfo();
-                    Drawable d = null;
-                    if (result != null)
-                        d = result.getDrawable();
-                    if (d instanceof IonDrawable) {
-                        IonDrawable id = (IonDrawable)d;
-                        val.info = id.info;
-                    }
-                    val.exception = e;
-                    val.imageView = result;
-                    ret.setComplete(val);
-                }
-            });
-            ret.setParent(this);
-            return ret;
-        }
-    }
-
-    public ImageViewFutureImpl getFuture() {
-        return callback.imageViewFuture;
-    }
-    
-    public IonDrawable setDisableFadeIn(boolean disableFadeIn) {
-        this.disableFadeIn = disableFadeIn;
-        return this;
-    }
-
-    public IonDrawable setInAnimation(Animation inAnimation, int inAnimationResource) {
-        callback.inAnimation = inAnimation;
-        callback.inAnimationResource = inAnimationResource;
-        return this;
-    }
-
     // create an internal static class that can act as a callback.
     // dont let it hold strong references to anything.
     static class IonDrawableCallback implements FutureCallback<BitmapInfo> {
         private WeakReference<IonDrawable> ionDrawableRef;
-        private ContextReference.ImageViewContextReference imageViewRef;
         private String bitmapKey;
-        private ImageViewFutureImpl imageViewFuture = new ImageViewFutureImpl();
-        private Animation inAnimation;
-        private int inAnimationResource;
-
-        public IonDrawableCallback(IonDrawable drawable, ImageView imageView) {
+        private Ion ion;
+        public IonDrawableCallback(IonDrawable drawable) {
             ionDrawableRef = new WeakReference<IonDrawable>(drawable);
-            imageViewRef = new ContextReference.ImageViewContextReference(imageView);
+//            imageViewRef = new ContextReference.ImageViewContextReference(imageView);
+        }
+
+        public void register(Ion ion, String bitmapKey) {
+            String previousKey = this.bitmapKey;
+            Ion previousIon = this.ion;
+            if (TextUtils.equals(previousKey, bitmapKey) && this.ion == ion)
+                return;
+            this.ion = ion;
+            this.bitmapKey = bitmapKey;
+            if (ion != null)
+                ion.bitmapsPending.add(bitmapKey, this);
+            unregister(previousIon, previousKey);
+        }
+
+        private void unregister(Ion ion, String key) {
+            if (key == null)
+                return;
+            // unregister this drawable from the bitmaps that are
+            // pending.
+
+            // if this drawable was the only thing waiting for this bitmap,
+            // then the removeItem call will return the TransformBitmap/LoadBitmap instance
+            // that was providing the result.
+            if (ion.bitmapsPending.removeItem(key, this)) {
+                // find out who owns this thing, to see if it is a candidate for removal
+                Object owner = ion.bitmapsPending.tag(key);
+                if (owner instanceof TransformBitmap) {
+                    TransformBitmap info = (TransformBitmap)owner;
+                    ion.bitmapsPending.remove(info.key);
+                    // this transform is also backed by a LoadBitmap* or a DeferredLoadBitmap, grab that
+                    // if it is the only waiter
+                    if (ion.bitmapsPending.removeItem(info.downloadKey, info))
+                        owner = ion.bitmapsPending.tag(info.downloadKey);
+                }
+                // only cancel deferred loads... LoadBitmap means a download is already in progress.
+                // due to view recycling, cancelling that may be bad, as it may be rerequested again
+                // during the recycle process.
+                if (owner instanceof DeferredLoadBitmap) {
+                    DeferredLoadBitmap defer = (DeferredLoadBitmap)owner;
+                    ion.bitmapsPending.remove(defer.key);
+                }
+            }
+
+            ion.processDeferred();
         }
 
         @Override
@@ -126,86 +142,73 @@ class IonDrawable extends Drawable {
             assert Thread.currentThread() == Looper.getMainLooper().getThread();
             assert result != null;
             // see if the imageview is still alive and cares about this result
-            ImageView imageView = imageViewRef.get();
-            if (imageView == null)
-                return;
-
             IonDrawable drawable = ionDrawableRef.get();
             if (drawable == null)
                 return;
-
-            if (imageView.getDrawable() != drawable)
-                return;
-
-            imageView.setImageDrawable(null);
             drawable.setBitmap(result, result.loadedFrom);
-            imageView.setImageDrawable(drawable);
-            IonBitmapRequestBuilder.doAnimation(imageView, inAnimation, inAnimationResource);
-
-            if (null != imageViewRef.isAlive()) {
-                imageViewFuture.cancelSilently();
-                return;
-            }
-
-            imageViewFuture.setComplete(e, imageView);
+            FutureCallback<IonDrawable> callback = drawable.loadCallback;
+            if (callback != null)
+                callback.onCompleted(e, drawable);
         }
+    }
+
+    class IonGifDecoder {
+        GifDecoder gifDecoder;
+        public IonGifDecoder(BitmapInfo info){
+            gifDecoder = info.gifDecoder.mutate();
+        }
+
+        Runnable loader = new Runnable() {
+            @Override
+            public void run() {
+                gifDecoder.nextFrame();
+                Ion.mainHandler.post(postLoad);
+            }
+        };
+
+        Runnable postLoad = new Runnable() {
+            @Override
+            public void run() {
+                isLoading = false;
+                if (!invalidateScheduled)
+                    invalidateSelf();
+            }
+        };
+
+        boolean isLoading;
+        public synchronized void scheduleNextFrame() {
+            if (isLoading)
+                return;
+            isLoading = true;
+            Ion.getBitmapLoadExecutorService().execute(loader);
+        }
+    }
+
+    public IonDrawable setDisableFadeIn(boolean disableFadeIn) {
+        this.disableFadeIn = disableFadeIn;
+        return this;
+    }
+
+    public IonDrawable setBitmapFetcher(BitmapFetcher bitmapFetcher) {
+        this.bitmapFetcher = bitmapFetcher;
+        if (ion == null)
+            throw new AssertionError("null ion");
+        return this;
     }
 
     public void cancel() {
-        unregister(ion, callback.bitmapKey, callback);
-        callback.bitmapKey = null;
-    }
-
-    private static void unregister(Ion ion, String key, IonDrawableCallback callback) {
-        if (key == null)
-            return;
-        // unregister this drawable from the bitmaps that are
-        // pending.
-
-        // if this drawable was the only thing waiting for this bitmap,
-        // then the removeItem call will return the TransformBitmap/LoadBitmap instance
-        // that was providing the result.
-        if (ion.bitmapsPending.removeItem(key, callback)) {
-            // find out who owns this thing, to see if it is a candidate for removal
-            Object owner = ion.bitmapsPending.tag(key);
-            if (owner instanceof TransformBitmap) {
-                TransformBitmap info = (TransformBitmap)owner;
-                ion.bitmapsPending.remove(info.key);
-                // this transform is also backed by a LoadBitmap* or a DeferredLoadBitmap, grab that
-                // if it is the only waiter
-                if (ion.bitmapsPending.removeItem(info.downloadKey, info))
-                    owner = ion.bitmapsPending.tag(info.downloadKey);
-            }
-            // only cancel deferred loads... LoadBitmap means a download is already in progress.
-            // due to view recycling, cancelling that may be bad, as it may be rerequested again
-            // during the recycle process.
-            if (owner instanceof DeferredLoadBitmap) {
-                DeferredLoadBitmap defer = (DeferredLoadBitmap)owner;
-                ion.bitmapsPending.remove(defer.key);
-            }
-        }
-
-        ion.processDeferred();
-    }
-
-    public void register(Ion ion, String bitmapKey) {
-        String previousKey = callback.bitmapKey;
-        if (TextUtils.equals(previousKey, bitmapKey))
-            return;
-        callback.bitmapKey = bitmapKey;
-        ion.bitmapsPending.add(bitmapKey, callback);
-        unregister(ion, previousKey, callback);
+        callback.register(null, null);
+        bitmapFetcher = null;
     }
 
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
-    public IonDrawable(Resources resources, ImageView imageView) {
+    public IonDrawable(Resources resources) {
         this.resources = resources;
         paint = new Paint(DEFAULT_PAINT_FLAGS);
-        callback = new IonDrawableCallback(this, imageView);
+        callback = new IonDrawableCallback(this);
     }
 
-    int currentFrame;
     private boolean invalidateScheduled;
     private int textureDim;
     private int maxLevel;
@@ -216,13 +219,12 @@ class IonDrawable extends Drawable {
         cancel();
         this.loadedFrom = loadedFrom;
         this.info = info;
-        currentFrame = 0;
+        gifDecoder = null;
         invalidateScheduled = false;
+        unscheduleSelf(invalidate);
         invalidateSelf();
-        if (info == null) {
-            callback.bitmapKey = null;
+        if (info == null)
             return this;
-        }
 
         if (info.decoder != null) {
             // find number of tiles across to fit
@@ -240,8 +242,15 @@ class IonDrawable extends Drawable {
             // this dimension:
             textureDim = TILE_DIM << maxLevel;
         }
+        else if (info.gifDecoder != null) {
+            gifDecoder = new IonGifDecoder(info);
+        }
 
-        callback.bitmapKey = info.key;
+        return this;
+    }
+
+    public IonDrawable setRepeatAnimation(boolean repeatAnimation) {
+        this.repeatAnimation = repeatAnimation;
         return this;
     }
 
@@ -334,9 +343,11 @@ class IonDrawable extends Drawable {
         if (info != null) {
             if (info.decoder != null)
                 return info.originalSize.x;
-            if (info.bitmaps != null)
-                return info.bitmaps[0].getScaledWidth(resources.getDisplayMetrics().densityDpi);
+            if (info.bitmap != null)
+                return info.bitmap.getScaledWidth(resources.getDisplayMetrics().densityDpi);
         }
+        if (gifDecoder != null)
+            return gifDecoder.gifDecoder.getWidth();
         // check eventual image size...
         if (resizeWidth > 0)
             return resizeWidth;
@@ -359,9 +370,11 @@ class IonDrawable extends Drawable {
         if (info != null) {
             if (info.decoder != null)
                 return info.originalSize.y;
-            if (info.bitmaps != null)
-                return info.bitmaps[0].getScaledHeight(resources.getDisplayMetrics().densityDpi);
+            if (info.bitmap != null)
+                return info.bitmap.getScaledHeight(resources.getDisplayMetrics().densityDpi);
         }
+        if (gifDecoder != null)
+            return gifDecoder.gifDecoder.getHeight();
         if (resizeHeight > 0)
             return resizeHeight;
         if (info != null) {
@@ -380,7 +393,6 @@ class IonDrawable extends Drawable {
         @Override
         public void run() {
             invalidateScheduled = false;
-            currentFrame++;
             invalidateSelf();
         }
     };
@@ -388,7 +400,7 @@ class IonDrawable extends Drawable {
     private static final double LOG_2 = Math.log(2);
     private static final int TILE_DIM = 256;
 
-    FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
+    private FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
         @Override
         public void onCompleted(Exception e, BitmapInfo result) {
             invalidateSelf();
@@ -446,7 +458,28 @@ class IonDrawable extends Drawable {
     @Override
     public void draw(Canvas canvas) {
         // TODO: handle animated drawables
+        // check if we have a bitmap, otherwise do the placeholder and bail
         if (info == null) {
+            // check if we can fetch the bitmap
+            if (bitmapFetcher != null) {
+                if (bitmapFetcher.sampleWidth == 0 && bitmapFetcher.sampleHeight == 0) {
+                    bitmapFetcher.sampleWidth = canvas.getWidth();
+                    bitmapFetcher.sampleHeight = canvas.getHeight();
+                    bitmapFetcher.recomputeDecodeKey();
+                }
+                callback.register(ion, bitmapFetcher.bitmapKey);
+
+                // check to see if there's too many imageview loads
+                // already in progress
+                if (BitmapFetcher.shouldDeferImageView(ion)) {
+                    bitmapFetcher.defer();
+                }
+                else {
+                    bitmapFetcher.execute();
+                }
+                bitmapFetcher = null;
+            }
+
             drawDrawable(canvas, tryGetPlaceholderResource());
             return;
         }
@@ -506,8 +539,8 @@ class IonDrawable extends Drawable {
 //            System.out.println(info.key + " visible: " + new Rect(visibleLeft, visibleTop, visibleRight, visibleBottom));
 
             final boolean DEBUG_ZOOM = false;
-            if (info.bitmaps != null && info.bitmaps[0] != null) {
-                canvas.drawBitmap(info.bitmaps[0], null, getBounds(), paint);
+            if (info.bitmap != null) {
+                canvas.drawBitmap(info.bitmap, null, getBounds(), paint);
                 if (DEBUG_ZOOM) {
                     paint.setColor(Color.RED);
                     paint.setAlpha(0x80);
@@ -549,10 +582,10 @@ class IonDrawable extends Drawable {
 //                    System.out.println("rendering: " + texRect + " for: " + bounds);
                     String tileKey = FileCache.toKeyString(info.key, ",", level, ",", x, ",", y);
                     BitmapInfo tile = ion.bitmapCache.get(tileKey);
-                    if (tile != null && tile.bitmaps != null) {
+                    if (tile != null && tile.bitmap != null) {
                         // render it
 //                        System.out.println("bitmap is: " + tile.bitmaps[0].getWidth() + "x" + tile.bitmaps[0].getHeight());
-                        canvas.drawBitmap(tile.bitmaps[0], null, texRect, paint);
+                        canvas.drawBitmap(tile.bitmap, null, texRect, paint);
                         continue;
                     }
 
@@ -578,7 +611,7 @@ class IonDrawable extends Drawable {
                     while (parentLevel >= 0) {
                         tileKey = FileCache.toKeyString(info.key, ",", parentLevel, ",", parentX, ",", parentY);
                         tile = ion.bitmapCache.get(tileKey);
-                        if (tile != null && tile.bitmaps != null)
+                        if (tile != null && tile.bitmap != null)
                             break;
                         if (parentX % 2 == 1) {
                             parentLeft += 1 << parentUp;
@@ -593,7 +626,7 @@ class IonDrawable extends Drawable {
                     }
 
                     // well, i give up
-                    if (tile == null || tile.bitmaps == null)
+                    if (tile == null || tile.bitmap == null)
                         continue;
 
 
@@ -608,7 +641,7 @@ class IonDrawable extends Drawable {
                     int sourceLeft = subTextureDim * parentLeft;
                     int sourceTop = subTextureDim * parentTop;
                     Rect sourceRect = new Rect(sourceLeft, sourceTop, sourceLeft + subTextureDim, sourceTop + subTextureDim);
-                    canvas.drawBitmap(tile.bitmaps[0], sourceRect, texRect, paint);
+                    canvas.drawBitmap(tile.bitmap, sourceRect, texRect, paint);
 
                     if (DEBUG_ZOOM) {
                         paint.setColor(Color.RED);
@@ -619,18 +652,28 @@ class IonDrawable extends Drawable {
                 }
             }
         }
-        else if (info.bitmaps != null) {
+        else if (info.bitmap != null) {
             paint.setAlpha((int)destAlpha);
-            canvas.drawBitmap(info.bitmaps[currentFrame % info.bitmaps.length], null, getBounds(), paint);
+            canvas.drawBitmap(info.bitmap, null, getBounds(), paint);
             paint.setAlpha(0xFF);
-            if (info.delays != null) {
-                int delay = info.delays[currentFrame % info.delays.length];
+        }
+        else if (info.gifDecoder != null) {
+            GifFrame lastFrame = gifDecoder.gifDecoder.getLastFrame();
+            if (lastFrame != null) {
+                paint.setAlpha((int)destAlpha);
+                canvas.drawBitmap(lastFrame.image, null, getBounds(), paint);
+                paint.setAlpha(0xFF);
+
+                long delay = lastFrame.delay;
                 if (!invalidateScheduled) {
                     invalidateScheduled = true;
                     unscheduleSelf(invalidate);
                     scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
                 }
             }
+            if (gifDecoder.gifDecoder.getStatus() == GifDecoder.STATUS_FINISH && repeatAnimation)
+                gifDecoder.gifDecoder.restart();
+            gifDecoder.scheduleNextFrame();
         }
         else {
             Drawable error = tryGetErrorResource();
@@ -688,7 +731,7 @@ class IonDrawable extends Drawable {
 
     @Override
     public int getOpacity() {
-        return (info == null || info.bitmaps == null || info.bitmaps[0].hasAlpha() || paint.getAlpha() < 255) ?
+        return (info == null || info.bitmap == null || info.bitmap.hasAlpha() || paint.getAlpha() < 255) ?
                 PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
     }
 
@@ -696,12 +739,14 @@ class IonDrawable extends Drawable {
         Drawable current = imageView.getDrawable();
         IonDrawable ret;
         if (current == null || !(current instanceof IonDrawable))
-            ret = new IonDrawable(imageView.getResources(), imageView);
+            ret = new IonDrawable(imageView.getResources());
         else
             ret = (IonDrawable)current;
         // invalidate self doesn't seem to trigger the dimension check to be called by imageview.
         // are drawable dimensions supposed to be immutable?
         imageView.setImageDrawable(null);
+        ret.unscheduleSelf(ret.invalidate);
+        ret.invalidateScheduled = false;
         return ret;
     }
 }

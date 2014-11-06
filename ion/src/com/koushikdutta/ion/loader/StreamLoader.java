@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
-import android.net.Uri;
 import android.text.TextUtils;
 
 import com.koushikdutta.async.future.Future;
@@ -14,36 +13,19 @@ import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
-import com.koushikdutta.ion.gif.GifAction;
 import com.koushikdutta.ion.gif.GifDecoder;
 
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 /**
  * Created by koush on 6/27/14.
  */
 public class StreamLoader extends SimpleLoader {
     protected BitmapInfo loadGif(String key, Point size, InputStream in, BitmapFactory.Options options) throws Exception {
-        GifDecoder decoder = new GifDecoder(in, new GifAction() {
-            @Override
-            public boolean parseOk(boolean parseStatus, int frameIndex) {
-                return true;
-            }
-        });
-        decoder.run();
-        StreamUtility.closeQuietly(in);
-        if (decoder.getFrameCount() == 0)
-            throw new Exception("failed to load gif");
-        Bitmap[] bitmaps = new Bitmap[decoder.getFrameCount()];
-        int[] delays = decoder.getDelays();
-        for (int i = 0; i < decoder.getFrameCount(); i++) {
-            Bitmap bitmap = decoder.getFrameImage(i);
-            if (bitmap == null)
-                throw new Exception("failed to load gif frame");
-            bitmaps[i] = bitmap;
-        }
-        BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmaps, size);
-        info.delays = delays;
+        BitmapInfo info = new BitmapInfo(key, options.outMimeType, null, size);
+        info.gifDecoder = new GifDecoder(ByteBuffer.wrap(StreamUtility.readToEndAsArray(in)));
+        info.gifDecoder.nextFrame();
         return info;
     }
 
@@ -74,7 +56,7 @@ public class StreamLoader extends SimpleLoader {
                         Bitmap bitmap = IonBitmapCache.loadBitmap(in, options);
                         if (bitmap == null)
                             throw new Exception("Bitmap failed to load");
-                        info = new BitmapInfo(key, options.outMimeType, new Bitmap[] { bitmap }, size);
+                        info = new BitmapInfo(key, options.outMimeType, bitmap, size);
                     }
                     info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);

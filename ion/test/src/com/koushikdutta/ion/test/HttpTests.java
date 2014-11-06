@@ -7,17 +7,16 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.AsyncServerSocket;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.http.AsyncHttpClient;
-import com.koushikdutta.async.http.AsyncHttpGet;
-import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.Multimap;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
 import com.koushikdutta.async.http.body.Part;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
+import com.koushikdutta.async.http.server.AsyncProxyServer;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
@@ -34,8 +33,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class HttpTests extends AndroidTestCase {
     public void testString() throws Exception {
-        assertNotNull(Ion.with(getContext(), "https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
-                .asString().get());
+        assertNotNull(Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        .asString().get());
     }
 
     public void testMultipartFileContentType() throws Exception {
@@ -71,7 +70,7 @@ public class HttpTests extends AndroidTestCase {
 
     public void testStringWithCallback() throws Exception {
         final Semaphore semaphore = new Semaphore(0);
-        Ion.with(getContext(), "http://www.clockworkmod.com/")
+        Ion.with(getContext()).load("http://www.clockworkmod.com/")
                 // need to null out the handler since the semaphore blocks the main thread,
                 // and ion's default behavior is to post back onto the main thread or calling Handler.
                 .setHandler(null)
@@ -88,7 +87,7 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testJsonObject() throws Exception {
-        JsonObject ret = Ion.with(getContext(), "https://raw.githubusercontent.com/koush/AndroidAsync/master/AndroidAsync/test/assets/test.json")
+        JsonObject ret = Ion.with(getContext()).load("https://raw.githubusercontent.com/koush/AndroidAsync/master/AndroidAsync/test/assets/test.json")
                 .asJsonObject().get();
         assertEquals("bar", ret.get("foo").getAsString());
     }
@@ -96,21 +95,21 @@ public class HttpTests extends AndroidTestCase {
     public void testPostJsonObject() throws Exception {
         JsonObject post = new JsonObject();
         post.addProperty("ping", "pong");
-        JsonObject ret = Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext()).load("https://koush.clockworkmod.com/test/echo")
                 .setJsonObjectBody(post)
                 .asJsonObject().get();
         assertEquals("pong", ret.get("ping").getAsString());
     }
 
     public void testUrlEncodedFormBody() throws Exception {
-        JsonObject ret = Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext()).load("https://koush.clockworkmod.com/test/echo")
         .setBodyParameter("blit", "bip")
         .asJsonObject().get();
         assertEquals("bip", ret.get("blit").getAsString());
     }
 
     public void testUrlEncodedFormBodyWithNull() throws Exception {
-        JsonObject ret = Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext()).load("https://koush.clockworkmod.com/test/echo")
         .setTimeout(3000000)
         .setBodyParameter("blit", null)
         .setBodyParameter("foo", "bar")
@@ -120,7 +119,7 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testMultipart() throws Exception {
-        JsonObject ret = Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext()).load("https://koush.clockworkmod.com/test/echo")
                 .setMultipartParameter("goop", "noop")
                 .asJsonObject().get();
         assertEquals("noop", ret.get("goop").getAsString());
@@ -130,9 +129,10 @@ public class HttpTests extends AndroidTestCase {
         Ion ion = Ion.getDefault(getContext());
         ion.getCookieMiddleware().clear();
 
-        ion.build(getContext(), "http://google.com")
-                .asString()
-                .get();
+        ion.build(getContext())
+        .load("http://google.com")
+        .asString()
+        .get();
 
         for (HttpCookie cookie: ion.getCookieMiddleware().getCookieStore().get(URI.create("http://www.google.com"))) {
             Log.i("CookieTest", cookie.getName() + ": " + cookie.getValue());
@@ -149,7 +149,7 @@ public class HttpTests extends AndroidTestCase {
         assertEquals(Ion.getDefault(getContext()).getPendingRequestCount(getContext()), 0);
 
         Object cancelGroup = new Object();
-        Ion.with(getContext(), "http://koush.clockworkmod.com/test/hang")
+        Ion.with(getContext()).load("http://koush.clockworkmod.com/test/hang")
                 .setHandler(null)
                 .group(cancelGroup)
                 .asJsonObject();
@@ -187,7 +187,7 @@ public class HttpTests extends AndroidTestCase {
         array.add(dummy2);
 
         final Semaphore semaphore = new Semaphore(0);
-        Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
+        Ion.with(getContext()).load("https://koush.clockworkmod.com/test/echo")
                 .setHandler(null)
                 .setJsonArrayBody(array)
                 .as(new TypeToken<List<Dummy>>() {
@@ -206,29 +206,19 @@ public class HttpTests extends AndroidTestCase {
     public void testProxy() throws Exception {
         wasProxied = false;
         final AsyncServer proxyServer = new AsyncServer();
-        AsyncHttpServer httpServer = new AsyncHttpServer();
         try {
-            httpServer.get(".*", new HttpServerRequestCallback() {
+            AsyncProxyServer httpServer = new AsyncProxyServer(proxyServer) {
                 @Override
-                public void onRequest(AsyncHttpServerRequest request, final AsyncHttpServerResponse response) {
-                    Log.i("Proxy", "Proxying request");
+                protected boolean onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
                     wasProxied = true;
-                    AsyncHttpClient proxying = new AsyncHttpClient(proxyServer);
-
-                    String url = request.getPath();
-                    proxying.executeString(new AsyncHttpGet(url), new AsyncHttpClient.StringCallback() {
-                        @Override
-                        public void onCompleted(Exception e, AsyncHttpResponse source, String result) {
-                            response.send(result);
-                        }
-                    });
+                    return super.onRequest(request, response);
                 }
-            });
+            };
+            AsyncServerSocket s = httpServer.listen(proxyServer, 0);
 
-            httpServer.listen(proxyServer, 5555);
-
-            Future<String> ret = Ion.with(getContext(), "http://www.clockworkmod.com")
-            .proxy("localhost", 5555)
+            Future<String> ret = Ion.with(getContext())
+            .load("http://www.clockworkmod.com")
+            .proxy("localhost", s.getLocalPort())
             .asString();
 
             String data;
@@ -237,13 +227,12 @@ public class HttpTests extends AndroidTestCase {
             assertTrue(wasProxied);
         }
         finally {
-            httpServer.stop();
             proxyServer.stop();
         }
     }
 
     public void testSSLNullRef() throws Exception {
-        Ion.with(getContext(), "https://launchpad.net/")
+        Ion.with(getContext()).load("https://launchpad.net/")
                 .asString()
                 .get();
     }

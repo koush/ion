@@ -1,6 +1,5 @@
 package com.koushikdutta.ion.builder;
 
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.animation.Animation;
 
@@ -80,10 +79,10 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
 
     /**
      * Flag to enable or disable animation of GIFs
-     * @param animateGif
+     * @param mode
      * @return
      */
-    public I animateGif(boolean animateGif);
+    public I animateGif(AnimateGifMode mode);
 
     /**
      * Load the ImageView with a deep zoomable image. This allows extremely large images
