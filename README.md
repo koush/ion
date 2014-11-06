@@ -403,7 +403,7 @@ git clone git://github.com/koush/AndroidAsync.git
 git clone git://github.com/koush/ion.git
 ```
 * Import the project from AndroidAsync/AndroidAsync into your workspace
-* Import all the ion projects (ion/ion, ion/ion-test, ion/ion-sample) into your workspace.
+* Import all the ion projects (ion/ion, ion/ion-sample) into your workspace.
 
 #### Projects using ion
 
