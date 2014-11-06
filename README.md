@@ -375,14 +375,14 @@ Ion.with(getContext())
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
-   <version>1,</version>
+   <version>2,</version>
 </dependency>
 ```
 
 ##### Gradle
 ```groovy
 dependencies {
-    compile 'com.koushikdutta.ion:ion:1.+'
+    compile 'com.koushikdutta.ion:ion:2.+'
 }
 ````
 
