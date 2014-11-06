@@ -668,7 +668,7 @@ class IonDrawable extends Drawable {
                 if (!invalidateScheduled) {
                     invalidateScheduled = true;
                     unscheduleSelf(invalidate);
-                    scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 100));
+                    scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 16));
                 }
             }
             if (gifDecoder.gifDecoder.getStatus() == GifDecoder.STATUS_FINISH && repeatAnimation)
