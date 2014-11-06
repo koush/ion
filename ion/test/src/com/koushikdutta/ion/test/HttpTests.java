@@ -1,6 +1,5 @@
 package com.koushikdutta.ion.test;
 
-import android.renderscript.FieldPacker;
 import android.test.AndroidTestCase;
 import android.util.Log;
 
@@ -8,14 +7,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.Multimap;
-import com.koushikdutta.async.http.body.FilePart;
 import com.koushikdutta.async.http.body.MultipartFormDataBody;
 import com.koushikdutta.async.http.body.Part;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
@@ -23,10 +20,8 @@ import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.ProgressCallback;
 import com.koushikdutta.ion.cookie.CookieMiddleware;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.net.HttpCookie;
 import java.net.URI;
@@ -44,7 +39,7 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testMultipartFileContentType() throws Exception {
-        File f = new File("/sdcard/ion/testdata");
+        File f = getContext().getFileStreamPath("empty");
         f.getParentFile().mkdirs();
         f.createNewFile();
         AsyncHttpServer httpServer = new AsyncHttpServer();
@@ -76,7 +71,7 @@ public class HttpTests extends AndroidTestCase {
 
     public void testStringWithCallback() throws Exception {
         final Semaphore semaphore = new Semaphore(0);
-        Ion.with(getContext(),"http://www.clockworkmod.com/")
+        Ion.with(getContext(), "http://www.clockworkmod.com/")
                 // need to null out the handler since the semaphore blocks the main thread,
                 // and ion's default behavior is to post back onto the main thread or calling Handler.
                 .setHandler(null)
@@ -93,7 +88,7 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testJsonObject() throws Exception {
-        JsonObject ret = Ion.with(getContext(),"https://raw.githubusercontent.com/koush/AndroidAsync/master/AndroidAsync/test/assets/test.json")
+        JsonObject ret = Ion.with(getContext(), "https://raw.githubusercontent.com/koush/AndroidAsync/master/AndroidAsync/test/assets/test.json")
                 .asJsonObject().get();
         assertEquals("bar", ret.get("foo").getAsString());
     }
@@ -101,21 +96,21 @@ public class HttpTests extends AndroidTestCase {
     public void testPostJsonObject() throws Exception {
         JsonObject post = new JsonObject();
         post.addProperty("ping", "pong");
-        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
                 .setJsonObjectBody(post)
                 .asJsonObject().get();
         assertEquals("pong", ret.get("ping").getAsString());
     }
 
     public void testUrlEncodedFormBody() throws Exception {
-        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
         .setBodyParameter("blit", "bip")
         .asJsonObject().get();
         assertEquals("bip", ret.get("blit").getAsString());
     }
 
     public void testUrlEncodedFormBodyWithNull() throws Exception {
-        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
         .setTimeout(3000000)
         .setBodyParameter("blit", null)
         .setBodyParameter("foo", "bar")
@@ -125,7 +120,7 @@ public class HttpTests extends AndroidTestCase {
     }
 
     public void testMultipart() throws Exception {
-        JsonObject ret = Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        JsonObject ret = Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
                 .setMultipartParameter("goop", "noop")
                 .asJsonObject().get();
         assertEquals("noop", ret.get("goop").getAsString());
@@ -154,7 +149,7 @@ public class HttpTests extends AndroidTestCase {
         assertEquals(Ion.getDefault(getContext()).getPendingRequestCount(getContext()), 0);
 
         Object cancelGroup = new Object();
-        Ion.with(getContext(),"http://koush.clockworkmod.com/test/hang")
+        Ion.with(getContext(), "http://koush.clockworkmod.com/test/hang")
                 .setHandler(null)
                 .group(cancelGroup)
                 .asJsonObject();
@@ -192,7 +187,7 @@ public class HttpTests extends AndroidTestCase {
         array.add(dummy2);
 
         final Semaphore semaphore = new Semaphore(0);
-        Ion.with(getContext(),"https://koush.clockworkmod.com/test/echo")
+        Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
                 .setHandler(null)
                 .setJsonArrayBody(array)
                 .as(new TypeToken<List<Dummy>>() {
