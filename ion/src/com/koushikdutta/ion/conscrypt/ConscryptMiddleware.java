@@ -10,7 +10,9 @@ import com.koushikdutta.async.http.SimpleMiddleware;
 import java.security.Provider;
 import java.security.Security;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * Created by koush on 7/13/14.
@@ -42,7 +44,8 @@ public class ConscryptMiddleware extends SimpleMiddleware {
                 if (Security.getProvider(GMS_PROVIDER) != null)
                     return;
 
-                SSLContext originalDefault = SSLContext.getDefault();
+                SSLContext originalDefaultContext = SSLContext.getDefault();
+                SSLSocketFactory originalDefaultSSLSocketFactory = HttpsURLConnection.getDefaultSSLSocketFactory();
                 Context gms = context.createPackageContext("com.google.android.gms", Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
                 gms
                 .getClassLoader()
@@ -54,7 +57,8 @@ public class ConscryptMiddleware extends SimpleMiddleware {
                 Provider provider = Security.getProvider(GMS_PROVIDER);
                 Security.removeProvider(GMS_PROVIDER);
                 Security.insertProviderAt(provider, providers.length);
-                SSLContext.setDefault(originalDefault);
+                SSLContext.setDefault(originalDefaultContext);
+                HttpsURLConnection.setDefaultSSLSocketFactory(originalDefaultSSLSocketFactory);
                 success = true;
             }
         }
