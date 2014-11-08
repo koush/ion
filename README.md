@@ -24,6 +24,7 @@
    * [application/x-www-form-urlencoded](https://github.com/koush/ion#post-applicationx-www-form-urlencoded-and-read-a-string)
    * [multipart/form-data](https://github.com/koush/ion#post-multipartform-data-and-read-json-with-an-upload-progress-bar)
  * Transparent usage of HTTP features and optimizations:
+   * SPDY and HTTP/2
    * Caching
    * Gzip/Deflate Compression
    * Connection pooling/reuse via HTTP Connection: keep-alive
