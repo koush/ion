@@ -42,11 +42,11 @@
                 android:name=".DeepZoomSample"
                 android:label="DeepZoom Sample"/>
         <activity
-                android:theme="@style/LollipopFullscreen"
+                android:theme="@android:style/Theme.Material.Light"
                 android:name=".LollipopTransition"
                 android:label="Lollipop Transition"/>
         <activity
-                android:theme="@style/LollipopFullscreen"
+                android:theme="@android:style/Theme.Material.Light"
                 android:name=".LollipopTransitionFullscreen"
                 android:label="Lollipop Transition"/>
         <activity
