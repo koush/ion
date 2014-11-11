@@ -70,7 +70,7 @@ public class ProgressBarDownload extends Activity {
                         public void onCompleted(Exception e, File result) {
                             resetDownload();
                             if (e != null) {
-                                Toast.makeText(ProgressBarDownload.this, "Error uploading file", Toast.LENGTH_LONG).show();
+                                Toast.makeText(ProgressBarDownload.this, "Error downloading file", Toast.LENGTH_LONG).show();
                                 return;
                             }
                             Toast.makeText(ProgressBarDownload.this, "File upload complete", Toast.LENGTH_LONG).show();
@@ -81,7 +81,7 @@ public class ProgressBarDownload extends Activity {
     }
 
     void resetDownload() {
-        // cancel any pending upload
+        // cancel any pending download
         downloading.cancel();
         downloading = null;
 
