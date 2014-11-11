@@ -37,7 +37,6 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     ScaleMode scaleMode;
     int resizeWidth;
     int resizeHeight;
-    boolean disableFadeIn;
     AnimateGifMode animateGifMode = AnimateGifMode.ANIMATE;
     boolean deepZoom;
     ArrayList<PostProcess> postProcess;
@@ -48,7 +47,6 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         scaleMode = null;
         resizeWidth = 0;
         resizeHeight = 0;
-        disableFadeIn = false;
         animateGifMode = AnimateGifMode.ANIMATE;
         builder = null;
         deepZoom = false;
@@ -293,12 +291,6 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     @Override
     public IonBitmapRequestBuilder resizeHeight(int height) {
         return resize(0, height);
-    }
-
-    @Override
-    public IonBitmapRequestBuilder disableFadeIn() {
-        this.disableFadeIn = true;
-        return this;
     }
 
 	public IonBitmapRequestBuilder smartSize(boolean smartSize) {

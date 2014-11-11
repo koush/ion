@@ -62,4 +62,11 @@
             android:text="DeepZoom"
             />
 
+    <Button
+            android:id="@+id/lollipop_transition"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:text="Lollipop Transition Sample"
+            />
+
 </LinearLayout>

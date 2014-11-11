@@ -7,8 +7,10 @@
     <uses-sdk
             android:minSdkVersion="11"
             android:targetSdkVersion="17"/>
+
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
     <application
             android:name=".SampleApplication"
             android:hardwareAccelerated="true"
@@ -28,17 +30,25 @@
                 android:name=".ProgressBarUpload"
                 android:label="Progress Bar Upload"/>
         <activity
-            android:name=".GoogleImageSearch"
-            android:label="Google Image Search"/>
+                android:name=".GoogleImageSearch"
+                android:label="Google Image Search"/>
         <activity
-            android:name=".GallerySample"
-            android:label="Gallery Sample"/>
+                android:name=".GallerySample"
+                android:label="Gallery Sample"/>
         <activity
                 android:name=".ImageViewSample"
                 android:label="ImageView Sample"/>
         <activity
                 android:name=".DeepZoomSample"
                 android:label="DeepZoom Sample"/>
+        <activity
+                android:theme="@style/LollipopFullscreen"
+                android:name=".LollipopTransition"
+                android:label="Lollipop Transition"/>
+        <activity
+                android:theme="@style/LollipopFullscreen"
+                android:name=".LollipopTransitionFullscreen"
+                android:label="Lollipop Transition"/>
         <activity
                 android:name=".Samples"
                 android:label="ion samples">

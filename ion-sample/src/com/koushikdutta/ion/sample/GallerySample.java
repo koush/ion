@@ -35,7 +35,7 @@ public class GallerySample extends Activity {
                 loadMore();
 
             if (convertView == null)
-                convertView = getLayoutInflater().inflate(R.layout.google_image, null);
+                convertView = getLayoutInflater().inflate(R.layout.image, null);
 
             // find the image view
             final ImageView iv = (ImageView) convertView.findViewById(R.id.image);

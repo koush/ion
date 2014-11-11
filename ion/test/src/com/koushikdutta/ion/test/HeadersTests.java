@@ -4,6 +4,7 @@ import android.test.AndroidTestCase;
 
 import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.Headers;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
 import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
@@ -110,5 +111,11 @@ public class HeadersTests extends AndroidTestCase {
             httpServer.stop();
             Ion.getDefault(getContext()).getServer().stop();
         }
+    }
+
+    public void testHeadCasing() throws Exception {
+        Headers headers = new Headers();
+        headers.set("Foo", "bar");
+        assertTrue(headers.toString().contains("Foo"));
     }
 }

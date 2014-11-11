@@ -72,10 +72,10 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
     public I animateLoad(int animationResource);
 
     /**
-     * Disable fadeIn when the image loads.
+     * Configure the fadeIn when the image loads.
      * @return
      */
-    public I disableFadeIn();
+    public I fadeIn(boolean fadeIn);
 
     /**
      * Flag to enable or disable animation of GIFs
@@ -97,5 +97,5 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      * Crossfade the new image with the existing image.
      * @return
      */
-    public I crossfade();
+    public I crossfade(boolean crossfade);
 }

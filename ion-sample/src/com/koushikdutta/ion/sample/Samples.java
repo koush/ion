@@ -2,6 +2,7 @@ package com.koushikdutta.ion.sample;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -79,5 +80,18 @@ public class Samples extends Activity {
                 startActivity(new Intent(Samples.this, DeepZoomSample.class));
             }
         });
+
+        Button lollipopTransitionSample = (Button)findViewById(R.id.lollipop_transition);
+        if (Build.VERSION.SDK_INT >= 21) {
+            lollipopTransitionSample.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    startActivity(new Intent(Samples.this, LollipopTransition.class));
+                }
+            });
+        }
+        else {
+            lollipopTransitionSample.setVisibility(View.GONE);
+        }
     }
 }

@@ -36,7 +36,7 @@ class IonDrawable extends Drawable {
     private Drawable error;
     private Resources resources;
     private int loadedFrom;
-    private boolean disableFadeIn;
+    private boolean fadeIn;
     private int resizeWidth;
     private int resizeHeight;
     private boolean repeatAnimation;
@@ -184,8 +184,8 @@ class IonDrawable extends Drawable {
         }
     }
 
-    public IonDrawable setDisableFadeIn(boolean disableFadeIn) {
-        this.disableFadeIn = disableFadeIn;
+    public IonDrawable setFadeIn(boolean fadeIn) {
+        this.fadeIn = fadeIn;
         return this;
     }
 
@@ -489,7 +489,7 @@ class IonDrawable extends Drawable {
 
         long destAlpha = 0xFF;
 
-        if(!disableFadeIn) {
+        if(fadeIn) {
             destAlpha = ((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
             destAlpha = Math.min(destAlpha, 0xFF);
         }

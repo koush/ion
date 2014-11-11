@@ -27,6 +27,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     int loadAnimationResource;
     int inAnimationResource;
     ContextReference.ImageViewContextReference imageViewPostRef;
+    boolean fadeIn;
 
     public IonImageViewRequestBuilder(IonRequestBuilder builder) {
         super(builder);
@@ -39,6 +40,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     @Override
     void reset() {
         super.reset();
+        fadeIn = true;
         imageViewPostRef = null;
         placeholderDrawable = null;
         placeholderResource = 0;
@@ -92,9 +94,15 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         .setSize(resizeWidth, resizeHeight)
         .setError(errorResource, errorDrawable)
         .setPlaceholder(placeholderResource, placeholderDrawable)
-        .setDisableFadeIn(disableFadeIn);
+        .setFadeIn(fadeIn);
         imageView.setImageDrawable(ret);
         return ret;
+    }
+
+    @Override
+    public IonBitmapRequestBuilder fadeIn(boolean fadeIn) {
+        this.fadeIn = fadeIn;
+        return this;
     }
 
     @Override
@@ -189,7 +197,9 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
 
     @Override
-    public IonImageViewRequestBuilder crossfade() {
+    public IonImageViewRequestBuilder crossfade(boolean crossfade) {
+        if (!crossfade)
+            return this;
         ImageView iv = imageViewPostRef.get();
         Drawable drawable = iv.getDrawable();
         if (drawable instanceof IonDrawable) {
