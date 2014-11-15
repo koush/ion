@@ -40,15 +40,15 @@ public class ImageViewSample extends Activity {
 
     public void loadGifCenterCrop() {
         Ion.with(this)
-        .load("https://raw2.github.com/koush/ion/master/ion-sample/mark.gif")
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion-sample/mark.gif")
         .withBitmap()
         .centerCrop()
         .intoImageView(imageView);
     }
 
-    public void loadGifCenterInside() {
+    public void loadGifFitCenter() {
         Ion.with(this)
-        .load("https://raw2.github.com/koush/ion/master/ion-sample/mark.gif")
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion-sample/mark.gif")
         .withBitmap()
         .fitCenter()
         .intoImageView(imageView);
@@ -109,7 +109,7 @@ public class ImageViewSample extends Activity {
                 else if (position == 3)
                     loadGifCenterCrop();
                 else if (position == 4)
-                    loadGifCenterInside();
+                    loadGifFitCenter();
                 else if (position == 5)
                     loadGifResource();
                 else if (position == 6)
