@@ -368,8 +368,8 @@ Ion.with(getContext())
 #### Get Ion
 
 ##### Jars
- * [androidasync.jar](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.async&a=androidasync&v=LATEST) (dependency)
- * [ion.jar](http://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=com.koushikdutta.ion&a=ion&v=LATEST)
+ * [androidasync.jar](https://search.maven.org/remote_content?g=com.koushikdutta.async&a=androidasync&v=LATEST) (dependency)
+ * [ion.jar](https://search.maven.org/remote_content?g=com.koushikdutta.ion&a=ion&v=LATEST)
 
 ##### Maven
 ```xml
