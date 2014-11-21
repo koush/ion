@@ -2,6 +2,7 @@ package com.koushikdutta.ion.gif;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
+import android.util.Log;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -74,6 +75,7 @@ public class GifDecoder implements Cloneable {
             suffix = null;
             pixelStack = null;
             pixels = null;
+            dest = null;
             return ret;
         }
         catch (CloneNotSupportedException e) {
@@ -185,17 +187,22 @@ public class GifDecoder implements Cloneable {
 	}
 
 	private Bitmap setPixels() {
-        if (dest == null)
-            dest = new int[width * height];
-
 		// fill in starting image contents based on last image's dispose code
         switch (lastDispose) {
-            // no dispose
+            case 0:
+                // no dispose
+                break;
             case 1:
-                // dest already contains the last bitmap pixels, just reuse it.
+                // use last bitmap pixels
+                if (dest == null && lastFrame != null) {
+                    dest = new int[width * height];
+                    lastFrame.image.getPixels(dest, 0, width, 0, 0, width, height);
+                }
                 break;
             case 2:
                 // fill last image rect area with background color
+                if (dest == null)
+                    dest = new int[width * height];
                 int c = 0;
                 if (!transparency) {
                     c = lastBgColor;
@@ -209,15 +216,23 @@ public class GifDecoder implements Cloneable {
                 }
                 break;
             case 3:
-                // use the image before last
-                beforeLastFrame.image.getPixels(dest, 0, width, 0, 0, width, height);
+                if (beforeLastFrame != null) {
+                    if (dest == null)
+                        dest = new int[width * height];
+                    // use the image before last
+                    beforeLastFrame.image.getPixels(dest, 0, width, 0, 0, width, height);
+                }
                 break;
             default:
                 // wtf?
+                Log.w("Ion", "Unknown gif dispose code: " + lastDispose);
                 break;
         }
 
-		// copy each source line to the appropriate place in the destination
+        if (dest == null)
+            dest = new int[width * height];
+
+        // copy each source line to the appropriate place in the destination
 		int pass = 1;
 		int inc = 8;
 		int iline = 0;

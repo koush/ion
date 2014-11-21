@@ -44,6 +44,10 @@ android {
 
     compileSdkVersion 21
     buildToolsVersion '21.1.0'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
 }
 
 // upload to maven task

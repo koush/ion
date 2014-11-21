@@ -66,15 +66,18 @@ public class VideoLoader extends SimpleLoader {
                     // downsample this if its obscenely large
                     Point originalSize = new Point(bmp.getWidth(), bmp.getHeight());
                     if (bmp.getWidth() > resizeWidth * 2 && bmp.getHeight() > resizeHeight * 2) {
-                        float xratio = (float)resizeWidth / bmp.getWidth();
-                        float yratio = (float)resizeHeight / bmp.getHeight();
+                        float xratio = (float) resizeWidth / bmp.getWidth();
+                        float yratio = (float) resizeHeight / bmp.getHeight();
                         float ratio = Math.min(xratio, yratio);
                         if (ratio != 0)
-                            bmp = Bitmap.createScaledBitmap(bmp, (int)(bmp.getWidth() * ratio), (int)(bmp.getHeight() * ratio), true);
+                            bmp = Bitmap.createScaledBitmap(bmp, (int) (bmp.getWidth() * ratio), (int) (bmp.getHeight() * ratio), true);
                     }
                     BitmapInfo info = new BitmapInfo(key, type.mimeType, bmp, originalSize);
                     info.loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
                     ret.setComplete(info);
+                }
+                catch (OutOfMemoryError e) {
+                    ret.setComplete(new Exception(e));
                 } catch (Exception e) {
                     ret.setComplete(e);
                 }
