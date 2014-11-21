@@ -32,7 +32,7 @@ public class ConscryptMiddleware extends SimpleMiddleware {
         }
     }
 
-    static void initialize(Context context) {
+    public static void initialize(Context context) {
         try {
             synchronized (lock) {
                 if (initialized)
@@ -82,7 +82,8 @@ public class ConscryptMiddleware extends SimpleMiddleware {
                 if (sslContext == null)
                     sslContext = SSLContext.getInstance("TLS");
                 sslContext.init(null, null, null);
-                if (middleware.getSSLContext() != AsyncSSLSocketWrapper.getDefaultSSLContext())
+                // only set the SSL context if it is the default SSL context
+                if (middleware.getSSLContext() == AsyncSSLSocketWrapper.getDefaultSSLContext())
                     middleware.setSSLContext(sslContext);
             }
             catch (Exception e) {
