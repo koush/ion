@@ -70,8 +70,14 @@ class IonDrawable extends Drawable {
         if (info != null) {
             if (info.bitmap != null)
                 return new BitmapDrawable(resources, info.bitmap);
-            else if (info.gifDecoder != null)
-                return new BitmapDrawable(resources, info.gifDecoder.nextFrame().image);
+            else if (info.gifDecoder != null) {
+                GifFrame last = info.gifDecoder.getLastFrame();
+                if (last != null)
+                    return new BitmapDrawable(resources, last.image);
+                if (placeholderResource != 0)
+                    return resources.getDrawable(placeholderResource);
+                return null;
+            }
         }
         if (errorResource != 0)
             return resources.getDrawable(errorResource);
@@ -154,6 +160,7 @@ class IonDrawable extends Drawable {
 
     class IonGifDecoder {
         GifDecoder gifDecoder;
+        Exception exception;
         public IonGifDecoder(BitmapInfo info){
             gifDecoder = info.gifDecoder.mutate();
         }
@@ -161,7 +168,12 @@ class IonDrawable extends Drawable {
         Runnable loader = new Runnable() {
             @Override
             public void run() {
-                gifDecoder.nextFrame();
+                try {
+                    gifDecoder.nextFrame();
+                }
+                catch (Exception e) {
+                    exception = e;
+                }
                 Ion.mainHandler.post(postLoad);
             }
         };
@@ -178,6 +190,8 @@ class IonDrawable extends Drawable {
         boolean isLoading;
         public synchronized void scheduleNextFrame() {
             if (isLoading)
+                return;
+            if (exception != null)
                 return;
             isLoading = true;
             Ion.getBitmapLoadExecutorService().execute(loader);
