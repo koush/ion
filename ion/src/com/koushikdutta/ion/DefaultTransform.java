@@ -15,7 +15,12 @@ class DefaultTransform implements Transform {
     public DefaultTransform(int width, int height, ScaleMode scaleMode) {
         resizeWidth = width;
         resizeHeight = height;
-        this.scaleMode = scaleMode;
+        // fixup ScaleMode to sane values.
+        // no scale mode means that we are stretching, disregarding aspect ratio
+        if (scaleMode == null)
+            this.scaleMode = ScaleMode.FitXY;
+        else
+            this.scaleMode = scaleMode;
     }
 
     final static Paint bilinearSamplingPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
@@ -39,12 +44,7 @@ class DefaultTransform implements Transform {
         RectF destination = new RectF(0, 0, resizeWidth, resizeHeight);
         ScaleMode scaleMode = this.scaleMode;
 
-        // fixup ScaleMode to sane values.
-        if (scaleMode == null) {
-            // no scale mode means that we are stretching, disregarding aspect ratio
-            scaleMode = ScaleMode.FitXY;
-        }
-        else if (scaleMode == ScaleMode.CenterInside) {
+        if (scaleMode == ScaleMode.CenterInside) {
             // center inside, but bitmap bounds exceed the resize dimensions...
             // so change it to fit center.
             if (resizeWidth <= b.getWidth() || resizeHeight <= b.getHeight())
