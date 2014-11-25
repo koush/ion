@@ -31,7 +31,6 @@ import java.io.InputStream;
 public class IonBitmapCache {
     public static final long DEFAULT_ERROR_CACHE_DURATION = 30000L;
 
-    Resources resources;
     DisplayMetrics metrics;
     LruBitmapCache cache;
     Ion ion;
@@ -52,7 +51,6 @@ public class IonBitmapCache {
         ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE))
                 .getDefaultDisplay().getMetrics(metrics);
         final AssetManager mgr = context.getAssets();
-        resources = new Resources(mgr, metrics, context.getResources().getConfiguration());
         cache = new LruBitmapCache(getHeapSize(context) / 7);
     }
 
@@ -128,7 +126,7 @@ public class IonBitmapCache {
         if (o.outWidth < 0 || o.outHeight < 0)
             throw new BitmapDecodeException(o.outWidth, o.outHeight);
         Point target = computeTarget(minx, miny);
-        int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
+        int scale = Math.min(o.outWidth / target.x, o.outHeight / target.y);
         BitmapFactory.Options ret = new BitmapFactory.Options();
         ret.inSampleSize = scale;
         ret.outWidth = o.outWidth;
