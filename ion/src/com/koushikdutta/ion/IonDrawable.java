@@ -477,8 +477,10 @@ class IonDrawable extends Drawable {
             // check if we can fetch the bitmap
             if (bitmapFetcher != null) {
                 if (bitmapFetcher.sampleWidth == 0 && bitmapFetcher.sampleHeight == 0) {
-                    bitmapFetcher.sampleWidth = canvas.getWidth();
-                    bitmapFetcher.sampleHeight = canvas.getHeight();
+                    if (canvas.getWidth() != 1)
+                        bitmapFetcher.sampleWidth = canvas.getWidth();
+                    if (canvas.getHeight() != 1)
+                        bitmapFetcher.sampleHeight = canvas.getHeight();
                     bitmapFetcher.recomputeDecodeKey();
                 }
                 callback.register(ion, bitmapFetcher.bitmapKey);
