@@ -19,7 +19,7 @@ import java.io.InputStream;
 public class AssetLoader extends StreamLoader {
     @Override
     public Future<BitmapInfo> loadBitmap(final Context context, final Ion ion, final String key, final String uri, final int resizeWidth, final int resizeHeight, final boolean animateGif) {
-        if (!uri.startsWith("file://android_asset/"))
+        if (!uri.startsWith("file:///android_asset/"))
             return null;
 
         return super.loadBitmap(context, ion, key, uri, resizeWidth, resizeHeight, animateGif);
@@ -27,7 +27,7 @@ public class AssetLoader extends StreamLoader {
 
     @Override
     protected InputStream getInputStream(Context context, String uri) throws Exception {
-        return context.getAssets().open(Uri.parse(uri).getPath().substring(1));
+        return context.getAssets().open(Uri.parse(uri).getPath().replaceFirst("^/android_asset/", ""));
     }
 
     @Override

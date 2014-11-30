@@ -11,7 +11,7 @@ import com.koushikdutta.ion.Ion;
 public class AssetTests extends AndroidTestCase {
     public void testAsset() throws Exception {
         Bitmap bitmap = Ion.with(getContext())
-        .load("file://android_asset/exif.jpg")
+        .load("file:///android_asset/exif.jpg")
         .asBitmap()
         .get();
 

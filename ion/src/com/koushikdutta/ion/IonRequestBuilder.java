@@ -146,6 +146,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder addHeaders(Map<String, List<String>> params) {
+        if (params == null)
+            return this;
         Headers headers = getHeaders();
         for (Map.Entry<String, List<String>> entry: params.entrySet()) {
             headers.addAll(entry.getKey(), entry.getValue());
