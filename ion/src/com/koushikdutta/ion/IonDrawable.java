@@ -474,7 +474,10 @@ class IonDrawable extends Drawable {
         // TODO: handle animated drawables
         // check if we have a bitmap, otherwise do the placeholder and bail
         if (info == null) {
-            // check if we can fetch the bitmap
+            // first things first, draw a placeholder
+            drawDrawable(canvas, tryGetPlaceholderResource());
+
+            // see if we can fetch a bitmap
             if (bitmapFetcher != null) {
                 if (bitmapFetcher.sampleWidth == 0 && bitmapFetcher.sampleHeight == 0) {
                     if (canvas.getWidth() != 1)
@@ -484,31 +487,33 @@ class IonDrawable extends Drawable {
 
                     // now that we have final dimensions, reattempt to find the image in the cache
                     bitmapFetcher.recomputeDecodeKey();
-                    info = ion.bitmapCache.get(bitmapFetcher.bitmapKey);
+                    BitmapInfo found = ion.bitmapCache.get(bitmapFetcher.bitmapKey);
+                    if (found != null) {
+                        // found what we're looking for, but can't draw at this very moment,
+                        // since we need to trigger a new measure.
+                        drawDrawable(canvas, tryGetPlaceholderResource());
+                        callback.onCompleted(null, found);
+                        return;
+                    }
                 }
 
-                if (info == null) {
-                    // no image found fetch it.
-                    callback.register(ion, bitmapFetcher.bitmapKey);
+                // no image found fetch it.
+                callback.register(ion, bitmapFetcher.bitmapKey);
 
-                    // check to see if there's too many imageview loads
-                    // already in progress
-                    if (BitmapFetcher.shouldDeferImageView(ion)) {
-                        bitmapFetcher.defer();
-                    }
-                    else {
-                        bitmapFetcher.execute();
-                    }
+                // check to see if there's too many imageview loads
+                // already in progress
+                if (BitmapFetcher.shouldDeferImageView(ion)) {
+                    bitmapFetcher.defer();
+                }
+                else {
+                    bitmapFetcher.execute();
                 }
                 // won't be needing THIS anymore
                 bitmapFetcher = null;
             }
 
-            if (info == null) {
-                // still no info after rechecking bounds, draw a placeholder and bail
-                drawDrawable(canvas, tryGetPlaceholderResource());
-                return;
-            }
+            // well, can't do anything else here.
+            return;
         }
 
         if (info.drawTime == 0)
