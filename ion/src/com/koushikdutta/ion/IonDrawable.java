@@ -481,23 +481,34 @@ class IonDrawable extends Drawable {
                         bitmapFetcher.sampleWidth = canvas.getWidth();
                     if (canvas.getHeight() != 1)
                         bitmapFetcher.sampleHeight = canvas.getHeight();
-                    bitmapFetcher.recomputeDecodeKey();
-                }
-                callback.register(ion, bitmapFetcher.bitmapKey);
 
-                // check to see if there's too many imageview loads
-                // already in progress
-                if (BitmapFetcher.shouldDeferImageView(ion)) {
-                    bitmapFetcher.defer();
+                    // now that we have final dimensions, reattempt to find the image in the cache
+                    bitmapFetcher.recomputeDecodeKey();
+                    info = ion.bitmapCache.get(bitmapFetcher.bitmapKey);
                 }
-                else {
-                    bitmapFetcher.execute();
+
+                if (info == null) {
+                    // no image found fetch it.
+                    callback.register(ion, bitmapFetcher.bitmapKey);
+
+                    // check to see if there's too many imageview loads
+                    // already in progress
+                    if (BitmapFetcher.shouldDeferImageView(ion)) {
+                        bitmapFetcher.defer();
+                    }
+                    else {
+                        bitmapFetcher.execute();
+                    }
                 }
+                // won't be needing THIS anymore
                 bitmapFetcher = null;
             }
 
-            drawDrawable(canvas, tryGetPlaceholderResource());
-            return;
+            if (info == null) {
+                // still no info after rechecking bounds, draw a placeholder and bail
+                drawDrawable(canvas, tryGetPlaceholderResource());
+                return;
+            }
         }
 
         if (info.drawTime == 0)
@@ -668,11 +679,6 @@ class IonDrawable extends Drawable {
                 }
             }
         }
-        else if (info.bitmap != null) {
-            paint.setAlpha((int)destAlpha);
-            canvas.drawBitmap(info.bitmap, null, getBounds(), paint);
-            paint.setAlpha(0xFF);
-        }
         else if (info.gifDecoder != null) {
             GifFrame lastFrame = gifDecoder.gifDecoder.getLastFrame();
             if (lastFrame != null) {
@@ -690,6 +696,11 @@ class IonDrawable extends Drawable {
             if (gifDecoder.gifDecoder.getStatus() == GifDecoder.STATUS_FINISH && repeatAnimation)
                 gifDecoder.gifDecoder.restart();
             gifDecoder.scheduleNextFrame();
+        }
+        else if (info.bitmap != null) {
+            paint.setAlpha((int)destAlpha);
+            canvas.drawBitmap(info.bitmap, null, getBounds(), paint);
+            paint.setAlpha(0xFF);
         }
         else {
             Drawable error = tryGetErrorResource();

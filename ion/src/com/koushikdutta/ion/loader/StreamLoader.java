@@ -14,6 +14,7 @@ import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.gif.GifDecoder;
+import com.koushikdutta.ion.gif.GifFrame;
 
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -23,9 +24,10 @@ import java.nio.ByteBuffer;
  */
 public class StreamLoader extends SimpleLoader {
     protected BitmapInfo loadGif(String key, Point size, InputStream in, BitmapFactory.Options options) throws Exception {
-        BitmapInfo info = new BitmapInfo(key, options.outMimeType, null, size);
-        info.gifDecoder = new GifDecoder(ByteBuffer.wrap(StreamUtility.readToEndAsArray(in)));
-        info.gifDecoder.nextFrame();
+        GifDecoder gifDecoder = new GifDecoder(ByteBuffer.wrap(StreamUtility.readToEndAsArray(in)));
+        GifFrame frame = gifDecoder.nextFrame();
+        BitmapInfo info = new BitmapInfo(key, options.outMimeType, frame.image, size);
+        info.gifDecoder = gifDecoder;
         return info;
     }
 

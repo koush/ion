@@ -10,6 +10,7 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.gif.GifDecoder;
+import com.koushikdutta.ion.gif.GifFrame;
 
 import java.nio.ByteBuffer;
 
@@ -55,9 +56,10 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
                     final Point size = new Point(options.outWidth, options.outHeight);
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
 //                        new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
-                        bitmap = null;
                         gifDecoder = new GifDecoder(bb.array(), bb.arrayOffset() + bb.position(), bb.remaining());
-                        gifDecoder.nextFrame();
+                        GifFrame frame = gifDecoder.nextFrame();
+                        bitmap = frame.image;
+                        // the byte buffer is needed by the decoder
                         bb = null;
                     }
                     else {

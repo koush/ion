@@ -14,6 +14,7 @@ import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.gif.GifDecoder;
+import com.koushikdutta.ion.gif.GifFrame;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -62,9 +63,10 @@ public class LoadDeepZoom extends LoadBitmapEmitter implements FutureCallback<Fi
                     if (animateGif && TextUtils.equals("image/gif", options.outMimeType)) {
                         fin = fileCache.get(key);
 
-                        BitmapInfo info = new BitmapInfo(key, options.outMimeType, null, size);
-                        info.gifDecoder = new GifDecoder(ByteBuffer.wrap(StreamUtility.readToEndAsArray(fin)));
-                        info.gifDecoder.nextFrame();
+                        GifDecoder gifDecoder = new GifDecoder(ByteBuffer.wrap(StreamUtility.readToEndAsArray(fin)));
+                        GifFrame frame = gifDecoder.nextFrame();
+                        BitmapInfo info = new BitmapInfo(key, options.outMimeType, frame.image, size);
+                        info.gifDecoder = gifDecoder;
                         report(null, info);
                         return;
                     }

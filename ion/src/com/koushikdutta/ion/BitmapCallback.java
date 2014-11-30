@@ -136,8 +136,10 @@ abstract class BitmapCallback {
         if (info == null || info.originalSize == null || info.decoder != null
             // don't cache anything that requests not to be cached
             || !put
-            // don't cache dead bitmaps or gifs
+            // don't cache dead bitmaps
             || info.bitmap == null
+            // don't cache gifs
+            || info.gifDecoder != null
             // too big
             || info.sizeOf() > 512 * 512 * 4) {
             return;
