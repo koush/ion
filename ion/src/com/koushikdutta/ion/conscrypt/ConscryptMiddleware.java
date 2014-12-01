@@ -42,8 +42,10 @@ public class ConscryptMiddleware extends SimpleMiddleware {
                 initialized = true;
 
                 // GMS Conscrypt is already initialized, from outside ion. Leave it alone.
-                if (Security.getProvider(GMS_PROVIDER) != null)
+                if (Security.getProvider(GMS_PROVIDER) != null) {
+                    success = true;
                     return;
+                }
 
                 SSLContext originalDefaultContext = SSLContext.getDefault();
                 SSLSocketFactory originalDefaultSSLSocketFactory = HttpsURLConnection.getDefaultSSLSocketFactory();
