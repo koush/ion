@@ -5,12 +5,14 @@ import android.test.AndroidTestCase;
 import android.util.Base64;
 import android.util.Log;
 
+import com.google.gson.JsonObject;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.AsyncServerSocket;
 import com.koushikdutta.async.AsyncSocket;
 import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.ListenCallback;
+import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
@@ -19,6 +21,7 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.Response;
 
 import java.io.File;
 import java.util.Arrays;
@@ -251,6 +254,7 @@ public class Issues extends AndroidTestCase {
     }
 
     public void testAAIssue225() throws Exception {
+        Ion.getDefault(getContext()).getConscryptMiddleware().enable(false);
         String ret = Ion.with(getContext())
         .load("https://content.fastrbooks.com/android-test.txt")
         .noCache()
@@ -259,4 +263,20 @@ public class Issues extends AndroidTestCase {
 
         System.out.println(ret);
     }
+
+//    public void testIssue428() throws Exception {
+//        final String FEEDLY_DOMAIN = "sandbox.feedly.com";
+//        final String FEEDLY_OAUTH2_TOKEN = "ArxsOch7ImEiOiJGZWVkbHkgc2FuZGJveCBjbGllbnQiLCJlIjoxNDE5MjQwNzEwNDI3LCJpIjoiZTkxMTFlOTAtN2Y1Mi00MTNiLThiZTYtYzc1OTBjMWZjZGYyIiwicCI6NiwidCI6MSwidiI6InNhbmRib3giLCJ3IjoiMjAxNC4yOCIsIngiOiJzdGFuZGFyZCJ9:sandbox";
+//
+//        Ion.with(getContext())
+//        .load("https://" + FEEDLY_DOMAIN + "/v3/profile")
+//        .addHeader("Authorization", "Bearer " + FEEDLY_OAUTH2_TOKEN)
+//        .asString();
+//
+//        Ion.with(getContext())
+//        .load("https://" + FEEDLY_DOMAIN + "/v3/profile")
+//        .addHeader("Authorization", "Bearer " + FEEDLY_OAUTH2_TOKEN)
+//        .asString()
+//        .get();
+//    }
 }

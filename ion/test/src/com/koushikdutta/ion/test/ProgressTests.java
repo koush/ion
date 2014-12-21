@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.test;
 
 import android.test.AndroidTestCase;
+import android.util.Log;
 
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.ByteBufferList;
@@ -32,6 +33,7 @@ public class ProgressTests extends AndroidTestCase {
         .load("https://raw.githubusercontent.com/koush/AndroidAsync/master/AndroidAsync/test/assets/6691924d7d24237d3b3679310157d640")
         .setHandler(null)
         .setTimeout(600000)
+        .setLogging("testProgress", Log.VERBOSE)
         .progress(new ProgressCallback() {
             @Override
             public void onProgress(long downloaded, long total) {
