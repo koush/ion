@@ -47,6 +47,38 @@ public class Issues extends AndroidTestCase {
         assertEquals(data, data2);
     }
 
+    public void testSpdyReuse() throws Exception {
+        String data = Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        .setLogging("MyLogs", Log.VERBOSE)
+        .asString().get();
+
+        String data2 = Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        .setLogging("MyLogs", Log.VERBOSE)
+        .asString().get();
+
+        Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        .setLogging("MyLogs", Log.VERBOSE)
+        .asString().get();
+
+        Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        .setLogging("MyLogs", Log.VERBOSE)
+        .asString().get();
+
+        Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        .setLogging("MyLogs", Log.VERBOSE)
+        .asString().get();
+
+        Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        .setLogging("MyLogs", Log.VERBOSE)
+        .asString().get();
+
+        Ion.with(getContext()).load("https://raw.github.com/koush/AndroidAsync/master/AndroidAsyncTest/testdata/test.json")
+        .setLogging("MyLogs", Log.VERBOSE)
+        .asString().get();
+
+        assertEquals(data, data2);
+    }
+
     public void testIssue126() throws Exception {
         Bitmap bitmap = Ion.with(getContext())
         .load("http://bdc.tsingyuan.cn/api/img?w=advanced")
@@ -254,7 +286,6 @@ public class Issues extends AndroidTestCase {
     }
 
     public void testAAIssue225() throws Exception {
-        Ion.getDefault(getContext()).getConscryptMiddleware().enable(false);
         String ret = Ion.with(getContext())
         .load("https://content.fastrbooks.com/android-test.txt")
         .noCache()
