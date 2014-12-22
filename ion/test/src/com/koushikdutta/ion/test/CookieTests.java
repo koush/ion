@@ -61,7 +61,7 @@ public class CookieTests extends AndroidTestCase {
         headers.set("Set-Cookie", "foo=goop");
         middleware.put(uri, headers);
 
-        middleware.reinit(getContext(), Ion.getDefault(getContext()).getName());
+        middleware.reinit();
         CookieManager manager = middleware.getCookieManager();
 
         Headers newHeaders = new Headers();

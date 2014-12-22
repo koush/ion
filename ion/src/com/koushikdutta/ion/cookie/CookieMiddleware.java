@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.koushikdutta.async.http.Headers;
 import com.koushikdutta.async.http.SimpleMiddleware;
+import com.koushikdutta.ion.Ion;
 
 import java.net.CookieManager;
 import java.net.CookieStore;
@@ -27,21 +28,24 @@ public class CookieMiddleware extends SimpleMiddleware {
     }
 
     public void clear() {
+        maybeInit();
         getCookieStore().removeAll();
-        preferences.edit().clear().commit();
+        preferences.edit().clear().apply();
     }
 
     public CookieManager getCookieManager() {
+        maybeInit();
         return manager;
     }
 
-    public CookieMiddleware(Context context, String name) {
-        reinit(context, name);
+    Ion ion;
+    public CookieMiddleware(Ion ion) {
+        this.ion = ion;
     }
 
-    public void reinit(Context context, String name) {
+    public void reinit() {
         manager = new CookieManager(null, null);
-        preferences = context.getSharedPreferences(name + "-cookies", Context.MODE_PRIVATE);
+        preferences = ion.getContext().getSharedPreferences(ion.getName() + "-cookies", Context.MODE_PRIVATE);
 
         Map<String, ?> allPrefs = preferences.getAll();
         for (String key: allPrefs.keySet()) {
@@ -75,8 +79,14 @@ public class CookieMiddleware extends SimpleMiddleware {
         }
     }
 
+    private void maybeInit() {
+        if (manager == null)
+            reinit();
+    }
+
     @Override
     public void onRequest(OnRequestData data) {
+        maybeInit();
         try {
             Map<String, List<String>> cookies = manager.get(
                 URI.create(
@@ -90,6 +100,7 @@ public class CookieMiddleware extends SimpleMiddleware {
 
     @Override
     public void onHeadersReceived(OnHeadersReceivedDataOnRequestSentData data) {
+        maybeInit();
         try {
             put(URI.create(data.request.getUri().toString()), data.response.headers());
         }
@@ -98,6 +109,7 @@ public class CookieMiddleware extends SimpleMiddleware {
     }
 
     public void put(URI uri, Headers headers) {
+        maybeInit();
         try {
             manager.put(uri, headers.getMultiMap());
 

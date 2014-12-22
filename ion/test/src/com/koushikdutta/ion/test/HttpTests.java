@@ -146,7 +146,7 @@ public class HttpTests extends AndroidTestCase {
         }
         assertTrue(ion.getCookieMiddleware().getCookieManager().get(URI.create("http://www.google.com/test/path"), new Multimap()).size() > 0);
 
-        CookieMiddleware deserialize = new CookieMiddleware(getContext(), ion.getDefault(getContext()).getName());
+        CookieMiddleware deserialize = new CookieMiddleware(ion);
         assertTrue(deserialize.getCookieManager().get(URI.create("http://www.google.com/test/path"), new Multimap()).size() > 0);
     }
 

@@ -396,7 +396,7 @@ public class Ion {
     WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
 
     private void addCookieMiddleware() {
-        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(context, name));
+        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(this));
     }
 
     /**
