@@ -9,11 +9,14 @@ import com.google.gson.JsonObject;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.AsyncServerSocket;
 import com.koushikdutta.async.AsyncSocket;
+import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.ListenCallback;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
@@ -295,19 +298,10 @@ public class Issues extends AndroidTestCase {
         System.out.println(ret);
     }
 
-//    public void testIssue428() throws Exception {
-//        final String FEEDLY_DOMAIN = "sandbox.feedly.com";
-//        final String FEEDLY_OAUTH2_TOKEN = "ArxsOch7ImEiOiJGZWVkbHkgc2FuZGJveCBjbGllbnQiLCJlIjoxNDE5MjQwNzEwNDI3LCJpIjoiZTkxMTFlOTAtN2Y1Mi00MTNiLThiZTYtYzc1OTBjMWZjZGYyIiwicCI6NiwidCI6MSwidiI6InNhbmRib3giLCJ3IjoiMjAxNC4yOCIsIngiOiJzdGFuZGFyZCJ9:sandbox";
-//
-//        Ion.with(getContext())
-//        .load("https://" + FEEDLY_DOMAIN + "/v3/profile")
-//        .addHeader("Authorization", "Bearer " + FEEDLY_OAUTH2_TOKEN)
-//        .asString();
-//
-//        Ion.with(getContext())
-//        .load("https://" + FEEDLY_DOMAIN + "/v3/profile")
-//        .addHeader("Authorization", "Bearer " + FEEDLY_OAUTH2_TOKEN)
-//        .asString()
-//        .get();
-//    }
+    public void testIon428() throws Exception {
+        Ion.with(getContext())
+        .load("https://cdn2.vox-cdn.com/thumbor/KxtZNw37jKNfxdA0hX5edHvbTBE=/0x0:2039x1359/800x536/cdn0.vox-cdn.com/uploads/chorus_image/image/44254028/lg-g-watch.0.0.jpg")
+        .asString()
+        .get();
+    }
 }
