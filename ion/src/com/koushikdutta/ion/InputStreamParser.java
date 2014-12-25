@@ -15,7 +15,7 @@ import java.io.InputStream;
 /**
  * Created by koush on 11/3/13.
  */
-public class InputStreamParser implements AsyncParser<InputStream> {
+class InputStreamParser implements AsyncParser<InputStream> {
     @Override
     public Future<InputStream> parse(DataEmitter emitter) {
         return new ByteBufferListParser().parse(emitter)

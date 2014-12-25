@@ -14,6 +14,7 @@ repositories {
 }
 
 dependencies {
+    compile 'com.google.android.gms:play-services:+'
     compile 'com.android.support:support-v4:+'
     compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:2.3'
