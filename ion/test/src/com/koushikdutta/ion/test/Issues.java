@@ -304,4 +304,25 @@ public class Issues extends AndroidTestCase {
         .asString()
         .get();
     }
+
+    public void testIon450() throws Exception {
+        Ion.getDefault(getContext())
+        .configure().setLogging("Test", Log.VERBOSE);
+
+        Ion.with(getContext())
+        .load("https://api.instagram.com/v1/users/self/feed")
+        .asString()
+        .get();
+
+        Ion.with(getContext())
+        .load("https://api.instagram.com/v1/users/self/feed")
+        .asString()
+        .get();
+
+        Ion.with(getContext())
+        .load("https://api.instagram.com/v1/users/self/feed")
+        .asString()
+        .get();
+
+    }
 }
