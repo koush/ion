@@ -540,7 +540,7 @@ public class Ion {
          * Disable routing of https requests through a previous provided proxy
          */
         public void disableSecureProxy() {
-            httpClient.getSocketMiddleware().disableProxy();
+            httpClient.getSSLSocketMiddleware().disableProxy();
         }
 
         /**
