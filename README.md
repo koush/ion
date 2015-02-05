@@ -357,7 +357,7 @@ Ion.with(getContext())
     @Override
     public void onCompleted(Exception e, Response<String> result) {
         // print the response code, ie, 200
-        System.out.println(result.getHeaders().getResponseCode());
+        System.out.println(result.getHeaders().code());
         // print the String that was downloaded
         System.out.println(result.getResult());
     }
