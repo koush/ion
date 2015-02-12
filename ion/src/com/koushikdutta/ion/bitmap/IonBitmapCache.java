@@ -92,7 +92,16 @@ public class IonBitmapCache {
 
         // see if this thing has an immediate cache hit
         BitmapInfo ret = cache.getBitmapInfo(key);
-        if (ret == null || ret.exception == null)
+        if (ret == null)
+            return null;
+        if (ret.bitmap != null && ret.bitmap.isRecycled()) {
+            Log.w("ION", "Cached bitmap was recycled.");
+            Log.w("ION", "This may happen if passing Ion bitmaps directly to notification builders or remote media clients.");
+            Log.w("ION", "Create a deep copy before doing this.");
+            cache.remove(key);
+            return null;
+        }
+        if (ret.exception == null)
             return ret;
 
         // if this bitmap load previously errored out, see if it is time to retry
