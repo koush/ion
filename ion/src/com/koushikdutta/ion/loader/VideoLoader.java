@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
@@ -32,7 +31,7 @@ public class VideoLoader extends SimpleLoader {
         } finally {
             try {
                 retriever.release();
-            } catch (RuntimeException ignored) {
+            } catch (Exception ignored) {
             }
         }
     }
