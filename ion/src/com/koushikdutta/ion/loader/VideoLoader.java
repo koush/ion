@@ -27,7 +27,14 @@ public class VideoLoader extends SimpleLoader {
     public static Bitmap createVideoThumbnail(String filePath) throws Exception {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(filePath);
-        return retriever.getFrameAtTime();
+        try {
+            return retriever.getFrameAtTime();
+        } finally {
+            try {
+                retriever.release();
+            } catch (RuntimeException ignored) {
+            }
+        }
     }
 
     static boolean mustUseThumbnailUtils() {
