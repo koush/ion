@@ -70,6 +70,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -653,6 +654,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public ResponseFuture<String> asString() {
+        return execute(new StringParser());
+    }
+
+    @Override
+    public ResponseFuture<String> asString(Charset charset) {
         return execute(new StringParser());
     }
 
