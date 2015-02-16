@@ -15,11 +15,15 @@ import com.koushikdutta.ion.Ion;
  */
 public class ImageViewSample extends Activity {
     public void loadCenterCrop() {
-        Ion.with(this)
-        .load("http://media.salon.com/2013/05/original.jpg")
-        .withBitmap()
-        .centerCrop()
-        .intoImageView(imageView);
+        Ion.with(getApplicationContext()).load("http://media.salon.com/2013/05/original.jpg").noCache().withBitmap().crossfade(true).intoImageView(imageView);
+
+//
+//
+//        Ion.with(this)
+//        .load("http://media.salon.com/2013/05/original.jpg")
+//        .withBitmap()
+//        .centerCrop()
+//        .intoImageView(imageView);
     }
 
     public void loadCenterInside() {
