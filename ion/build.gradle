@@ -17,6 +17,9 @@ dependencies {
     compile 'com.android.support:support-v4:+'
     compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:2.3'
+
+    // for when i wanna test this against gms conscrypt
+    androidTestCompile 'com.google.android.gms:play-services:+'
 }
 
 android {
