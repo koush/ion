@@ -96,7 +96,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         .setSize(resizeWidth, resizeHeight)
         .setError(errorResource, errorDrawable)
         .setPlaceholder(placeholderResource, placeholderDrawable)
-        .setFadeIn(fadeIn);
+        .setFadeIn(fadeIn || crossfade);
         imageView.setImageDrawable(ret);
         return ret;
     }
