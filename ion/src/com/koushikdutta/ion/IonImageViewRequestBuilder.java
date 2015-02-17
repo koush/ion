@@ -134,7 +134,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         int sampleHeight = resizeHeight;
         // see if we need default transforms, or this if the imageview
         // will request the actual size on measure
-        if (resizeHeight == 0 && resizeWidth == 0) {
+        if (resizeHeight == 0 && resizeWidth == 0 && !imageView.getAdjustViewBounds()) {
             // set the sample size hints from the current dimensions
             // but don't actually apply a transform.
             // this may be zero, in which case IonDrawable
