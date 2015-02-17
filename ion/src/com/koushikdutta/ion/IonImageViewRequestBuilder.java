@@ -1,8 +1,10 @@
 package com.koushikdutta.ion;
 
+import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Looper;
 import android.view.animation.Animation;
 import android.widget.ImageView;
@@ -107,6 +109,15 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         return this;
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    private static boolean getAdjustViewBounds_16(ImageView imageView) {
+        return imageView.getAdjustViewBounds();
+    }
+
+    private static boolean getAdjustViewBounds(ImageView imageView) {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && getAdjustViewBounds_16(imageView);
+    }
+
     @Override
     public ImageViewFuture intoImageView(ImageView imageView) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
@@ -134,7 +145,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         int sampleHeight = resizeHeight;
         // see if we need default transforms, or this if the imageview
         // will request the actual size on measure
-        if (resizeHeight == 0 && resizeWidth == 0 && !imageView.getAdjustViewBounds()) {
+        if (resizeHeight == 0 && resizeWidth == 0 && !getAdjustViewBounds(imageView)) {
             // set the sample size hints from the current dimensions
             // but don't actually apply a transform.
             // this may be zero, in which case IonDrawable
