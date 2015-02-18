@@ -90,7 +90,8 @@ Ion.with(context)
 #### Post application/x-www-form-urlencoded and read a String
 
 ```java
-Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
+Ion.with(getContext())
+.load("https://koush.clockworkmod.com/test/echo")
 .setBodyParameter("goop", "noop")
 .setBodyParameter("foo", "bar")
 .asString()
@@ -100,7 +101,8 @@ Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
 #### Post multipart/form-data and read JSON with an upload progress bar
 
 ```java
-Ion.with(getContext(), "https://koush.clockworkmod.com/test/echo")
+Ion.with(getContext())
+.load("https://koush.clockworkmod.com/test/echo")
 .uploadProgressBar(uploadProgressBar)
 .setMultipartParameter("goop", "noop")
 .setMultipartFile("filename.zip", new File("/sdcard/filename.zip"))
@@ -299,22 +301,26 @@ Ion also lets you tag your requests into groups to allow for easy cancellation o
 Object jsonGroup = new Object();
 Object imageGroup = new Object();
 
-Future<JsonObject> json1 = Ion.with(activity, "http://example.com/test.json")
+Future<JsonObject> json1 = Ion.with(activity)
+.load("http://example.com/test.json")
 // tag in a custom group
 .group(jsonGroup)
 .asJsonObject();
 
-Future<JsonObject> json2 = Ion.with(activity, "http://example.com/test2.json")
+Future<JsonObject> json2 = Ion.with(activity)
+.load("http://example.com/test2.json")
 // use the same custom group as the other json request
 .group(jsonGroup)
 .asJsonObject();
 
-Future<Bitmap> image1 = Ion.with(activity, "http://example.com/test.png")
+Future<Bitmap> image1 = Ion.with(activity)
+.load("http://example.com/test.png")
 // for this image request, use a different group for images
 .group(imageGroup)
 .intoImageView(imageView1);
 
-Future<Bitmap> image2 = Ion.with(activity, "http://example.com/test2.png")
+Future<Bitmap> image2 = Ion.with(activity)
+.load("http://example.com/test2.png")
 // same imageGroup as before
 .group(imageGroup)
 .intoImageView(imageView2);
