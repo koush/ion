@@ -6,6 +6,7 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class GifDecoder implements Cloneable {
 
@@ -64,7 +65,7 @@ public class GifDecoder implements Cloneable {
     private int currentFrame;
 
     GifFrame lastFrame;
-    GifFrame beforeLastFrame;
+    GifFrame restoreFrame;
     int[] dest;
 
     public GifDecoder mutate() {
@@ -101,10 +102,6 @@ public class GifDecoder implements Cloneable {
 
     public GifFrame getLastFrame() {
         return lastFrame;
-    }
-
-    public GifFrame getBeforeLastFrame() {
-        return beforeLastFrame;
     }
 
     public GifDecoder(ByteBuffer bb) {
@@ -187,50 +184,31 @@ public class GifDecoder implements Cloneable {
 	}
 
 	private Bitmap setPixels() {
-		// fill in starting image contents based on last image's dispose code
-        switch (lastDispose) {
-            case 0:
-                // no dispose
-                break;
-            case 1:
-                // use last bitmap pixels
-                if (dest == null && lastFrame != null) {
-                    dest = new int[width * height];
-                    lastFrame.image.getPixels(dest, 0, width, 0, 0, width, height);
-                }
-                break;
-            case 2:
-                // fill last image rect area with background color
-                if (dest == null)
-                    dest = new int[width * height];
-                int c = 0;
-                if (!transparency) {
-                    c = lastBgColor;
-                }
-                for (int i = 0; i < lrh; i++) {
-                    int n1 = (lry + i) * width + lrx;
-                    int n2 = n1 + lrw;
-                    for (int k = n1; k < n2; k++) {
-                        dest[k] = c;
-                    }
-                }
-                break;
-            case 3:
-                if (beforeLastFrame != null) {
-                    if (dest == null)
-                        dest = new int[width * height];
-                    // use the image before last
-                    beforeLastFrame.image.getPixels(dest, 0, width, 0, 0, width, height);
-                }
-                break;
-            default:
-                // wtf?
-                Log.w("Ion", "Unknown gif dispose code: " + lastDispose);
-                break;
+        if (lastDispose == 2) {
+            if (dest == null)
+                dest = new int[width * height];
+            int c = 0;
+            if (!transparency) {
+                c = lastBgColor;
+            }
+            Arrays.fill(dest, c);
         }
-
-        if (dest == null)
-            dest = new int[width * height];
+        else {
+            if (dest == null) {
+                dest = new int[width * height];
+                if (restoreFrame != null)
+                    restoreFrame.image.getPixels(dest, 0, width, 0, 0, width, height);
+                else
+                    Arrays.fill(dest, 0);
+            }
+            else if (lastDispose == 3) {
+                // force restore on dispose method restore previous
+                if (restoreFrame != null)
+                    restoreFrame.image.getPixels(dest, 0, width, 0, 0, width, height);
+                else
+                    Arrays.fill(dest, 0);
+            }
+        }
 
         // copy each source line to the appropriate place in the destination
 		int pass = 1;
@@ -269,8 +247,8 @@ public class GifDecoder implements Cloneable {
 				while (dx < dlim) {
 					// map color and insert in destination
 					int index = ((int) pixels[sx++]) & 0xff;
-					if (!transparency || index != transIndex) {
-						dest[dx] = act[index];
+                    if (!transparency || index != transIndex) {
+                        dest[dx] = act[index];
 					}
 					dx++;
 				}
@@ -527,7 +505,7 @@ public class GifDecoder implements Cloneable {
         GifFrame gifFrame = new GifFrame(image, delay);
         // frames.addElement(new GifFrame(image, delay)); // add image to frame
         // list
-        resetFrame();
+        resetFrame(gifFrame);
         return gifFrame;
 	}
 
@@ -562,13 +540,36 @@ public class GifDecoder implements Cloneable {
 		return read() | (read() << 8);
 	}
 
-	private void resetFrame() {
+	private void resetFrame(GifFrame newFrame) {
+        // fill in starting image contents based on last image's dispose code
+        switch (dispose) {
+            case 0:
+                // no dispose, leave restore frame as whatever this is
+                restoreFrame = newFrame;
+                break;
+            case 1:
+                // use last bitmap pixels
+                restoreFrame = newFrame;
+                break;
+            case 2:
+                // fill last image rect area with background color,
+                // handle that in setPixels
+                restoreFrame = null;
+                break;
+            case 3:
+                // revert canvas to previous, so just leave the original restore frame
+                break;
+            default:
+                // wtf?
+                Log.w("Ion", "Unknown gif dispose code: " + lastDispose);
+                break;
+        }
+
 		lastDispose = dispose;
 		lrx = ix;
 		lry = iy;
 		lrw = iw;
 		lrh = ih;
-        beforeLastFrame = lastFrame;
 		lastBgColor = bgColor;
 		dispose = 0;
 		transparency = false;

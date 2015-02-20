@@ -10,5 +10,4 @@ public class GifFrame {
 	
     public Bitmap image;
     public int delay;
-    public GifFrame nextFrame = null;
 }

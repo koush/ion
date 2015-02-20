@@ -16,9 +16,8 @@ import com.koushikdutta.ion.Ion;
 public class ImageViewSample extends Activity {
     public void loadCenterCrop() {
         Ion.with(this)
-        .load("http://media.salon.com/2013/05/original.jpg")
+        .load("http://data.qa.rithm.me/emojis/dougie/GIF/Transparent/300/dougie.gif")
         .withBitmap()
-        .centerCrop()
         .intoImageView(imageView);
     }
 
