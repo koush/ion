@@ -653,6 +653,16 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public ResponseFuture<JsonObject> asJsonObject(Charset charset) {
+        return execute(new GsonObjectParser(charset));
+    }
+
+    @Override
+    public ResponseFuture<JsonArray> asJsonArray(Charset charset) {
+        return execute(new GsonArrayParser(charset));
+    }
+
+    @Override
     public ResponseFuture<String> asString() {
         return execute(new StringParser());
     }
