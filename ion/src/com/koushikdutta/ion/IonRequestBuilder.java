@@ -659,7 +659,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public ResponseFuture<String> asString(Charset charset) {
-        return execute(new StringParser());
+        return execute(new StringParser(charset));
     }
 
     @Override
