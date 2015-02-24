@@ -1,16 +1,16 @@
 package com.koushikdutta.ion;
 
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -27,7 +27,7 @@ import java.lang.ref.WeakReference;
 /**
  * Created by koush on 6/8/13.
  */
-class IonDrawable extends Drawable {
+class IonDrawable extends LayerDrawable {
     private Paint paint;
     private BitmapInfo info;
     private int placeholderResource;
@@ -215,9 +215,21 @@ class IonDrawable extends Drawable {
         bitmapFetcher = null;
     }
 
+    private Drawable null0;
+    private Drawable null1;
+    private Drawable null2;
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
-
     public IonDrawable(Resources resources) {
+        super(new Drawable[] { new BitmapDrawable(resources, (Bitmap)null), new BitmapDrawable(resources, (Bitmap)null), new BitmapDrawable(resources, (Bitmap)null) });
+
+        setId(0, 0);
+        setId(1, 1);
+        setId(2, 2);
+
+        null0 = getDrawable(0);
+        null1 = getDrawable(1);
+        null2 = getDrawable(2);
+
         this.resources = resources;
         paint = new Paint(DEFAULT_PAINT_FLAGS);
         callback = new IonDrawableCallback(this);
@@ -234,11 +246,18 @@ class IonDrawable extends Drawable {
         this.loadedFrom = loadedFrom;
         this.info = info;
         gifDecoder = null;
+        bitmapDrawable = null;
+        setDrawableByLayerId(2, null2);
         invalidateScheduled = false;
         unscheduleSelf(invalidate);
         invalidateSelf();
         if (info == null)
             return this;
+
+        if (info.bitmap != null) {
+            bitmapDrawable = new BitmapDrawable(resources, info.bitmap);
+            setDrawableByLayerId(2, bitmapDrawable);
+        }
 
         if (info.decoder != null) {
             // find number of tiles across to fit
@@ -282,9 +301,11 @@ class IonDrawable extends Drawable {
             return this;
 
         errorResource = resource;
-        if (error != null)
-            error.setCallback(null);
         error = drawable;
+        if (error != null)
+            setDrawableByLayerId(1, error);
+        else
+            setDrawableByLayerId(1, null1);
         invalidateSelf();
         return this;
     }
@@ -294,42 +315,15 @@ class IonDrawable extends Drawable {
             return this;
 
         placeholderResource = resource;
-        if (placeholder != null)
-            placeholder.setCallback(null);
         placeholder = drawable;
+        if (placeholder != null)
+            setDrawableByLayerId(0, placeholder);
+        else
+            setDrawableByLayerId(0, null0);
         invalidateSelf();
 
         return this;
     }
-
-    @Override
-    public void setFilterBitmap(boolean filter) {
-        paint.setFilterBitmap(filter);
-        invalidateSelf();
-    }
-
-    @Override
-    public void setDither(boolean dither) {
-        paint.setDither(dither);
-        invalidateSelf();
-    }
-
-    Callback drawableCallback = new Callback() {
-        @Override
-        public void invalidateDrawable(Drawable who) {
-            IonDrawable.this.invalidateSelf();
-        }
-
-        @Override
-        public void scheduleDrawable(Drawable who, Runnable what, long when) {
-            IonDrawable.this.scheduleSelf(what, when);
-        }
-
-        @Override
-        public void unscheduleDrawable(Drawable who, Runnable what) {
-            IonDrawable.this.unscheduleSelf(what);
-        }
-    };
 
     private Drawable tryGetErrorResource() {
         if (error != null)
@@ -337,8 +331,21 @@ class IonDrawable extends Drawable {
         if (errorResource == 0)
             return null;
         error = resources.getDrawable(errorResource);
-        error.setCallback(drawableCallback);
+        setDrawableByLayerId(1, placeholder);
         return error;
+    }
+
+    BitmapDrawable bitmapDrawable;
+    private BitmapDrawable tryGetBitmapResource() {
+        if (bitmapDrawable != null)
+            return bitmapDrawable;
+        if (info == null)
+            return null;
+        if (info.bitmap == null)
+            return null;
+        bitmapDrawable = new BitmapDrawable(resources, info.bitmap);
+        setDrawableByLayerId(2, bitmapDrawable);
+        return bitmapDrawable;
     }
 
     private Drawable tryGetPlaceholderResource() {
@@ -347,59 +354,8 @@ class IonDrawable extends Drawable {
         if (placeholderResource == 0)
             return null;
         placeholder = resources.getDrawable(placeholderResource);
-        placeholder.setCallback(drawableCallback);
+        setDrawableByLayerId(0, placeholder);
         return placeholder;
-    }
-
-    @Override
-    public int getIntrinsicWidth() {
-        // first check if image was loaded
-        if (info != null) {
-            if (info.decoder != null)
-                return info.originalSize.x;
-            if (info.bitmap != null)
-                return info.bitmap.getScaledWidth(resources.getDisplayMetrics().densityDpi);
-        }
-        if (gifDecoder != null)
-            return gifDecoder.gifDecoder.getWidth();
-        // check eventual image size...
-        if (resizeWidth > 0)
-            return resizeWidth;
-        // no image, but there was an error
-        if (info != null) {
-            Drawable error = tryGetErrorResource();
-            if (error != null)
-                return error.getIntrinsicWidth();
-        }
-        // check placeholder
-        Drawable placeholder = tryGetPlaceholderResource();
-        if (placeholder != null)
-            return placeholder.getIntrinsicWidth();
-        // we're SOL
-        return -1;
-    }
-
-    @Override
-    public int getIntrinsicHeight() {
-        if (info != null) {
-            if (info.decoder != null)
-                return info.originalSize.y;
-            if (info.bitmap != null)
-                return info.bitmap.getScaledHeight(resources.getDisplayMetrics().densityDpi);
-        }
-        if (gifDecoder != null)
-            return gifDecoder.gifDecoder.getHeight();
-        if (resizeHeight > 0)
-            return resizeHeight;
-        if (info != null) {
-            Drawable error = tryGetErrorResource();
-            if (error != null)
-                return error.getIntrinsicHeight();
-        }
-        Drawable placeholder = tryGetPlaceholderResource();
-        if (placeholder != null)
-            return placeholder.getIntrinsicHeight();
-        return -1;
     }
 
     public static final long FADE_DURATION = 200;
@@ -411,6 +367,11 @@ class IonDrawable extends Drawable {
         }
     };
 
+    @Override
+    public int getNumberOfLayers() {
+        return super.getNumberOfLayers();
+    }
+
     private static final double LOG_2 = Math.log(2);
     private static final int TILE_DIM = 256;
 
@@ -421,61 +382,28 @@ class IonDrawable extends Drawable {
         }
     };
 
-    private void drawDrawable(Canvas canvas, Drawable d) {
-        if (d == null)
-            return;
+    @Override
+    public int getIntrinsicWidth() {
+        if (info != null && info.decoder != null)
+            return info.originalSize.x;
+        return super.getIntrinsicWidth();
+    }
 
-        if (false) {
-            // this centers inside and draws the drawable
-            d.setBounds(0 , 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-            int count = canvas.save();
-            Matrix matrix = new Matrix();
-            matrix.setRectToRect(new RectF(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight()),
-            new RectF(canvas.getClipBounds()), Matrix.ScaleToFit.CENTER);
-            canvas.concat(matrix);
-
-            float scale = (float)canvas.getClipBounds().width() / canvas.getWidth();
-            canvas.scale(scale, scale, d.getIntrinsicWidth() / 2, d.getIntrinsicHeight() / 2);
-
-            d.draw(canvas);
-            canvas.restoreToCount(count);
-            return;
-        }
-        else if (false) {
-            // this centers fits and draws the drawable
-            int iw = d.getIntrinsicWidth();
-            int ih = d.getIntrinsicHeight();
-
-            Rect b = copyBounds();
-            int w = b.width();
-            int h = b.height();
-            if (iw >= 0) {
-                int wp = (w - iw) / 2;
-                b.left += wp;
-                b.right = b.left + iw;
-            }
-            if (ih >= 0) {
-                int hp = (h - ih) / 2;
-                b.top += hp;
-                b.bottom = b.top + ih;
-            }
-            d.setBounds(b);
-        }
-        else {
-            // fitxy the drwable
-            d.setBounds(getBounds());
-        }
-
-        d.draw(canvas);
+    @Override
+    public int getIntrinsicHeight() {
+        if (info != null && info.decoder != null)
+            return info.originalSize.y;
+        return super.getIntrinsicHeight();
     }
 
     @Override
     public void draw(Canvas canvas) {
-        // TODO: handle animated drawables
-        // check if we have a bitmap, otherwise do the placeholder and bail
         if (info == null) {
-            // first things first, draw a placeholder
-            drawDrawable(canvas, tryGetPlaceholderResource());
+            // setup the placeholder if needed
+            tryGetPlaceholderResource();
+
+            // draw stuff
+            super.draw(canvas);
 
             // see if we can fetch a bitmap
             if (bitmapFetcher != null) {
@@ -491,7 +419,6 @@ class IonDrawable extends Drawable {
                     if (found != null) {
                         // found what we're looking for, but can't draw at this very moment,
                         // since we need to trigger a new measure.
-                        drawDrawable(canvas, tryGetPlaceholderResource());
                         callback.onCompleted(null, found);
                         return;
                     }
@@ -516,21 +443,62 @@ class IonDrawable extends Drawable {
             return;
         }
 
-        if (info.drawTime == 0)
-            info.drawTime = SystemClock.uptimeMillis();
+        if (info.decoder == null) {
+            if (info.drawTime == 0)
+                info.drawTime = SystemClock.uptimeMillis();
 
-        long destAlpha = 0xFF;
+            long destAlpha = 0xFF;
 
-        if(fadeIn) {
-            destAlpha = ((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
-            destAlpha = Math.min(destAlpha, 0xFF);
-        }
-
-        if (destAlpha != 255) {
-            Drawable placeholder = tryGetPlaceholderResource();
-            if (placeholder != null) {
-                drawDrawable(canvas, placeholder);
+            if(fadeIn) {
+                destAlpha = ((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
+                destAlpha = Math.min(destAlpha, 0xFF);
             }
+
+            // remove self if not visible
+            if (destAlpha == 255) {
+                if (placeholder != null) {
+                    placeholder = null;
+                    setDrawableByLayerId(0, null0);
+                }
+            }
+            else {
+                tryGetPlaceholderResource();
+            }
+
+            if (info.gifDecoder != null) {
+                super.draw(canvas);
+
+                GifFrame lastFrame = gifDecoder.gifDecoder.getLastFrame();
+                if (lastFrame != null) {
+                    paint.setAlpha((int)destAlpha);
+                    canvas.drawBitmap(lastFrame.image, null, getBounds(), paint);
+                    paint.setAlpha(0xFF);
+
+                    long delay = lastFrame.delay;
+                    if (!invalidateScheduled) {
+                        invalidateScheduled = true;
+                        unscheduleSelf(invalidate);
+                        scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 16));
+                    }
+                }
+                if (gifDecoder.gifDecoder.getStatus() == GifDecoder.STATUS_FINISH && repeatAnimation)
+                    gifDecoder.gifDecoder.restart();
+                gifDecoder.scheduleNextFrame();
+                return;
+            }
+
+            tryGetBitmapResource();
+            if (bitmapDrawable != null) {
+                bitmapDrawable.setAlpha((int)destAlpha);
+            }
+            else {
+                tryGetErrorResource();
+                if (error != null)
+                    error.setAlpha((int)destAlpha);
+            }
+
+            super.draw(canvas);
+            return;
         }
 
         if (info.decoder != null) {
@@ -684,40 +652,6 @@ class IonDrawable extends Drawable {
                 }
             }
         }
-        else if (info.gifDecoder != null) {
-            GifFrame lastFrame = gifDecoder.gifDecoder.getLastFrame();
-            if (lastFrame != null) {
-                paint.setAlpha((int)destAlpha);
-                canvas.drawBitmap(lastFrame.image, null, getBounds(), paint);
-                paint.setAlpha(0xFF);
-
-                long delay = lastFrame.delay;
-                if (!invalidateScheduled) {
-                    invalidateScheduled = true;
-                    unscheduleSelf(invalidate);
-                    scheduleSelf(invalidate, SystemClock.uptimeMillis() + Math.max(delay, 16));
-                }
-            }
-            if (gifDecoder.gifDecoder.getStatus() == GifDecoder.STATUS_FINISH && repeatAnimation)
-                gifDecoder.gifDecoder.restart();
-            gifDecoder.scheduleNextFrame();
-        }
-        else if (info.bitmap != null) {
-            paint.setAlpha((int)destAlpha);
-            canvas.drawBitmap(info.bitmap, null, getBounds(), paint);
-            paint.setAlpha(0xFF);
-        }
-        else {
-            Drawable error = tryGetErrorResource();
-            if (error != null) {
-                error.setAlpha((int)destAlpha);
-                drawDrawable(canvas, error);
-                error.setAlpha(0xFF);
-            }
-        }
-
-        if (destAlpha != 255)
-            invalidateSelf();
 
         if (true)
             return;
