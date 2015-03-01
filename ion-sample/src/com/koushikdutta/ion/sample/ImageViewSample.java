@@ -23,55 +23,45 @@ public class ImageViewSample extends Activity {
     }
 
     public void loadCenterInside() {
-        Ion.with(this)
-        .load("http://media.salon.com/2013/05/original.jpg")
-        .withBitmap()
+        Ion.with(imageView)
         .centerInside()
-        .intoImageView(imageView);
+        .load("http://media.salon.com/2013/05/original.jpg");
     }
 
     public void loadFitCenter() {
-        Ion.with(this)
-        .load("http://media.salon.com/2013/05/original.jpg")
-        .withBitmap()
+        Ion.with(imageView)
         .fitCenter()
-        .intoImageView(imageView);
+        .load("http://media.salon.com/2013/05/original.jpg");
     }
 
     public void loadGifCenterCrop() {
-        Ion.with(this)
-        .load("https://raw.githubusercontent.com/koush/ion/master/ion-sample/mark.gif")
-        .withBitmap()
+        Ion.with(imageView)
         .centerCrop()
-        .intoImageView(imageView);
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion-sample/mark.gif");
     }
 
     public void loadGifFitCenter() {
-        Ion.with(this)
-        .load("https://raw.githubusercontent.com/koush/ion/master/ion-sample/mark.gif")
-        .withBitmap()
+        Ion.with(imageView)
         .fitCenter()
-        .intoImageView(imageView);
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion-sample/mark.gif");
     }
 
     public void loadGifResource() {
-        Ion.with(this)
-        .load("android.resource://" + getPackageName() + "/" + R.drawable.borg)
-        .withBitmap()
+        Ion.with(imageView)
         .fitCenter()
-        .intoImageView(imageView);
+        .load("android.resource://" + getPackageName() + "/" + R.drawable.borg);
     }
 
     public void loadExifRotated() {
-        Ion.with(this)
-        .load("https://raw.githubusercontent.com/koush/ion/master/ion/test/assets/exif.jpg")
-        .intoImageView(imageView);
+        Ion.with(imageView)
+        .fitCenter()
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion/test/assets/exif.jpg");
     }
 
     public void loadTwitterResource() {
-        Ion.with(this)
-        .load("android.resource://" + getPackageName() + "/drawable/twitter")
-        .intoImageView(imageView);
+        Ion.with(imageView)
+        .fitCenter()
+        .load("android.resource://" + getPackageName() + "/drawable/twitter");
     }
 
     Spinner fitChoices;
@@ -82,9 +72,6 @@ public class ImageViewSample extends Activity {
         setContentView(R.layout.image_view);
 
         imageView = (ImageView)findViewById(R.id.image);
-//        imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-//        imageView.setImageResource(R.drawable.charles);
-//        if (true) return;
         fitChoices = (Spinner)findViewById(R.id.fit_choices);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item);
