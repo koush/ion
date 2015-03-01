@@ -401,16 +401,53 @@ class IonDrawable extends LayerDrawable {
 
     @Override
     public int getIntrinsicWidth() {
-        if (info != null && info.decoder != null)
-            return info.originalSize.x;
-        return super.getIntrinsicWidth();
+        // first check if image was loaded
+        if (info != null) {
+            if (info.decoder != null)
+                return info.originalSize.x;
+            if (info.bitmap != null)
+                return info.bitmap.getScaledWidth(resources.getDisplayMetrics().densityDpi);
+        }
+        if (gifDecoder != null)
+            return gifDecoder.gifDecoder.getWidth();
+        // check eventual image size...
+        if (resizeWidth > 0)
+            return resizeWidth;
+        // no image, but there was an error
+        if (info != null) {
+            Drawable error = tryGetErrorResource();
+            if (error != null)
+                return error.getIntrinsicWidth();
+        }
+        // check placeholder
+        Drawable placeholder = tryGetPlaceholderResource();
+        if (placeholder != null)
+            return placeholder.getIntrinsicWidth();
+        // we're SOL
+        return -1;
     }
 
     @Override
     public int getIntrinsicHeight() {
-        if (info != null && info.decoder != null)
-            return info.originalSize.y;
-        return super.getIntrinsicHeight();
+        if (info != null) {
+            if (info.decoder != null)
+                return info.originalSize.y;
+            if (info.bitmap != null)
+                return info.bitmap.getScaledHeight(resources.getDisplayMetrics().densityDpi);
+        }
+        if (gifDecoder != null)
+            return gifDecoder.gifDecoder.getHeight();
+        if (resizeHeight > 0)
+            return resizeHeight;
+        if (info != null) {
+            Drawable error = tryGetErrorResource();
+            if (error != null)
+                return error.getIntrinsicHeight();
+        }
+        Drawable placeholder = tryGetPlaceholderResource();
+        if (placeholder != null)
+            return placeholder.getIntrinsicHeight();
+        return -1;
     }
 
     @Override
