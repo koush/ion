@@ -246,20 +246,16 @@ class IonDrawable extends LayerDrawable {
         bitmapFetcher = null;
     }
 
-    private Drawable null0;
-    private Drawable null1;
-    private Drawable null2;
+    private final static Drawable null0 = new BitmapDrawable((Bitmap)null);
+    private final static Drawable null1 = new BitmapDrawable((Bitmap)null);
+    private final static Drawable null2 = new BitmapDrawable((Bitmap)null);
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
     public IonDrawable(Resources resources) {
-        super(new Drawable[] { new BitmapDrawable(resources, (Bitmap)null), new BitmapDrawable(resources, (Bitmap)null), new BitmapDrawable(resources, (Bitmap)null) });
+        super(new Drawable[] { null0, null1, null2 });
 
         setId(0, 0);
         setId(1, 1);
         setId(2, 2);
-
-        null0 = getDrawable(0);
-        null1 = getDrawable(1);
-        null2 = getDrawable(2);
 
         this.resources = resources;
         paint = new Paint(DEFAULT_PAINT_FLAGS);
