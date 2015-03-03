@@ -355,7 +355,8 @@ class IonDrawable extends LayerDrawable {
         if (errorResource == 0)
             return null;
         error = resources.getDrawable(errorResource);
-        setDrawableByLayerId(1, placeholder);
+        if (error != null)
+            setDrawableByLayerId(1, error);
         return error;
     }
 
@@ -378,7 +379,8 @@ class IonDrawable extends LayerDrawable {
         if (placeholderResource == 0)
             return null;
         placeholder = resources.getDrawable(placeholderResource);
-        setDrawableByLayerId(0, placeholder);
+        if (placeholder != null)
+            setDrawableByLayerId(0, placeholder);
         return placeholder;
     }
 
