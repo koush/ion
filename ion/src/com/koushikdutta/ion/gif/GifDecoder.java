@@ -45,7 +45,7 @@ public class GifDecoder implements Cloneable {
 	private int dispose = 0;
 	private int lastDispose = 0;
 	private boolean transparency = false; // use transparent color
-	private int delay = 0; // delay in milliseconds
+	private int delay = 100; // delay in milliseconds
 	private int transIndex; // transparent color index
 
 	private static final int MaxStackSize = 4096;
@@ -447,6 +447,9 @@ public class GifDecoder implements Cloneable {
 		}
 		transparency = (packed & 1) != 0;
 		delay = readShort() * 10; // delay in milliseconds
+        if (delay < 20) {
+            delay = 100;
+        }
 		transIndex = read(); // transparent color index
 		read(); // block terminator
 	}
@@ -573,7 +576,7 @@ public class GifDecoder implements Cloneable {
 		lastBgColor = bgColor;
 		dispose = 0;
 		transparency = false;
-		delay = 0;
+		delay = 100;
 		lct = null;
 	}
 
