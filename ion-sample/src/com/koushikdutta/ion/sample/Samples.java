@@ -81,6 +81,14 @@ public class Samples extends Activity {
             }
         });
 
+        findViewById(R.id.rounded)
+        .setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, RoundedImageViewSample.class));
+            }
+        });
+
         Button lollipopTransitionSample = (Button)findViewById(R.id.lollipop_transition);
         if (Build.VERSION.SDK_INT >= 21) {
             lollipopTransitionSample.setOnClickListener(new View.OnClickListener() {

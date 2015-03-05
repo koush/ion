@@ -17,6 +17,7 @@ repositories {
 }
 
 dependencies {
+    compile 'com.makeramen:roundedimageview:+'
     compile 'com.github.chrisbanes.photoview:library:+'
     compile project(':ion:ion')
 }
@@ -27,6 +28,7 @@ android {
             manifest.srcFile 'AndroidManifest.xml'
             res.srcDirs = ['res/']
             java.srcDirs = ['src/']
+            assets.srcDirs = ['assets/']
         }
     }
 
@@ -36,6 +38,6 @@ android {
     }
 
     compileSdkVersion 21
-    buildToolsVersion "21.1.0"
+    buildToolsVersion '21.1.2'
 }
 

@@ -1,72 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
-              android:gravity="center"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent">
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <Button
+    <LinearLayout
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_width="0dp"
+        android:layout_height="match_parent">
+
+        <Button
             android:id="@+id/twitter"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Twitter Client Sample"
-            />
+            android:text="Twitter Client Sample" />
 
-    <Button
+        <Button
             android:id="@+id/twitter_gson"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Twitter Gson Client Sample"
-            />
+            android:text="Twitter Gson Client Sample" />
 
-    <Button
+        <Button
             android:id="@+id/download"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Progress Bar Download"
-            />
+            android:text="Progress Bar Download" />
 
-    <Button
+        <Button
             android:id="@+id/upload"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Progress Bar Upload"
-            />
+            android:text="Progress Bar Upload" />
 
-    <Button
+        <Button
             android:id="@+id/image_view"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="ImageView Sample"
-            />
+            android:text="ImageView Sample" />
+    </LinearLayout>
 
-    <Button
+    <LinearLayout
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_width="0dp"
+        android:layout_height="match_parent">
+
+        <Button
             android:id="@+id/google_image_search"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Google Image Search"
-            />
+            android:text="Google Image Search" />
 
-    <Button
+        <Button
             android:id="@+id/gallery"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Gallery"
-            />
+            android:text="Gallery" />
 
-    <Button
+        <Button
             android:id="@+id/deepzoom"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="DeepZoom"
-            />
+            android:text="DeepZoom" />
 
-    <Button
+        <Button
+            android:id="@+id/rounded"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rounded Image View" />
+
+        <Button
             android:id="@+id/lollipop_transition"
-            android:layout_width="240dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Lollipop Transition Sample"
-            />
+            android:text="Lollipop Transition Sample" />
 
+    </LinearLayout>
 </LinearLayout>

@@ -39,8 +39,11 @@
                 android:name=".ImageViewSample"
                 android:label="ImageView Sample"/>
         <activity
-                android:name=".DeepZoomSample"
-                android:label="DeepZoom Sample"/>
+            android:name=".DeepZoomSample"
+            android:label="DeepZoom Sample"/>
+        <activity
+            android:name=".RoundedImageViewSample"
+            android:label="DeepZoom Sample"/>
         <activity
                 android:theme="@android:style/Theme.Material.Light"
                 android:name=".LollipopTransition"
