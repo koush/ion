@@ -33,6 +33,13 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
             return;
         }
 
+        if (emitterTransform != null && emitterTransform.headers != null) {
+            if (emitterTransform.headers.code() == 410) {
+                report(new HeaderException(emitterTransform.headers), null);
+                return;
+            }
+        }
+
         if (ion.bitmapsPending.tag(key) != this) {
             result.recycle();
             return;

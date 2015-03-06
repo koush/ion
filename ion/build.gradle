@@ -15,8 +15,8 @@ repositories {
 
 dependencies {
     compile 'com.android.support:support-v4:+'
-    compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:2.3'
+    compile fileTree(dir: 'libs', include: '*.jar')
 
     // for when i wanna test this against gms conscrypt
     androidTestCompile 'com.google.android.gms:play-services:+'
