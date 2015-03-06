@@ -219,7 +219,11 @@ class IonDrawable extends LayerDrawable {
                 if (gifDecoder.getLastFrame() != currentFrame) {
                     // we have a frame waiting, grab it i guess.
                     currentFrame = gifDecoder.getLastFrame();
-                    nextFrameRender += getDelay();
+                    // check if we need to drop frames, or maintain timing
+                    if (now > nextFrameRender + getDelay())
+                        nextFrameRender = now + getDelay();
+                    else
+                        nextFrameRender += getDelay();
                 }
                 scheduleNextFrame();
             }
