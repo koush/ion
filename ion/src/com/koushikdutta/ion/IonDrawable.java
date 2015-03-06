@@ -362,6 +362,10 @@ class IonDrawable extends LayerDrawable {
             return bitmapDrawable;
         if (info == null)
             return null;
+        if (info.gifDecoder != null)
+            return null;
+        if (info.decoder != null)
+            return null;
         if (info.bitmap == null)
             return null;
         bitmapDrawable = new BitmapDrawable(resources, info.bitmap);
