@@ -28,6 +28,14 @@ import java.lang.ref.WeakReference;
  * Created by koush on 6/8/13.
  */
 class IonDrawable extends LayerDrawable {
+    private static final double LOG_2 = Math.log(2);
+    private static final int TILE_DIM = 256;
+    private static final long FADE_DURATION = 200;
+    private static final Drawable null0 = new BitmapDrawable((Bitmap)null);
+    private static final Drawable null1 = new BitmapDrawable((Bitmap)null);
+    private static final Drawable null2 = new BitmapDrawable((Bitmap)null);
+    private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
+
     private Paint paint;
     private BitmapInfo info;
     private int placeholderResource;
@@ -45,6 +53,9 @@ class IonDrawable extends LayerDrawable {
     private IonDrawableCallback callback;
     private FutureCallback<IonDrawable> loadCallback;
     private IonGifDecoder gifDecoder;
+    BitmapDrawable bitmapDrawable;
+    private int textureDim;
+    private int maxLevel;
 
     public FutureCallback<IonDrawable> getLoadCallback() {
         return loadCallback;
@@ -246,10 +257,6 @@ class IonDrawable extends LayerDrawable {
         bitmapFetcher = null;
     }
 
-    private final static Drawable null0 = new BitmapDrawable((Bitmap)null);
-    private final static Drawable null1 = new BitmapDrawable((Bitmap)null);
-    private final static Drawable null2 = new BitmapDrawable((Bitmap)null);
-    private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
     public IonDrawable(Resources resources) {
         super(new Drawable[] { null0, null1, null2 });
 
@@ -262,8 +269,6 @@ class IonDrawable extends LayerDrawable {
         callback = new IonDrawableCallback(this);
     }
 
-    private int textureDim;
-    private int maxLevel;
     public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
         if (this.info == info)
             return this;
@@ -356,7 +361,6 @@ class IonDrawable extends LayerDrawable {
         return error;
     }
 
-    BitmapDrawable bitmapDrawable;
     private BitmapDrawable tryGetBitmapResource() {
         if (bitmapDrawable != null)
             return bitmapDrawable;
@@ -384,15 +388,10 @@ class IonDrawable extends LayerDrawable {
         return placeholder;
     }
 
-    public static final long FADE_DURATION = 200;
-
     @Override
     public int getNumberOfLayers() {
         return super.getNumberOfLayers();
     }
-
-    private static final double LOG_2 = Math.log(2);
-    private static final int TILE_DIM = 256;
 
     private FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
         @Override
