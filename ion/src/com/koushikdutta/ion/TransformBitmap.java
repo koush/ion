@@ -67,7 +67,7 @@ class TransformBitmap extends BitmapCallback implements FutureCallback<BitmapInf
                             throw new Exception("failed to transform bitmap");
                     }
                     info = new BitmapInfo(key, result.mimeType, bitmap, result.originalSize);
-                    info.loadedFrom = result.loadedFrom;
+                    info.servedFrom = result.servedFrom;
 
                     if (postProcess != null) {
                         for (PostProcess p: postProcess) {

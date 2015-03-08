@@ -20,6 +20,10 @@ dependencies {
 
     // for when i wanna test this against gms conscrypt
     androidTestCompile 'com.google.android.gms:play-services:+'
+    // mockito nom nom oh god im drunk
+    androidTestCompile "org.mockito:mockito-core:1.+"
+    androidTestCompile "com.google.dexmaker:dexmaker:1.2"
+    androidTestCompile "com.google.dexmaker:dexmaker-mockito:1.2"
 }
 
 android {

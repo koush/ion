@@ -10,7 +10,7 @@ import android.graphics.drawable.BitmapDrawable;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.Loader;
+import com.koushikdutta.ion.ResponseServedFrom;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.net.URI;
@@ -36,7 +36,7 @@ public class PackageIconLoader extends SimpleLoader {
                     if (bmp == null)
                         throw new Exception("package icon failed to load");
                     BitmapInfo info = new BitmapInfo(key, null, bmp, new Point(bmp.getWidth(), bmp.getHeight()));
-                    info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
+                    info.servedFrom = ResponseServedFrom.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 }
                 catch (Exception e) {

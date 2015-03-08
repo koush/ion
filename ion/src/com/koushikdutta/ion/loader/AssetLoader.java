@@ -9,6 +9,7 @@ import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.stream.InputStreamDataEmitter;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.ResponseServedFrom;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 import java.io.InputStream;
@@ -46,7 +47,7 @@ public class AssetLoader extends StreamLoader {
                     int available = stream.available();
                     InputStreamDataEmitter emitter = new InputStreamDataEmitter(ion.getHttpClient().getServer(), stream);
                     ret.setComplete(emitter);
-                    callback.onCompleted(null, new LoaderEmitter(emitter, available, LoaderEmitter.LOADED_FROM_CACHE, null, null));
+                    callback.onCompleted(null, new LoaderEmitter(emitter, available, ResponseServedFrom.LOADED_FROM_CACHE, null, null));
                 }
                 catch (Exception e) {
                     ret.setComplete(e);

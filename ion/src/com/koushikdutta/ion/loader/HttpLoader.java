@@ -12,6 +12,7 @@ import com.koushikdutta.async.http.cache.ResponseCacheMiddleware;
 import com.koushikdutta.async.http.callback.HttpConnectCallback;
 import com.koushikdutta.ion.HeadersResponse;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.ResponseServedFrom;
 
 /**
  * Created by koush on 5/22/13.
@@ -26,7 +27,7 @@ public class HttpLoader extends SimpleLoader {
             @Override
             public void onConnectCompleted(Exception ex, AsyncHttpResponse response) {
                 long length = -1;
-                int loadedFrom = LoaderEmitter.LOADED_FROM_NETWORK;
+                ResponseServedFrom loadedFrom = ResponseServedFrom.LOADED_FROM_NETWORK;
                 HeadersResponse headers = null;
                 AsyncHttpRequest request = null;
                 if (response != null) {
@@ -35,9 +36,9 @@ public class HttpLoader extends SimpleLoader {
                     length = HttpUtil.contentLength(headers.getHeaders());
                     String servedFrom = response.headers().get(ResponseCacheMiddleware.SERVED_FROM);
                     if (TextUtils.equals(servedFrom, ResponseCacheMiddleware.CACHE))
-                        loadedFrom = LoaderEmitter.LOADED_FROM_CACHE;
+                        loadedFrom = ResponseServedFrom.LOADED_FROM_CACHE;
                     else if (TextUtils.equals(servedFrom, ResponseCacheMiddleware.CONDITIONAL_CACHE))
-                        loadedFrom = LoaderEmitter.LOADED_FROM_CONDITIONAL_CACHE;
+                        loadedFrom = ResponseServedFrom.LOADED_FROM_CONDITIONAL_CACHE;
                 }
                 callback.onCompleted(ex,
                     new LoaderEmitter(response, length, loadedFrom, headers, request));

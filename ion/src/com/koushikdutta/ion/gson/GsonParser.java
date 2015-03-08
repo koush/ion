@@ -10,11 +10,10 @@ import com.koushikdutta.async.DataSink;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.TransformFuture;
-import com.koushikdutta.async.parser.AsyncParser;
+import com.koushikdutta.async.parser.AsyncParserBase;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.ByteBufferListInputStream;
-import com.koushikdutta.async.util.Charsets;
 
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -22,7 +21,7 @@ import java.nio.charset.Charset;
 /**
  * Created by koush on 5/27/13.
  */
-public abstract class GsonParser<T extends JsonElement> implements AsyncParser<T> {
+public abstract class GsonParser<T extends JsonElement> extends AsyncParserBase<T> {
     Charset forcedCharset;
     Class<? extends JsonElement> clazz;
     public GsonParser(Class<? extends T> clazz) {

@@ -6,27 +6,23 @@ import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.Headers;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.future.ResponseFuture;
 
 import java.io.InputStream;
+import java.lang.reflect.Type;
 
 /**
  * Created by koush on 5/22/13.
  */
 public interface Loader {
     public static class LoaderEmitter {
-        public static final int LOADED_FROM_MEMORY = 0;
-        public static final int LOADED_FROM_CACHE = 1;
-        public static final int LOADED_FROM_CONDITIONAL_CACHE = 2;
-        public static final int LOADED_FROM_NETWORK = 3;
-
-        public LoaderEmitter(DataEmitter emitter, long length, int loadedFrom,
+        public LoaderEmitter(DataEmitter emitter, long length, ResponseServedFrom servedFrom,
                              HeadersResponse headers,
                              AsyncHttpRequest request) {
             this.length = length;
             this.emitter = emitter;
-            this.loadedFrom = loadedFrom;
+            this.servedFrom = servedFrom;
             this.headers = headers;
             this.request = request;
         }
@@ -38,9 +34,9 @@ public interface Loader {
         public long length() {
             return length;
         }
-        int loadedFrom;
-        public int loadedFrom() {
-            return loadedFrom;
+        ResponseServedFrom servedFrom;
+        public ResponseServedFrom getServedFrom() {
+            return servedFrom;
         }
         HeadersResponse headers;
         public HeadersResponse getHeaders() {
@@ -91,4 +87,6 @@ public interface Loader {
      * @return
      */
     public Future<AsyncHttpRequest> resolve(Context context, Ion ion, AsyncHttpRequest request);
+
+    public <T> ResponseFuture<T> load(Ion ion, AsyncHttpRequest request, Type type);
 }

@@ -14,7 +14,7 @@ import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.Loader;
+import com.koushikdutta.ion.ResponseServedFrom;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 
@@ -66,7 +66,7 @@ public class FileLoader extends StreamLoader {
                             throw new Exception("Bitmap failed to load");
                         info = new BitmapInfo(key, options.outMimeType, bitmap, size);
                     }
-                    info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
+                    info.servedFrom = ResponseServedFrom.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 }
                 catch (OutOfMemoryError e) {
@@ -111,7 +111,7 @@ public class FileLoader extends StreamLoader {
                 File file = new File(URI.create(request.getUri().toString()));
                 FileDataEmitter emitter = new FileDataEmitter(ion.getHttpClient().getServer(), file);
                 ret.setComplete(emitter);
-                callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length(), LoaderEmitter.LOADED_FROM_CACHE, null, request));
+                callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length(), ResponseServedFrom.LOADED_FROM_CACHE, null, request));
             }
         });
         return ret;

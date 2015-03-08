@@ -45,8 +45,8 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
                 return false;
             MediaFile.MediaFileType type = MediaFile.getFileType(file.getAbsolutePath());
             if (type == null || !MediaFile.isVideoFileType(type.fileType)) {
-                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, decodeKey, animateGif, null, null);
-                loadDeepZoom.onCompleted(null, file);
+                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, decodeKey, animateGif, null);
+                loadDeepZoom.onCompleted(null, new Response<File>(null, ResponseServedFrom.LOADED_FROM_CACHE, null, null, file));
 //                System.out.println("fastloading deepZoom");
                 return true;
             }
@@ -131,7 +131,7 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
             builder.loadRequestCallback = this;
 
             if (!deepZoom) {
-                IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
+                Future<Response<ByteBufferList>> emitterTransform = builder.execute(new ByteBufferListParser(), new Runnable() {
                     @Override
                     public void run() {
                         AsyncServer.post(Ion.mainHandler, new Runnable() {
@@ -141,19 +141,15 @@ class BitmapFetcher implements IonRequestBuilder.LoadRequestCallback {
                             }
                         });
                     }
-                });
-                emitterTransform.setCallback(new LoadBitmap(ion, decodeKey, !hasTransforms, sampleWidth, sampleHeight, animateGif, emitterTransform));
+                })
+                .withResponse();
+                emitterTransform.setCallback(new LoadBitmap(ion, decodeKey, !hasTransforms, sampleWidth, sampleHeight, animateGif));
             }
             else {
 //                System.out.println("downloading file for deepZoom");
                 File file = fileCache.getTempFile();
-                IonRequestBuilder.EmitterTransform<File> emitterTransform = builder.write(file);
-                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, decodeKey, animateGif, emitterTransform, fileCache) {
-                    @Override
-                    public void onCompleted(Exception e, File file) {
-                        super.onCompleted(e, file);
-                    }
-                };
+                Future<Response<File>> emitterTransform = builder.write(file).withResponse();
+                LoadDeepZoom loadDeepZoom = new LoadDeepZoom(ion, decodeKey, animateGif, fileCache);
                 emitterTransform.setCallback(loadDeepZoom);
             }
         }

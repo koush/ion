@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.concurrent.CancellationException;
 
 abstract class BitmapCallback {
-    String key;
-    Ion ion;
+    final String key;
+    final Ion ion;
 
     public static void saveBitmapSnapshot(Ion ion, BitmapInfo info) {
         if (info.bitmap == null)
@@ -59,7 +59,7 @@ abstract class BitmapCallback {
                     if (bitmap == null)
                         throw new Exception("Bitmap failed to load");
                     BitmapInfo info = new BitmapInfo(transformKey, "image/jpeg", bitmap, null);
-                    info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
+                    info.servedFrom =  ResponseServedFrom.LOADED_FROM_CACHE;
 
                     if (postProcess != null) {
                         for (PostProcess p: postProcess) {
@@ -91,7 +91,7 @@ abstract class BitmapCallback {
         ion.bitmapsPending.tag(key, this);
     }
 
-    boolean put;
+    final boolean put;
 
     boolean put() {
         return put;

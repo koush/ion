@@ -5,6 +5,7 @@ import android.graphics.BitmapRegionDecoder;
 import android.graphics.Point;
 
 import com.koushikdutta.async.util.UntypedHashtable;
+import com.koushikdutta.ion.ResponseServedFrom;
 import com.koushikdutta.ion.gif.GifDecoder;
 
 import java.io.File;
@@ -25,7 +26,7 @@ public class BitmapInfo {
     public long loadTime = System.currentTimeMillis();
     public long drawTime;
     final public String key;
-    public int loadedFrom;
+    public ResponseServedFrom servedFrom;
     final public Bitmap bitmap;
     public Exception exception;
     public GifDecoder gifDecoder;

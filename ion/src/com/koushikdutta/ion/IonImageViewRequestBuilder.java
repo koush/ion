@@ -83,7 +83,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         return this;
     }
 
-    private IonDrawable setIonDrawable(ImageView imageView, BitmapFetcher bitmapFetcher, int loadedFrom) {
+    private IonDrawable setIonDrawable(ImageView imageView, BitmapFetcher bitmapFetcher, ResponseServedFrom servedFrom) {
         BitmapInfo info = null;
         if (bitmapFetcher != null)
             info = bitmapFetcher.info;
@@ -92,13 +92,14 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
         IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView)
         .ion(ion)
-        .setBitmap(info, loadedFrom)
+        .setBitmap(info, servedFrom)
         .setBitmapFetcher(bitmapFetcher)
         .setRepeatAnimation(animateGifMode == AnimateGifMode.ANIMATE)
         .setSize(resizeWidth, resizeHeight)
         .setError(errorResource, errorDrawable)
         .setPlaceholder(placeholderResource, placeholderDrawable)
-        .setFadeIn(fadeIn || crossfade);
+        .setFadeIn(fadeIn || crossfade)
+        .updateLayers();
         imageView.setImageDrawable(ret);
         return ret;
     }
@@ -126,7 +127,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
-            setIonDrawable(imageView, null, 0).cancel();
+            setIonDrawable(imageView, null, ResponseServedFrom.LOADED_FROM_NETWORK).cancel();
             return ImageViewFutureImpl.FUTURE_IMAGEVIEW_NULL_URI;
         }
 
@@ -162,7 +163,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         BitmapFetcher bitmapFetcher = executeCache(sampleWidth, sampleHeight);
         if (bitmapFetcher.info != null) {
             doAnimation(imageView, null, 0);
-            IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, Loader.LoaderEmitter.LOADED_FROM_MEMORY);
+            IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, ResponseServedFrom.LOADED_FROM_MEMORY);
             drawable.cancel();
             ImageViewFutureImpl imageViewFuture = ImageViewFutureImpl.getOrCreateImageViewFuture(imageViewPostRef, drawable)
             .setInAnimation(inAnimation, inAnimationResource)
@@ -173,7 +174,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
             return imageViewFuture;
         }
 
-        IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, 0);
+        IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, ResponseServedFrom.LOADED_FROM_NETWORK);
         doAnimation(imageView, loadAnimation, loadAnimationResource);
         ImageViewFutureImpl imageViewFuture = ImageViewFutureImpl.getOrCreateImageViewFuture(imageViewPostRef, drawable)
         .setInAnimation(inAnimation, inAnimationResource)
