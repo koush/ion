@@ -19,11 +19,6 @@ import java.lang.reflect.Type;
  */
 public class SimpleLoader implements Loader {
     @Override
-    public Future<InputStream> load(Ion ion, AsyncHttpRequest request) {
-        return null;
-    }
-
-    @Override
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, FutureCallback<LoaderEmitter> callback) {
         return null;
     }

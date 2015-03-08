@@ -82,25 +82,6 @@ public class FileLoader extends StreamLoader {
     }
 
     @Override
-    public Future<InputStream> load(final Ion ion, final AsyncHttpRequest request) {
-        if (!request.getUri().getScheme().startsWith("file"))
-            return null;
-        final SimpleFuture<InputStream> ret = new SimpleFuture<InputStream>();
-        Ion.getIoExecutorService().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    InputStream stream = new FileInputStream(new File(URI.create(request.getUri().toString())));
-                    ret.setComplete(stream);
-                } catch (Exception e) {
-                    ret.setComplete(e);
-                }
-            }
-        });
-        return ret;
-    }
-
-    @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
         if (!request.getUri().getScheme().startsWith("file"))
             return null;
