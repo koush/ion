@@ -19,6 +19,7 @@ repositories {
 dependencies {
     compile 'com.makeramen:roundedimageview:+'
     compile 'com.github.chrisbanes.photoview:library:+'
+    compile 'com.flaviofaria:kenburnsview:1.0.6'
     compile project(':ion:ion')
 }
 

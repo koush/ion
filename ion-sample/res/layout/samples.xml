@@ -70,6 +70,12 @@
             android:text="DeepZoom" />
 
         <Button
+            android:id="@+id/kenburns"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="KenBurns" />
+
+        <Button
             android:id="@+id/rounded"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

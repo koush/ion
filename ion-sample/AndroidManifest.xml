@@ -42,6 +42,9 @@
             android:name=".DeepZoomSample"
             android:label="DeepZoom Sample"/>
         <activity
+            android:name=".KenBurnsSample"
+            android:label="KenBurns Sample"/>
+        <activity
             android:name=".RoundedImageViewSample"
             android:label="RoundedImageViewSample Sample"/>
         <activity

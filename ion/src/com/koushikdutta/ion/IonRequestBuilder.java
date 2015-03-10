@@ -71,6 +71,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -614,8 +615,9 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
         if (uri != null) {
             request = prepareRequest(uri);
+            Type type = parser.getType();
             for (Loader loader: ion.loaders) {
-                ResponseFuture<T> quickLoad = loader.load(ion, request, parser.getType());
+                ResponseFuture<T> quickLoad = loader.load(ion, request, type);
                 if (quickLoad != null)
                     return quickLoad;
             }
