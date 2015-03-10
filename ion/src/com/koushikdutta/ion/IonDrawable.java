@@ -743,18 +743,20 @@ class IonDrawable extends LayerDrawable {
 
     @Override
     public void setAlpha(int alpha) {
-       paint.setAlpha(alpha);
+        super.setAlpha(alpha);
+        paint.setAlpha(alpha);
     }
 
     @Override
     public void setColorFilter(ColorFilter cf) {
+        super.setColorFilter(cf);
         paint.setColorFilter(cf);
     }
 
     @Override
     public int getOpacity() {
         return (info == null || info.bitmap == null || info.bitmap.hasAlpha() || paint.getAlpha() < 255) ?
-                PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
+                PixelFormat.TRANSLUCENT : super.getOpacity();
     }
 
     static IonDrawable getOrCreateIonDrawable(ImageView imageView) {
