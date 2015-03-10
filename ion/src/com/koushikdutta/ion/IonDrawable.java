@@ -31,9 +31,7 @@ class IonDrawable extends LayerDrawable {
     private static final double LOG_2 = Math.log(2);
     private static final int TILE_DIM = 256;
     private static final long FADE_DURATION = 200;
-    private static final Drawable null0 = new BitmapDrawable((Bitmap)null);
-    private static final Drawable null1 = new BitmapDrawable((Bitmap)null);
-    private static final Drawable null2 = new BitmapDrawable((Bitmap)null);
+    private static final Drawable NULL_BITMAP = new BitmapDrawable((Bitmap)null);
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
     private Paint paint;
@@ -264,7 +262,7 @@ class IonDrawable extends LayerDrawable {
     }
 
     public IonDrawable(Resources resources) {
-        super(new Drawable[] { null0, null1, null2 });
+        super(new Drawable[] {NULL_BITMAP, NULL_BITMAP, NULL_BITMAP });
 
         setId(0, 0);
         setId(1, 1);
@@ -279,22 +277,22 @@ class IonDrawable extends LayerDrawable {
         // always set up the placeholder, it will disappear automagically
         tryGetPlaceholderResource();
         if (placeholder == null)
-            setDrawableByLayerId(0, null0);
+            setDrawableByLayerId(0, NULL_BITMAP);
         else
             setDrawableByLayerId(0, placeholder);
 
         if (info == null) {
-            setDrawableByLayerId(1, null1);
-            setDrawableByLayerId(2, null2);
+            setDrawableByLayerId(1, NULL_BITMAP);
+            setDrawableByLayerId(2, NULL_BITMAP);
             return this;
         }
 
         // error case
         if (info.bitmap == null && info.decoder == null && info.gifDecoder == null) {
-            setDrawableByLayerId(1, null1);
+            setDrawableByLayerId(1, NULL_BITMAP);
             tryGetErrorResource();
             if (error == null)
-                setDrawableByLayerId(2, null2);
+                setDrawableByLayerId(2, NULL_BITMAP);
             else
                 setDrawableByLayerId(2, error);
             return this;
@@ -307,9 +305,9 @@ class IonDrawable extends LayerDrawable {
         }
         else {
             // gif or deepzoom
-            setDrawableByLayerId(1, null1);
+            setDrawableByLayerId(1, NULL_BITMAP);
         }
-        setDrawableByLayerId(2, null2);
+        setDrawableByLayerId(2, NULL_BITMAP);
         return this;
     }
 
@@ -534,7 +532,7 @@ class IonDrawable extends LayerDrawable {
         if (destAlpha == 255) {
             if (placeholder != null) {
                 placeholder = null;
-                setDrawableByLayerId(0, null0);
+                setDrawableByLayerId(0, NULL_BITMAP);
             }
         } else {
             // invalidate to fade in
