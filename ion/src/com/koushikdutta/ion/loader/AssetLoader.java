@@ -33,7 +33,7 @@ public class AssetLoader extends StreamLoader {
 
     @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().getScheme().startsWith("file://android_asset/"))
+        if (!request.getUri().toString().startsWith("file:///android_asset/"))
             return null;
 
         final InputStreamDataEmitterFuture ret = new InputStreamDataEmitterFuture();
@@ -41,7 +41,7 @@ public class AssetLoader extends StreamLoader {
             @Override
             public void run() {
                 try {
-                    InputStream stream = ion.getContext().getContentResolver().openInputStream(Uri.parse(request.getUri().toString()));
+                    InputStream stream = getInputStream(ion.getContext(), request.getUri().toString());
                     if (stream == null)
                         throw new Exception("Unable to load content stream");
                     int available = stream.available();

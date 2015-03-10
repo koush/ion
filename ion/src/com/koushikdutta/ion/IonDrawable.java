@@ -276,6 +276,7 @@ class IonDrawable extends LayerDrawable {
     }
 
     public IonDrawable updateLayers() {
+        // always set up the placeholder, it will disappear automagically
         tryGetPlaceholderResource();
         if (placeholder == null)
             setDrawableByLayerId(0, null0);
@@ -288,6 +289,7 @@ class IonDrawable extends LayerDrawable {
             return this;
         }
 
+        // error case
         if (info.bitmap == null && info.decoder == null && info.gifDecoder == null) {
             setDrawableByLayerId(1, null1);
             tryGetErrorResource();
@@ -295,10 +297,18 @@ class IonDrawable extends LayerDrawable {
                 setDrawableByLayerId(2, null2);
             else
                 setDrawableByLayerId(2, error);
+            return this;
         }
 
-        tryGetBitmapResource();
-        setDrawableByLayerId(1, bitmapDrawable);
+        if (info.decoder == null && info.gifDecoder == null) {
+            // normal bitmap
+            tryGetBitmapResource();
+            setDrawableByLayerId(1, bitmapDrawable);
+        }
+        else {
+            // gif or deepzoom
+            setDrawableByLayerId(1, null1);
+        }
         setDrawableByLayerId(2, null2);
         return this;
     }

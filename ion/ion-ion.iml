@@ -92,8 +92,8 @@
     <orderEntry type="library" exported="" name="support-v4-21.0.3" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="mockito-core-1.10.19" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="dexmaker-mockito-1.2" level="project" />
-    <orderEntry type="library" exported="" scope="TEST" name="dexmaker-1.2" level="project" />
     <orderEntry type="library" exported="" name="gson-2.3" level="project" />
+    <orderEntry type="library" exported="" scope="TEST" name="dexmaker-1.2" level="project" />
     <orderEntry type="library" exported="" scope="TEST" name="hamcrest-core-1.1" level="project" />
     <orderEntry type="module" module-name="AndroidAsync-AndroidAsync" exported="" />
   </component>

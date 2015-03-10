@@ -30,10 +30,11 @@ public class KenBurnsSample extends Activity {
 
         // this is going to load a 30mb download...
         Ion.with(this)
-        .load("http://wallbervation.com/wp-content/uploads/2015/02/Awesome-Nature.jpg")
+        .load("file:///android_asset/telescope.jpg")
         .progressDialog(dlg)
         .setLogging("DeepZoom", Log.VERBOSE)
         .withBitmap()
+        .deepZoom()
         .intoImageView(view)
         .setCallback(new FutureCallback<ImageView>() {
             @Override
