@@ -30,7 +30,7 @@ public class MockLoader extends SimpleLoader {
     public <T> ResponseFuture<T> load(Ion ion, AsyncHttpRequest request, Type type) {
         T result = (T)requestHandler.request(request.getUri().toString());
         if (result != null) {
-            MockResponseFuture<T> ret = new MockResponseFuture<>(request);
+            MockResponseFuture<T> ret = new MockResponseFuture<T>(request);
             ret.setComplete(result);
             return ret;
         }
