@@ -1,20 +1,4 @@
-task wrapper(type: Wrapper) {
-    gradleVersion = '1.6'
-}
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:+'
-    }
-}
 apply plugin: 'com.android.application'
-
-repositories {
-    mavenCentral()
-}
 
 dependencies {
     compile 'com.makeramen:roundedimageview:+'
