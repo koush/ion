@@ -43,7 +43,6 @@ import com.koushikdutta.async.http.body.StringBody;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.parser.AsyncParser;
-import com.koushikdutta.async.parser.AsyncParserBase;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.async.parser.DocumentParser;
 import com.koushikdutta.async.parser.StringParser;
@@ -679,7 +678,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public ResponseFuture<byte[]> asByteArray() {
-        return execute(new AsyncParserBase<byte[]>() {
+        return execute(new AsyncParser<byte[]>() {
             @Override
             public Future<byte[]> parse(DataEmitter emitter) {
                 return new ByteBufferListParser().parse(emitter)
@@ -694,6 +693,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             @Override
             public void write(DataSink sink, byte[] value, CompletedCallback completed) {
                 new ByteBufferListParser().write(sink, new ByteBufferList(value), completed);
+            }
+
+            @Override
+            public Type getType() {
+                return byte[].class;
             }
         });
     }

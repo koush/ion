@@ -6,16 +6,17 @@ import com.koushikdutta.async.DataSink;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.TransformFuture;
-import com.koushikdutta.async.parser.AsyncParserBase;
+import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.async.stream.ByteBufferListInputStream;
 
 import java.io.InputStream;
+import java.lang.reflect.Type;
 
 /**
  * Created by koush on 11/3/13.
  */
-class InputStreamParser extends AsyncParserBase<InputStream> {
+class InputStreamParser implements AsyncParser<InputStream> {
     @Override
     public Future<InputStream> parse(DataEmitter emitter) {
         return new ByteBufferListParser().parse(emitter)
@@ -30,5 +31,10 @@ class InputStreamParser extends AsyncParserBase<InputStream> {
     @Override
     public void write(DataSink sink, InputStream value, CompletedCallback completed) {
         throw new AssertionError("not implemented");
+    }
+
+    @Override
+    public Type getType() {
+        return InputStream.class;
     }
 }
