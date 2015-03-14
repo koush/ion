@@ -10,18 +10,19 @@ import com.koushikdutta.async.DataSink;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.TransformFuture;
-import com.koushikdutta.async.parser.AsyncParserBase;
+import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.async.parser.StringParser;
 import com.koushikdutta.async.stream.ByteBufferListInputStream;
 
 import java.io.InputStreamReader;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 
 /**
  * Created by koush on 5/27/13.
  */
-public abstract class GsonParser<T extends JsonElement> extends AsyncParserBase<T> {
+public abstract class GsonParser<T extends JsonElement> implements AsyncParser<T> {
     Charset forcedCharset;
     Class<? extends JsonElement> clazz;
     public GsonParser(Class<? extends T> clazz) {
@@ -62,5 +63,10 @@ public abstract class GsonParser<T extends JsonElement> extends AsyncParserBase<
     @Override
     public void write(DataSink sink, T value, CompletedCallback completed) {
         new StringParser().write(sink, value.toString(), completed);
+    }
+
+    @Override
+    public Type getType() {
+        return clazz;
     }
 }

@@ -10,20 +10,19 @@ import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.TransformFuture;
-import com.koushikdutta.async.parser.AsyncParserBase;
+import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.async.stream.ByteBufferListInputStream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
  * Created by koush on 6/1/13.
  */
-public class GsonSerializer<T> extends AsyncParserBase<T> {
+public class GsonSerializer<T> implements AsyncParser<T> {
     Gson gson;
     Type type;
     public GsonSerializer(Gson gson, Class<T> clazz) {
