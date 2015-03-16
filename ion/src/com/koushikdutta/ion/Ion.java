@@ -148,6 +148,10 @@ public class Ion {
     Context context;
     IonImageViewRequestBuilder bitmapBuilder = new IonImageViewRequestBuilder(this);
 
+    public FileCache getStoreCache() {
+        return storeCache;
+    }
+
     private Ion(Context context, String name) {
         this.context = context = context.getApplicationContext();
         this.name = name;
