@@ -204,6 +204,9 @@ class IonDrawable extends LayerDrawable {
         };
 
         long getDelay() {
+            // error case?
+            if (currentFrame == null)
+                return 1000 / 10;
             long delay = currentFrame.delay;
             if (delay == 0)
                 delay = 1000 / 10;
