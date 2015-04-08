@@ -498,6 +498,8 @@ class IonDrawable extends LayerDrawable {
                     bitmapFetcher.recomputeDecodeKey();
                     BitmapInfo found = ion.bitmapCache.get(bitmapFetcher.bitmapKey);
                     if (found != null) {
+                        // won't be needing THIS anymore
+                        bitmapFetcher = null;
                         // found what we're looking for, but can't draw at this very moment,
                         // since we need to trigger a new measure.
                         callback.onCompleted(null, found);
