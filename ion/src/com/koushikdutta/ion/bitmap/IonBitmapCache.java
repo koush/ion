@@ -137,7 +137,7 @@ public class IonBitmapCache {
         if (o.outWidth < 0 || o.outHeight < 0)
             throw new BitmapDecodeException(o.outWidth, o.outHeight);
         Point target = computeTarget(minx, miny);
-        int scale = Math.max(o.outWidth / target.x, o.outHeight / target.y);
+        int scale = Math.round(Math.max((float)o.outWidth / target.x, (float)o.outHeight / target.y));
         BitmapFactory.Options ret = new BitmapFactory.Options();
         ret.inSampleSize = scale;
         ret.outWidth = o.outWidth;
