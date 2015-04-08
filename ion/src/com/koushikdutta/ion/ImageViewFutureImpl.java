@@ -56,14 +56,13 @@ class ImageViewFutureImpl extends TransformFuture<ImageView, IonDrawable> implem
         }
 
         // retrigger the intrinsic dimension check on the drawable
-        imageView.setImageDrawable(null);
-        imageView.setImageDrawable(result);
         BitmapInfo info = result.getBitmapInfo();
         if (info != null && info.exception == null) {
             applyScaleMode(imageView, scaleMode);
         }
         IonBitmapRequestBuilder.doAnimation(imageView, inAnimation, inAnimationResource);
-
+        imageView.setImageDrawable(null);
+        imageView.setImageDrawable(result);
         setComplete(imageView);
     }
 
