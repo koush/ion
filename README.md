@@ -425,3 +425,4 @@ There's hundreds of apps using ion. Feel free to contact me or submit a pull req
 * [Eventius](https://play.google.com/store/apps/details?id=com.eventius.android)
 * [Plume](https://play.google.com/store/apps/details?id=com.levelup.touiteur)
 * [GameRaven](https://play.google.com/store/apps/details?id=com.ioabsoftware.gameraven)
+* [See You There](https://play.google.com/store/apps/details?id=com.maps.wearat&hl=en)
