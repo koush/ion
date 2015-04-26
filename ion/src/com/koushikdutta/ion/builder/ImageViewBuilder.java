@@ -3,6 +3,8 @@ package com.koushikdutta.ion.builder;
 import android.graphics.drawable.Drawable;
 import android.view.animation.Animation;
 
+import com.koushikdutta.ion.BitmapDrawableFactory;
+
 /**
 * Created by koush on 5/30/13.
 */
@@ -98,4 +100,12 @@ public interface ImageViewBuilder<I extends ImageViewBuilder<?>> {
      * @return
      */
     public I crossfade(boolean crossfade);
+
+    /**
+     * Provide an Drawable factory to control how the loaded Bitmap is drawn.
+     * Handy for RoundedDrawables, etc.
+     * @param bitmapDrawableFactory
+     * @return
+     */
+    public I bitmapDrawableFactory(BitmapDrawableFactory bitmapDrawableFactory);
 }

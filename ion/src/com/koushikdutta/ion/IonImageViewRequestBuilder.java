@@ -31,6 +31,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     ContextReference.ImageViewContextReference imageViewPostRef;
     boolean fadeIn = true;
     boolean crossfade;
+    BitmapDrawableFactory bitmapDrawableFactory = BitmapDrawableFactory.DEFAULT;
 
     public IonImageViewRequestBuilder(IonRequestBuilder builder) {
         super(builder);
@@ -47,6 +48,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         crossfade = false;
         imageViewPostRef = null;
         placeholderDrawable = null;
+        bitmapDrawableFactory = BitmapDrawableFactory.DEFAULT;
         placeholderResource = 0;
         errorDrawable = null;
         errorResource = 0;
@@ -99,6 +101,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         .setError(errorResource, errorDrawable)
         .setPlaceholder(placeholderResource, placeholderDrawable)
         .setFadeIn(fadeIn || crossfade)
+        .setBitmapDrawableFactory(bitmapDrawableFactory)
         .updateLayers();
         imageView.setImageDrawable(ret);
         return ret;
@@ -270,6 +273,12 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     @Override
     public IonImageViewRequestBuilder animateIn(int animationResource) {
         inAnimationResource = animationResource;
+        return this;
+    }
+
+    @Override
+    public IonImageViewRequestBuilder bitmapDrawableFactory(BitmapDrawableFactory bitmapDrawableFactory) {
+        this.bitmapDrawableFactory = bitmapDrawableFactory;
         return this;
     }
 }

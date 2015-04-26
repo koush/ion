@@ -50,9 +50,10 @@ class IonDrawable extends LayerDrawable {
     private IonDrawableCallback callback;
     private FutureCallback<IonDrawable> loadCallback;
     private IonGifDecoder gifDecoder;
-    BitmapDrawable bitmapDrawable;
+    private Drawable bitmapDrawable;
     private int textureDim;
     private int maxLevel;
+    private BitmapDrawableFactory bitmapDrawableFactory;
 
     private final Drawable NULL_PLACEHOLDER;
     private final Drawable NULL_BITMAPINFO;
@@ -262,6 +263,11 @@ class IonDrawable extends LayerDrawable {
         return this;
     }
 
+    public IonDrawable setBitmapDrawableFactory(BitmapDrawableFactory factory) {
+        this.bitmapDrawableFactory = factory;
+        return this;
+    }
+
     public void cancel() {
         callback.register(null, null);
         bitmapFetcher = null;
@@ -398,7 +404,7 @@ class IonDrawable extends LayerDrawable {
         return error;
     }
 
-    private BitmapDrawable tryGetBitmapResource() {
+    private Drawable tryGetBitmapResource() {
         if (bitmapDrawable != null)
             return bitmapDrawable;
         if (info == null)
@@ -409,7 +415,7 @@ class IonDrawable extends LayerDrawable {
             return null;
         if (info.bitmap == null)
             return null;
-        bitmapDrawable = new BitmapDrawable(resources, info.bitmap);
+        bitmapDrawable = bitmapDrawableFactory.fromBitmap(resources, info.bitmap);
         return bitmapDrawable;
     }
 
