@@ -708,6 +708,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public ResponseFuture<DataEmitter> asDataEmitter() {
+        return execute(new DataEmitterParser());
+    }
+
+    @Override
     public <T> ResponseFuture<T> as(AsyncParser<T> parser) {
         return execute(parser);
     }

@@ -1,5 +1,6 @@
 package com.koushikdutta.ion.builder;
 
+import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.ion.future.ResponseFuture;
 
@@ -34,6 +35,12 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @return
      */
     public ResponseFuture<InputStream> asInputStream();
+
+    /**
+     * Execute the request and get the result as a DataEmitter.
+     * @return
+     */
+    public ResponseFuture<DataEmitter> asDataEmitter();
 
     /**
      * Execute the request and get the result as an XML Document
