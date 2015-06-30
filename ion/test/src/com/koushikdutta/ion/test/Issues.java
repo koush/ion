@@ -327,11 +327,6 @@ public class Issues extends AndroidTestCase {
 
     public void testIon559() throws Exception {
         Ion.with(getContext())
-        .load("https://conscrypt.org/")
-        .asString()
-        .get();
-
-        Ion.with(getContext())
         .load("https://saren.wtako.net/Teikoku.Shounen.jpg")
         .asBitmap()
         .get();
