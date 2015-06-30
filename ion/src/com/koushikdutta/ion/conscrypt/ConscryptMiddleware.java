@@ -1,6 +1,7 @@
 package com.koushikdutta.ion.conscrypt;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.koushikdutta.async.AsyncSSLSocketWrapper;
 import com.koushikdutta.async.future.Cancellable;
@@ -10,6 +11,7 @@ import com.koushikdutta.async.http.SimpleMiddleware;
 import java.lang.reflect.Method;
 import java.security.Provider;
 import java.security.Security;
+import java.security.Signature;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -24,6 +26,8 @@ public class ConscryptMiddleware extends SimpleMiddleware {
     static boolean success;
     boolean instanceInitialized;
     boolean enabled = true;
+
+    private static final String LOGTAG = "IonConscrypt";
 
     public void enable(boolean enabled) {
         this.enabled = enabled;
@@ -73,6 +77,7 @@ public class ConscryptMiddleware extends SimpleMiddleware {
             }
         }
         catch (Exception e) {
+            Log.w(LOGTAG, "Conscrypt initialization failed.");
         }
     }
 
