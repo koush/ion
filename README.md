@@ -105,7 +105,7 @@ Ion.with(getContext())
 .load("https://koush.clockworkmod.com/test/echo")
 .uploadProgressBar(uploadProgressBar)
 .setMultipartParameter("goop", "noop")
-.setMultipartFile("filename.zip", new File("/sdcard/filename.zip"))
+.setMultipartFile("archive", "application/zip", new File("/sdcard/filename.zip"))
 .asJsonObject()
 .setCallback(...)
 ```
