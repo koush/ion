@@ -7,7 +7,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.3'
 
     // for when i wanna test this against gms conscrypt
-    androidTestCompile 'com.google.android.gms:play-services:+'
+    androidTestCompile 'com.google.android.gms:play-services-base:+'
     // mockito nom nom oh god im drunk
     androidTestCompile "org.mockito:mockito-core:1.+"
     androidTestCompile "com.google.dexmaker:dexmaker:1.2"
@@ -38,7 +38,7 @@ android {
     }
 
     compileSdkVersion 23
-    buildToolsVersion '23.0.0'
+    buildToolsVersion '23.0.1'
 }
 
 // upload to maven task

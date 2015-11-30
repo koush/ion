@@ -82,6 +82,7 @@ public class Issues extends AndroidTestCase {
         assertEquals(data, data2);
     }
 
+    // url is dead, test will fail
     public void testIssue126() throws Exception {
         Bitmap bitmap = Ion.with(getContext())
         .load("http://bdc.tsingyuan.cn/api/img?w=advanced")
