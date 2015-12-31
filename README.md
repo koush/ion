@@ -48,7 +48,7 @@ The included documented [ion-sample](https://github.com/koush/ion/tree/master/io
    * Populate a ListView Adapter and fetch more data as you scroll to the end
    * Put images from a URLs into ImageViews (twitter profile pictures)
  * File Download with [Progress Bar Sample](https://github.com/koush/ion/blob/master/ion-sample/src/com/koushikdutta/ion/sample/ProgressBarDownload.java)
- * Get JSON and show images with the [Google Image Search Sample](https://github.com/koush/ion/blob/master/ion-sample/src/com/koushikdutta/ion/sample/GoogleImageSearch.java)
+ * Get JSON and show images with the [Image Search Sample](https://github.com/koush/ion/blob/master/ion-sample/src/com/koushikdutta/ion/sample/ImageSearch.java)
 
 #### More Examples
 
