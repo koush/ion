@@ -332,4 +332,15 @@ public class Issues extends AndroidTestCase {
         .asBitmap()
         .get();
     }
+
+    public void testIssueVerso() throws Exception {
+//        Ion.getDefault(getContext()).getHttpClient().getSSLSocketMiddleware().setSpdyEnabled(false);
+//        Ion.getDefault(getContext()).getConscryptMiddleware().enable(false);
+
+        Ion.with(getContext())
+        .load("https://versoworks.com/images/vwlogo.png")
+        .setLogging("Verso", Log.VERBOSE)
+        .asByteArray()
+        .get();
+    }
 }
