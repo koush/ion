@@ -189,6 +189,9 @@ class IonDrawable extends LayerDrawable {
                 try {
                     gifDecoder.nextFrame();
                 }
+                catch (OutOfMemoryError e) {
+                    exception = new Exception(e);
+                }
                 catch (Exception e) {
                     exception = e;
                 }
