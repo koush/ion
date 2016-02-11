@@ -32,6 +32,7 @@ import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.Headers;
 import com.koushikdutta.async.http.Multimap;
+import com.koushikdutta.async.http.NameValuePair;
 import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
 import com.koushikdutta.async.http.body.DocumentBody;
 import com.koushikdutta.async.http.body.FileBody;
@@ -62,7 +63,6 @@ import com.koushikdutta.ion.gson.GsonObjectParser;
 import com.koushikdutta.ion.gson.GsonSerializer;
 import com.koushikdutta.ion.gson.PojoBody;
 
-import org.apache.http.NameValuePair;
 import org.w3c.dom.Document;
 
 import java.io.ByteArrayInputStream;
