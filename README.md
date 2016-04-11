@@ -3,7 +3,7 @@
 ![](ion-sample/ion-sample.png)
 
 #### Download
- * [Jar](https://github.com/koush/ion#get-ion)
+ * [Jar](https://jcenter.bintray.com/com/koushikdutta/)
  * [Maven](https://github.com/koush/ion#get-ion)
  * [Git](https://github.com/koush/ion#get-ion)
 
