@@ -121,7 +121,7 @@ Ion.with(context)
 .progressDialog(progressDialog)
 // can also use a custom callback
 .progress(new ProgressCallback() {@Override
-   public void onProgress(int downloaded, int total) {
+   public void onProgress(long downloaded, long total) {
        System.out.println("" + downloaded + " / " + total);
    }
 })
