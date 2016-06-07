@@ -170,7 +170,7 @@ Ion.with(imageView)
 
 The Ion Image load API has the following features:
  * Disk and memory caching
- * Bitmaps are held via weak references so memory is managed very effeciently
+ * Bitmaps are held via weak references so memory is managed very efficiently
  * ListView Adapter recycling support
  * Bitmap transformations via the .transform(Transform)
  * Animate loading and loaded ImageView states
