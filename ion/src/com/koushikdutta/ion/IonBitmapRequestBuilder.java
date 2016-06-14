@@ -166,6 +166,18 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         return LocallyCachedStatus.NOT_CACHED;
     }
 
+
+    @Override
+    public void removeCachedBitmap() {
+        final String decodeKey = computeDecodeKey();
+        addDefaultTransform();
+        String bitmapKey = computeBitmapKey(decodeKey);
+        ion.responseCache.getFileCache().remove(decodeKey);
+        ion.responseCache.getFileCache().remove(bitmapKey);
+        builder.ion.bitmapCache.remove(bitmapKey);
+        builder.ion.bitmapCache.remove(decodeKey);
+    }
+
     @Override
     public BitmapInfo asCachedBitmap() {
         final String decodeKey = computeDecodeKey();
