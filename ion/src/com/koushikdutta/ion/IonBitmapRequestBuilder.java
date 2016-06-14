@@ -18,6 +18,7 @@ import com.koushikdutta.ion.builder.AnimateGifMode;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 

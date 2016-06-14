@@ -347,32 +347,60 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         resolveAndLoadRequest(request, ret);
     }
 
-    <T> void resolveAndLoadRequest(final AsyncHttpRequest request, final EmitterTransform<T> ret) {
-        Future<AsyncHttpRequest> resolved = resolveRequest(request, ret);
-        if (resolved != null) {
-            resolved.setCallback(new FutureCallback<AsyncHttpRequest>() {
-                @Override
-                public void onCompleted(Exception e, final AsyncHttpRequest result) {
-                    if (e != null) {
-                        ret.setComplete(e);
-                        return;
+    Future<AsyncHttpRequest> recursiveResolveRequest(final AsyncHttpRequest request) {
+        final SimpleFuture<AsyncHttpRequest> ret = new SimpleFuture<AsyncHttpRequest>();
+
+        Runnable resolver = new Runnable() {
+            AsyncHttpRequest inRequest = request;
+            Runnable runner = this;
+
+            @Override
+            public void run() {
+                Future<AsyncHttpRequest> resolved = resolveRequest(inRequest);
+                if (resolved == null) {
+                    ret.setComplete(inRequest);
+                    return;
+                }
+                resolved.setCallback(new FutureCallback<AsyncHttpRequest>() {
+                    @Override
+                    public void onCompleted(Exception e, final AsyncHttpRequest result) {
+                        if (e != null) {
+                            ret.setComplete(e);
+                            return;
+                        }
+                        inRequest = result;
+                        runner.run();
                     }
-                    ret.finalRequest = result;
-                    resolveAndLoadRequest(result, ret);
+                });
+            }
+        };
+        resolver.run();
+        return ret;
+    }
+
+    <T> void resolveAndLoadRequest(final AsyncHttpRequest request, final EmitterTransform<T> ret) {
+        recursiveResolveRequest(request)
+        .setCallback(new FutureCallback<AsyncHttpRequest>() {
+            @Override
+            public void onCompleted(Exception e, AsyncHttpRequest result) {
+                if (e != null) {
+                    ret.setComplete(e);
+                    return;
                 }
-            });
-            return;
-        }
-        if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
-            AsyncServer.post(Ion.mainHandler, new Runnable() {
-                @Override
-                public void run() {
-                    invokeLoadRequest(request, ret);
+                ret.finalRequest = result;
+
+                if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
+                    AsyncServer.post(Ion.mainHandler, new Runnable() {
+                        @Override
+                        public void run() {
+                            invokeLoadRequest(request, ret);
+                        }
+                    });
+                    return;
                 }
-            });
-            return;
-        }
-        invokeLoadRequest(request, ret);
+                invokeLoadRequest(request, ret);
+            }
+        });
     }
 
     <T> void invokeLoadRequest(final AsyncHttpRequest request, final EmitterTransform<T> ret) {
@@ -393,7 +421,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         ret.setComplete(new Exception("Unknown uri scheme"));
     }
 
-    <T> Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
+    <T> Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request) {
         // first attempt to resolve the url
         for (Loader loader: ion.loaders) {
             Future<AsyncHttpRequest> resolved = loader.resolve(contextReference.getContext(), ion, request);
