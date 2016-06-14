@@ -863,6 +863,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public void removeCachedBitmap() {
+        new IonImageViewRequestBuilder(this).removeCachedBitmap();
+    }
+
+    @Override
     public LocallyCachedStatus isLocallyCached() {
         return new IonImageViewRequestBuilder(this).isLocallyCached();
     }
