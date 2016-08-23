@@ -121,7 +121,7 @@ public class CookieMiddleware extends SimpleMiddleware {
 
             Headers dump = new Headers();
             for (HttpCookie cookie: cookies) {
-                dump.add("Set-Cookie", cookie.getName() + "=" + cookie.getValue());
+                dump.add("Set-Cookie", cookie.getName() + "=" + cookie.getValue() + "; path=" + cookie.getPath());
             }
 
             String key = uri.getScheme() + "://" + uri.getAuthority();
