@@ -34,6 +34,7 @@ class IonDrawable extends LayerDrawable {
     private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
 
     private Paint paint;
+    private int alpha = 0xFF;
     private BitmapInfo info;
     private int placeholderResource;
     private Drawable placeholder;
@@ -542,15 +543,15 @@ class IonDrawable extends LayerDrawable {
         if (info.drawTime == 0)
             info.drawTime = SystemClock.uptimeMillis();
 
-        long destAlpha = 0xFF;
+        long destAlpha = this.alpha;
 
         if (fadeIn) {
             destAlpha = ((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
-            destAlpha = Math.min(destAlpha, 0xFF);
+            destAlpha = Math.min(destAlpha, this.alpha);
         }
 
         // remove plaeholder if not visible
-        if (destAlpha == 255) {
+        if (destAlpha == this.alpha) {
             if (placeholder != null) {
                 placeholder = null;
                 setDrawableByLayerId(0, NULL_PLACEHOLDER);
@@ -568,7 +569,7 @@ class IonDrawable extends LayerDrawable {
             if (frame != null) {
                 paint.setAlpha((int) destAlpha);
                 canvas.drawBitmap(frame.image, null, getBounds(), paint);
-                paint.setAlpha(0xFF);
+                paint.setAlpha(this.alpha);
                 invalidateSelf();
             }
             return;
@@ -765,6 +766,7 @@ class IonDrawable extends LayerDrawable {
     @Override
     public void setAlpha(int alpha) {
         super.setAlpha(alpha);
+        this.alpha = alpha;
         paint.setAlpha(alpha);
     }
 
