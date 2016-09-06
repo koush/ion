@@ -343,4 +343,26 @@ public class Issues extends AndroidTestCase {
         .asByteArray()
         .get();
     }
+
+    public void testIssue714() throws Exception {
+        AsyncHttpServer server = new AsyncHttpServer();
+        server.post("/test", new HttpServerRequestCallback() {
+            @Override
+            public void onRequest(AsyncHttpServerRequest request, AsyncHttpServerResponse response) {
+                response.send(request.getHeaders().get("Authorization"));
+            }
+        });
+        int port = server.listen(Ion.getDefault(getContext()).getServer(), 0).getLocalPort();
+        String auth = "";
+        for (int i = 0; i < 2048; i++) {
+            auth += (char)('0' + (i % 10));
+        }
+        System.out.println(auth);
+        assertEquals(auth, Ion.with(getContext())
+        .load("http://localhost:" + port + "/test")
+        .setHeader("Authorization", auth)
+        .setStringBody("testtest")
+        .asString()
+        .get());
+    }
 }
