@@ -3,7 +3,6 @@
 ![](ion-sample/ion-sample.png)
 
 #### Download
- * [Jar](https://github.com/koush/ion#get-ion)
  * [Maven](https://github.com/koush/ion#get-ion)
  * [Git](https://github.com/koush/ion#get-ion)
 
@@ -372,10 +371,6 @@ Ion.with(getContext())
 
 
 #### Get Ion
-
-##### Jars
- * [androidasync.jar](https://search.maven.org/remote_content?g=com.koushikdutta.async&a=androidasync&v=LATEST) (dependency)
- * [ion.jar](https://search.maven.org/remote_content?g=com.koushikdutta.ion&a=ion&v=LATEST)
 
 ##### Maven
 ```xml
