@@ -52,10 +52,10 @@
         android:layout_height="match_parent">
 
         <Button
-            android:id="@+id/google_image_search"
+            android:id="@+id/image_search"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Google Image Search" />
+            android:text="Image Search" />
 
         <Button
             android:id="@+id/gallery"

@@ -4,10 +4,6 @@
           android:versionCode="1"
           android:versionName="1.0">
 
-    <uses-sdk
-            android:minSdkVersion="11"
-            android:targetSdkVersion="17"/>
-
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
@@ -30,8 +26,8 @@
                 android:name=".ProgressBarUpload"
                 android:label="Progress Bar Upload"/>
         <activity
-                android:name=".GoogleImageSearch"
-                android:label="Google Image Search"/>
+                android:name=".ImageSearch"
+                android:label="Image Search"/>
         <activity
                 android:name=".GallerySample"
                 android:label="Gallery Sample"/>
