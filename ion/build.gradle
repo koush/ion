@@ -35,6 +35,7 @@ android {
     defaultConfig {
         targetSdkVersion 23
         minSdkVersion 9
+        consumerProguardFiles 'proguard-project.txt'
     }
 
     compileSdkVersion 23
