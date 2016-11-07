@@ -68,6 +68,9 @@ public class GifDecoder implements Cloneable {
     GifFrame restoreFrame;
     int[] dest;
 
+    // Any pixels at this index or beyond will reuse their values from the previous frame.
+    private int pixelsTrimIndex = Integer.MAX_VALUE;
+
     public GifDecoder mutate() {
         try {
             GifDecoder ret = (GifDecoder) clone();
@@ -242,6 +245,8 @@ public class GifDecoder implements Cloneable {
                 }
                 int sx = i * iw; // start of line in source
                 while (dx < dlim) {
+                    if (sx >= pixelsTrimIndex) break; // There's no more "new" pixels in this frame.
+
                     // map color and insert in destination
                     int index = ((int) pixels[sx++]) & 0xff;
                     if (!transparency || index != transIndex) {
@@ -358,9 +363,8 @@ public class GifDecoder implements Cloneable {
             pixels[pi++] = pixelStack[top];
             i++;
         }
-        for (i = pi; i < npix; i++) {
-            pixels[i] = 0; // clear missing pixels
-        }
+
+        pixelsTrimIndex = pi;
     }
 
     private boolean err() {
@@ -572,6 +576,7 @@ public class GifDecoder implements Cloneable {
         transparency = false;
         delay = 0;
         lct = null;
+        pixelsTrimIndex = Integer.MAX_VALUE;
     }
 
     /**
