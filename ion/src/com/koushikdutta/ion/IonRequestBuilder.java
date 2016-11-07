@@ -538,6 +538,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                         AsyncServer.post(Ion.mainHandler, new Runnable() {
                             @Override
                             public void run() {
+                                if (isCancelled() || isDone())
+                                    return;
                                 if (progressBar != null) {
                                     ProgressBar bar = progressBar.get();
                                     if (bar != null)
