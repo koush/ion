@@ -289,8 +289,8 @@ Future<JsonObject> json2 = Ion.with(activity, "http://example.com/test2.json").a
 // later... in activity.onStop
 @Override
 protected void onStop() {
-    super.onStop();
     Ion.getDefault(activity).cancelAll(activity);
+    super.onStop();
 }
 ```
 
