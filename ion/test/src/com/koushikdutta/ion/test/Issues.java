@@ -5,18 +5,13 @@ import android.test.AndroidTestCase;
 import android.util.Base64;
 import android.util.Log;
 
-import com.google.gson.JsonObject;
 import com.koushikdutta.async.AsyncServer;
 import com.koushikdutta.async.AsyncServerSocket;
 import com.koushikdutta.async.AsyncSocket;
-import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.callback.ListenCallback;
-import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.http.AsyncHttpClient;
-import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.server.AsyncHttpServer;
 import com.koushikdutta.async.http.server.AsyncHttpServerRequest;
@@ -24,7 +19,9 @@ import com.koushikdutta.async.http.server.AsyncHttpServerResponse;
 import com.koushikdutta.async.http.server.HttpServerRequestCallback;
 import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.Response;
+import com.koushikdutta.ion.gif.GifDecoder;
+
+import junit.framework.Assert;
 
 import java.io.File;
 import java.util.Arrays;
@@ -364,5 +361,31 @@ public class Issues extends AndroidTestCase {
         .setStringBody("testtest")
         .asString()
         .get());
+    }
+
+    public void testIssue760() throws Exception {
+        // https://github.com/koush/ion/issues/760
+        byte[] bytes = Ion.with(getContext())
+                .load("https://media.giphy.com/media/ykzXbY24BFqY8/giphy.gif")
+                .asByteArray()
+                .get();
+
+        GifDecoder decoder = new GifDecoder(bytes);
+
+        for (int i = 0; i <= 3; i++) {
+            // Skip to the interesting frames.
+            decoder.nextFrame();
+        }
+
+        // Get frame 4's pixel value.
+        int frame4Pixel = decoder.nextFrame().image.getPixel(35, 200);
+
+        // Get frame 5's pixel value which reproduces the incorrect value.
+        int frame5Pixel = decoder.nextFrame().image.getPixel(35, 200);
+
+        // The pixel value should not have changed between frame 4 and frame 5.
+        String assertionMessage = "{Pixel(35,200,4): " + Integer.toHexString(frame4Pixel)
+                + "} should be equal to {Pixel(35,200,5): " + Integer.toHexString(frame5Pixel) + "}";
+        Assert.assertEquals(assertionMessage, frame4Pixel, frame5Pixel);
     }
 }
