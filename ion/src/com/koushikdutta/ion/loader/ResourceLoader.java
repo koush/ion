@@ -106,7 +106,7 @@ public class ResourceLoader extends StreamLoader {
 
     @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().getScheme().startsWith("android.resource:/"))
+        if (!request.getUri().getScheme().equals("android.resource"))
             return null;
 
         final InputStreamDataEmitterFuture ret = new InputStreamDataEmitterFuture();
