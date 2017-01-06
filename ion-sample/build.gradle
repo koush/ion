@@ -3,7 +3,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.0.0-alpha3'
+        classpath 'com.android.tools.build:gradle:2.2.3'
     }
 }
 
@@ -38,7 +38,7 @@ android {
         minSdkVersion 9
     }
 
-    compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    compileSdkVersion project.hasProperty('global_compileSdkVersion') ? global_compileSdkVersion : 25
+    buildToolsVersion project.hasProperty('global_buildToolsVersion') ? global_buildToolsVersion : '25.0.2'
 }
 
