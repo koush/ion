@@ -49,6 +49,7 @@ android {
     defaultConfig {
         targetSdkVersion 23
         minSdkVersion 9
+        consumerProguardFiles 'proguard-project.txt'
     }
 
     compileSdkVersion project.hasProperty('global_compileSdkVersion') ? global_compileSdkVersion : 25
