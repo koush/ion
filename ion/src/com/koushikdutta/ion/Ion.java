@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.ImageView;
 
@@ -140,6 +141,8 @@ public class Ion {
     int logLevel;
     Gson gson;
     String userAgent;
+    String basicAuthUsername;
+    String basicAuthPassword;
     ArrayList<Loader> loaders = new ArrayList<Loader>();
     String name;
     HashList<FutureCallback<BitmapInfo>> bitmapsPending = new HashList<FutureCallback<BitmapInfo>>();
@@ -559,6 +562,9 @@ public class Ion {
                 AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
                 if (!TextUtils.isEmpty(userAgent))
                     request.getHeaders().set("User-Agent", userAgent);
+                if (basicAuthentication() != null) {
+                    request.getHeaders().set("Authorization", basicAuthentication());
+                }
                 return request;
             }
         };
@@ -578,6 +584,22 @@ public class Ion {
 
         public Config userAgent(String userAgent) {
             Ion.this.userAgent = userAgent;
+            return this;
+        }
+
+        public String basicAuthentication() {
+            if (TextUtils.isEmpty(basicAuthUsername) || basicAuthPassword == null) {
+                return null;
+            }
+            return "Basic "
+                    + Base64.encodeToString(
+                            String.format("%s:%s", basicAuthUsername, basicAuthPassword).getBytes(),
+                            Base64.NO_WRAP);
+        }
+
+        public Config basicAuthentication(String basicAuthUsername, String basicAuthPassword) {
+            Ion.this.basicAuthUsername = basicAuthUsername;
+            Ion.this.basicAuthPassword = basicAuthPassword;
             return this;
         }
 
