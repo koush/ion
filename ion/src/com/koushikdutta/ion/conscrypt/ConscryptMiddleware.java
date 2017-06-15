@@ -6,6 +6,7 @@ import android.util.Log;
 import com.google.android.gms.security.ProviderInstaller;
 import com.koushikdutta.async.AsyncSSLSocketWrapper;
 import com.koushikdutta.async.future.Cancellable;
+import com.koushikdutta.async.http.AsyncSSLEngineConfigurator;
 import com.koushikdutta.async.http.AsyncSSLSocketMiddleware;
 import com.koushikdutta.async.http.SimpleMiddleware;
 
@@ -14,6 +15,7 @@ import java.security.Security;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSocketFactory;
 
 /**
@@ -74,18 +76,25 @@ public class ConscryptMiddleware extends SimpleMiddleware {
         if (success && !instanceInitialized && enabled) {
             instanceInitialized = true;
             try {
-                SSLContext sslContext = null;
-                try {
-                    sslContext = SSLContext.getInstance("TLS", ProviderInstaller.PROVIDER_NAME);
-                }
-                catch (Exception e) {
-                }
-                if (sslContext == null)
-                    sslContext = SSLContext.getInstance("TLS");
+                final SSLContext sslContext = SSLContext.getInstance("TLS", ProviderInstaller.PROVIDER_NAME);
                 sslContext.init(null, null, null);
                 // only set the SSL context if it is the default SSL context
                 if (middleware.getSSLContext() == AsyncSSLSocketWrapper.getDefaultSSLContext())
                     middleware.setSSLContext(sslContext);
+
+                middleware.addEngineConfigurator(new AsyncSSLEngineConfigurator() {
+                    @Override
+                    public SSLEngine createEngine(SSLContext inContext, String peerHost, int peerPort) {
+                        if (inContext == sslContext)
+                            return sslContext.createSSLEngine(peerHost, peerPort);
+                        return null;
+                    }
+
+                    @Override
+                    public void configureEngine(SSLEngine engine, GetSocketData data, String host, int port) {
+
+                    }
+                });
             }
             catch (Exception e) {
             }
