@@ -20,6 +20,9 @@ dependencies {
     compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:2.3'
 
+    // use play services if the linking app is using it. when play services isn't avialable
+    // ConscryptMiddleware will throw ClassNotFoundErrors and simply not load,
+    // and the system SSL stack will be used.
     provided 'com.google.android.gms:play-services-base:+'
     // for when i wanna test this against gms conscrypt
     androidTestCompile 'com.google.android.gms:play-services-base:+'
