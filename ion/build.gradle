@@ -20,7 +20,7 @@ dependencies {
     compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:2.3'
 
-    // Use play services if the linking app is using it. when play services isn't available
+    // Use play services if the linking app is using it. When play services isn't available
     // ConscryptMiddleware will throw ClassNotFoundErrors upon attempting to load it at runtime.
     // Conscrypt will fail to load, and the system SSL stack will be used.
     // "provided" means the library is provided by the platform. Typically this is used for 
