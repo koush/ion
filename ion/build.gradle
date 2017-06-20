@@ -15,7 +15,6 @@ repositories {
 apply plugin: 'com.android.library'
 
 dependencies {
-    compile 'com.android.support:palette-v7:+'
     compile 'com.android.support:support-v4:+'
     compile project(':AndroidAsync:AndroidAsync')
     compile 'com.google.code.gson:gson:2.3'
@@ -70,7 +69,6 @@ if (System.getenv().I_AM_KOUSH == 'true') {
                 mavenDeployer {
                     pom*.whenConfigured { pom ->
                         pom.dependencies.removeAll { dep -> dep.artifactId == 'support-v4' }
-                        pom.dependencies.removeAll { dep -> dep.artifactId == 'palette-v7' }
                     }
                 }
             }
