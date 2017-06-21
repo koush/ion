@@ -81,20 +81,6 @@ public class ConscryptMiddleware extends SimpleMiddleware {
                 // only set the SSL context if it is the default SSL context
                 if (middleware.getSSLContext() == AsyncSSLSocketWrapper.getDefaultSSLContext())
                     middleware.setSSLContext(sslContext);
-
-                middleware.addEngineConfigurator(new AsyncSSLEngineConfigurator() {
-                    @Override
-                    public SSLEngine createEngine(SSLContext inContext, String peerHost, int peerPort) {
-                        if (inContext == sslContext)
-                            return sslContext.createSSLEngine(peerHost, peerPort);
-                        return null;
-                    }
-
-                    @Override
-                    public void configureEngine(SSLEngine engine, GetSocketData data, String host, int port) {
-
-                    }
-                });
             }
             catch (Exception e) {
             }
