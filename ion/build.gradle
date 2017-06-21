@@ -25,10 +25,10 @@ dependencies {
     // "provided" means the library is provided by the platform. Typically this is used for 
     // actual platform libraries like framework.jar. But this is a clever way of having a soft
     // dependency to play services.
-    provided 'com.google.android.gms:play-services-base:+'
+    provided 'com.google.android.gms:play-services-base:10.+'
 
     // for when i wanna test this against gms conscrypt
-    androidTestCompile 'com.google.android.gms:play-services-base:+'
+    androidTestCompile 'com.google.android.gms:play-services-base:10.+'
 
     // mockito nom nom oh god im drunk
     androidTestCompile "org.mockito:mockito-core:1.+"
