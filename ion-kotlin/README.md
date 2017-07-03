@@ -1,5 +1,23 @@
 # Ion Kotlin Extensions - async/await
 
+async/await allows you to write code that looks like synchronous code, but is actually run asynchronously via coroutines.
+
+For example, if you wanted to download a list of files with async/await in Ion:
+
+```kotlin
+fun getFiles(files: Array<String>) = async {
+    for (file in files) {
+        Ion.with(context)
+        .load(file)
+        .asString()
+        .await()
+    }
+}
+```
+This may look like synchronous code, but it is not. The return type of getFiles is a [Future](https://github.com/koush/ion#futures)
+
+
+
 ### Java
 ```java
 private void getCredentials() {
@@ -46,7 +64,7 @@ private void load(String accessToken) {
     });
 }
 
-getCredentials()
+getCredentials();
 ```
 
 ### Kotlin
