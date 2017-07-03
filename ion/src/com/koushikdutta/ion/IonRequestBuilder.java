@@ -81,12 +81,12 @@ import java.util.Map;
  */
 class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.M, Builders.Any.U, LoadBuilder<Builders.Any.B> {
     Ion ion;
-    ContextReference contextReference;
+    IonContext contextReference;
     Handler handler = Ion.mainHandler;
     String method = AsyncHttpGet.METHOD;
     String uri;
 
-    public IonRequestBuilder(ContextReference contextReference, Ion ion) {
+    public IonRequestBuilder(IonContext contextReference, Ion ion) {
         String alive = contextReference.isAlive();
         if (null != alive)
             Log.w("Ion", "Building request with dead context: " + alive);

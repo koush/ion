@@ -73,6 +73,15 @@ public class Ion {
     }
 
     /**
+     * Get the default Ion object instance and begin building a request
+     * @param context
+     * @return
+     */
+    public static LoadBuilder<Builders.Any.B> with(IonContext context) {
+        return getDefault(context.getContext()).build(context);
+    }
+
+    /**
      * the default Ion object instance and begin building a request
      * @param fragment
      * @return
@@ -208,6 +217,15 @@ public class Ion {
      */
     public LoadBuilder<Builders.Any.B> build(Context context) {
         return new IonRequestBuilder(ContextReference.fromContext(context), this);
+    }
+
+    /**
+     * Begin building a request
+     * @param context
+     * @return
+     */
+    public LoadBuilder<Builders.Any.B> build(IonContext context) {
+        return new IonRequestBuilder(context, this);
     }
 
     /**
