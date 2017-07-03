@@ -76,7 +76,10 @@ class KotlinTests: AndroidTestCase {
     internal val github = "https://" + githubPath + dataNameAndHash
     @Throws(Exception::class)
     fun testGithubRandomData() {
+        System.out.println("Alice")
+
         val ret = async {
+            System.out.println("Bob")
             // get the bytes, this happens in Ion's reactor thread
             val bytes = Ion.with(context)
                     .load(github)
@@ -98,10 +101,25 @@ class KotlinTests: AndroidTestCase {
             await()
             Assert.assertSame(Thread.currentThread(), Looper.getMainLooper().thread)
 
+            System.out.println("Chuck")
             return@async md5.digest()
         }
 
+        System.out.println("David")
+
         val digest = ret.get()
         Assert.assertEquals(digest, dataNameAndHash)
+    }
+
+    fun myStringFunction(url: String) = async {
+        try {
+            return@async Ion.with(context)
+                    .load(url)
+                    .asString()
+                    .await()
+        }
+        catch (e: Exception) {
+            return@async "Failed to load"
+        }
     }
 }
