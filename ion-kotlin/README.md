@@ -16,10 +16,10 @@ fun getFiles(files: Array<String>) = async {
 ```
 This may look like synchronous code, but it is not. The return type of getFiles is a actually [Future](https://github.com/koush/ion#futures). The operation happens asynchronously, and only when all the files are finished downloading, will the Future's callback be called.
 
+The code in an async block is a [suspend fun](https://kotlinlang.org/docs/reference/coroutines.html).
 ```kotlin
 async {
     // the code in here is a suspend fun, a coroutine.
-    // https://kotlinlang.org/docs/reference/coroutines.html
     // execution can be suspended and resumed.
 }
 ```
