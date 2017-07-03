@@ -14,8 +14,11 @@
             android:icon="@drawable/ic_launcher"
             android:theme="@style/Theme">
         <activity
-                android:name=".Twitter"
-                android:label="Twitter Client Sample"/>
+            android:name=".Twitter"
+            android:label="Twitter Client Sample"/>
+        <activity
+            android:name=".TwitterKotlin"
+            android:label="Twitter Kotlin Client Sample"/>
         <activity
                 android:name=".TwitterGson"
                 android:label="Twitter Gson Client Sample"/>

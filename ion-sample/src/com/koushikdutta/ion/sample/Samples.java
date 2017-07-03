@@ -25,6 +25,14 @@ public class Samples extends Activity {
             }
         });
 
+        Button twitterKotlin = (Button)findViewById(R.id.twitter_kotlin);
+        twitterKotlin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, TwitterKotlin.class));
+            }
+        });
+
         Button twitterGson = (Button)findViewById(R.id.twitter_gson);
         twitterGson.setOnClickListener(new View.OnClickListener() {
             @Override

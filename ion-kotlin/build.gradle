@@ -1,3 +1,13 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile project(':ion:ion')
+}
+
 buildscript {
     ext.kotlin_version = '1.1.3-eap-85'
     repositories {
@@ -15,20 +25,6 @@ buildscript {
     }
 }
 
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-
-dependencies {
-    compile 'com.makeramen:roundedimageview:+'
-    compile 'com.github.chrisbanes.photoview:library:+'
-    compile 'com.flaviofaria:kenburnsview:1.0.6'
-    compile project (':ion:ion-kotlin')
-
-    compile 'com.google.android.gms:play-services-base:11.0.0'
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-}
-
 android {
     sourceSets {
         main {
@@ -40,7 +36,7 @@ android {
     }
 
     defaultConfig {
-        targetSdkVersion 23
+        targetSdkVersion 26
         minSdkVersion 14
     }
 

@@ -20,6 +20,12 @@
             android:text="Twitter Client Sample" />
 
         <Button
+            android:id="@+id/twitter_kotlin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Twitter Kotlin Client Sample" />
+
+        <Button
             android:id="@+id/twitter_gson"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
