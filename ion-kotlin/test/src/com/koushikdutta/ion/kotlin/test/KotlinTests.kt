@@ -104,5 +104,4 @@ class KotlinTests: AndroidTestCase {
         val digest = ret.get()
         Assert.assertEquals(digest, dataNameAndHash)
     }
-
 }

@@ -19,10 +19,6 @@ class TwitterKotlin : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        async<Int> poop@ {
-            return@poop 3
-        }
-
         // Enable global Ion logging
         //        Ion.getDefault(this).setLogging("ion-sample", Log.DEBUG);
 
