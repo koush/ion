@@ -16,12 +16,38 @@ fun getFiles(files: Array<String>) = async {
 ```
 This may look like synchronous code, but it is not. The return type of getFiles is a actually [Future](https://github.com/koush/ion#futures). The operation happens asynchronously, and only when all the files are finished downloading, will the Future's callback be called.
 
-The code in an async block is a [suspend fun](https://kotlinlang.org/docs/reference/coroutines.html).
+The code in an async block is a [suspend fun, aka a coroutine](https://kotlinlang.org/docs/reference/coroutines.html).
 ```kotlin
 async {
     // the code in here is a suspend fun, a coroutine.
     // execution can be suspended and resumed.
 }
+```
+
+Inside an async block, you can use await on various objects to wait for results.
+
+```kotlin
+fun getFiles(files: File) = async {
+    System.out.println("Alice")
+
+    Ion.with(context)
+    .load(file)
+    .asString()
+    .await()
+    
+    System.out.println("Chuck")
+}
+
+getFiles(file)
+System.out.println("Bob")
+```
+
+async blocks are run asynchronously, but look synchronous. The output from this code would be:
+
+```
+Alice
+Bob
+Chuck
 ```
 
 ### Java
