@@ -6,6 +6,8 @@ apply plugin: 'kotlin-android-extensions'
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile project(':ion:ion')
+
+    androidTestCompile 'com.google.android.gms:play-services-base:10.+'
 }
 
 buildscript {
@@ -33,6 +35,9 @@ android {
             java.srcDirs = ['src/']
             assets.srcDirs = ['assets/']
         }
+        androidTest.java.srcDirs=['test/src/']
+        androidTest.res.srcDirs=['test/res/']
+        androidTest.assets.srcDirs=['test/assets/']
     }
 
     defaultConfig {

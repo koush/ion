@@ -23,19 +23,19 @@ private class WrappingContextReference {
 }
 
 fun <T> Activity.async(block: suspend AsyncContext.() -> T): Future<T> {
-    return async(ContextReference.ActivityContextReference(this) as ContextReference<Object>, block)
+    return async(ContextReference.ActivityContextReference(this), block)
 }
 
 fun <T> Service.async(block: suspend AsyncContext.() -> T): Future<T> {
-    return async(ContextReference.ServiceContextReference(this) as ContextReference<Object>, block)
+    return async(ContextReference.ServiceContextReference(this), block)
 }
 
 fun <T> Fragment.async(block: suspend AsyncContext.() -> T): Future<T> {
-    return async(ContextReference.FragmentContextReference(this) as ContextReference<Object>, block)
+    return async(ContextReference.FragmentContextReference(this), block)
 }
 
 fun <T> android.support.v4.app.Fragment.async(block: suspend AsyncContext.() -> T): Future<T> {
-    return async(ContextReference.SupportFragmentContextReference(this) as ContextReference<Object>, block)
+    return async(ContextReference.SupportFragmentContextReference(this), block)
 }
 
 class AsyncContext(val ionContext: IonContext, val future: SimpleFuture<Object>): IonContext {
@@ -60,35 +60,35 @@ class AsyncContext(val ionContext: IonContext, val future: SimpleFuture<Object>)
         }
     }
 
-    suspend fun await(looper: Looper) {
-        return await(Handler(looper))
+    suspend fun Looper.await() {
+        return Handler(this).await()
     }
 
     suspend fun await() {
-        return await(Looper.getMainLooper())
+        return Looper.getMainLooper().await()
     }
 
-    suspend fun await(handler: Handler) {
+    suspend fun Handler.await() {
         return suspendCoroutine { continuation ->
-            handler.post {
+            post {
                 if (checkLive())
                     continuation.resume(Unit)
             }
         }
     }
 
-    suspend fun await(asyncServer: AsyncServer) {
+    suspend fun AsyncServer.await() {
         return suspendCoroutine { continuation ->
-            asyncServer.post {
+            post {
                 if (checkLive())
                     continuation.resume(Unit)
             }
         }
     }
 
-    suspend fun await(executor: Executor) {
+    suspend fun Executor.await() {
         return suspendCoroutine { continuation ->
-            executor.execute {
+            execute {
                 if (checkLive())
                     continuation.resume(Unit)
             }
@@ -124,7 +124,7 @@ private class StandaloneCoroutine<T>(val asyncContext: AsyncContext, val future:
     }
 }
 
-internal fun <T> async(ionContext: IonContext, block: suspend AsyncContext.() -> T): Future<T> {
+fun <T> async(ionContext: IonContext, block: suspend AsyncContext.() -> T): Future<T> {
     val future = SimpleFuture<T>()
     val asyncContext = AsyncContext(ionContext, future as SimpleFuture<Object>)
     val coroutineContext = StandaloneCoroutine<T>(asyncContext, future, EmptyCoroutineContext)

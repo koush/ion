@@ -80,7 +80,7 @@ class TwitterKotlin : Activity() {
         getCredentials()
     }
 
-    private fun getCredentials()= async {
+    private fun getCredentials() = async {
         try {
             val credentials = Ion.with(this)
                     .load("https://api.twitter.com/oauth2/token")
