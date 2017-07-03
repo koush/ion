@@ -70,6 +70,7 @@ async {
     asyncServer.await()
     System.out.println("I'm running on this AsyncServer's reactor thread.")
 }
+```
  
 ### Getting results from async functions
 
