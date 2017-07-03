@@ -24,13 +24,13 @@ async {
 }
 ```
 
-Inside an async block, you can use await on various objects to wait for results.
+Inside an async block, you can use await on Futures to wait for their results.
 
 ```kotlin
 fun getFiles(files: File) = async {
     System.out.println("Bob")
 
-    Ion.with(context)
+    val string = Ion.with(context)
     .load(file)
     .asString()
     .await()
@@ -53,3 +53,20 @@ Chuck
 ```
 
 Execution was paused at the await() call, and resumed after the file was downloaded.
+
+Await can also be used to switch thread affinities:
+
+```kotlin
+async {
+    looper.await()
+    System.out.println("I'm running on this Looper thread.")
+
+    handler.await()
+    System.out.println("I'm running on this handler's Looper thread.")
+
+    executor.await()
+    System.out.println("I'm running on this Executor's thread pool.")
+    
+    asyncServer.await()
+    System.out.println("I'm running on this AsyncServer's reactor thread.")
+ }
