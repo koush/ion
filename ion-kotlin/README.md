@@ -69,4 +69,40 @@ async {
     
     asyncServer.await()
     System.out.println("I'm running on this AsyncServer's reactor thread.")
- }
+}
+ 
+### Getting results from async functions
+
+async lets you easily write functions that return Futures.
+
+```kotlin
+fun myStringFunction(url: String) = async {
+    try {
+        return@async Ion.with(context)
+                .load(url)
+                .asString()
+                .await()
+    }
+    catch (e: Exception) {
+        return@async "Failed to load"
+    }
+}
+```
+
+myStringFunction returns a Future<String>. Can attach setCallback to get the result, or use it in other async code blocks
+
+Or for brevity:
+
+```kotlin
+fun myStringFunction(url: String) = async {
+    try {
+        Ion.with(context)
+                .load(url)
+                .asString()
+                .await()
+    }
+    catch (e: Exception) {
+        "Failed to load"
+    }
+}
+```
