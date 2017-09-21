@@ -185,7 +185,7 @@ public class Ion {
 
         // TODO: Support pre GB?
         if (Build.VERSION.SDK_INT >= 9)
-            addCookieMiddleware();
+            setCookieMiddleware(new CookieMiddleware(this));
 
         httpClient.getSocketMiddleware().setConnectAllAddresses(true);
         httpClient.getSSLSocketMiddleware().setConnectAllAddresses(true);
@@ -413,8 +413,11 @@ public class Ion {
     // maintain a list of futures that are in being processed, allow for bulk cancellation
     WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
 
-    private void addCookieMiddleware() {
-        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(this));
+    public void setCookieMiddleware(CookieMiddleware middleware) {
+        if (cookieMiddleware != null) {
+            httpClient.getMiddleware().remove(cookieMiddleware);
+        }
+        httpClient.insertMiddleware(cookieMiddleware = middleware);
     }
 
     /**
