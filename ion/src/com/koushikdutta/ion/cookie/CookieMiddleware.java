@@ -38,13 +38,17 @@ public class CookieMiddleware extends SimpleMiddleware {
         return manager;
     }
 
+    protected CookieManager initializeCookieManager(Ion ion) {
+        return new CookieManager(null, null);
+    }
+
     Ion ion;
     public CookieMiddleware(Ion ion) {
         this.ion = ion;
     }
 
     public void reinit() {
-        manager = new CookieManager(null, null);
+        manager = initializeCookieManager(ion);
         preferences = ion.getContext().getSharedPreferences(ion.getName() + "-cookies", Context.MODE_PRIVATE);
 
         Map<String, ?> allPrefs = preferences.getAll();
@@ -89,8 +93,8 @@ public class CookieMiddleware extends SimpleMiddleware {
         maybeInit();
         try {
             Map<String, List<String>> cookies = manager.get(
-                URI.create(
-                    data.request.getUri().toString()),
+                    URI.create(
+                            data.request.getUri().toString()),
                     data.request.getHeaders().getMultiMap());
             addCookies(cookies, data.request.getHeaders());
         }
