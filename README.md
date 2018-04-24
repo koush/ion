@@ -384,7 +384,7 @@ Ion.with(getContext())
 ##### Gradle
 ```groovy
 dependencies {
-    compile 'com.koushikdutta.ion:ion:2.+'
+    implementation 'com.koushikdutta.ion:ion:2.+'
 }
 ````
 
