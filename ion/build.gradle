@@ -1,39 +1,24 @@
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.1'
-    }
-}
-
-repositories {
-    mavenCentral()
-}
-
 apply plugin: 'com.android.library'
 
 dependencies {
-    compile 'com.android.support:support-v4:+'
-    compile project(':AndroidAsync:AndroidAsync')
-    compile 'com.google.code.gson:gson:2.3'
+    api project(':AndroidAsync:AndroidAsync')
+    api 'com.google.code.gson:gson:2.3'
 
     // Use play services if the linking app is using it. When play services isn't available
     // ConscryptMiddleware will throw ClassNotFoundErrors upon attempting to load it at runtime.
     // Conscrypt will fail to load, and the system SSL stack will be used.
-    // "provided" means the library is provided by the platform. Typically this is used for 
-    // actual platform libraries like framework.jar. But this is a clever way of having a soft
-    // dependency to play services.
-    provided 'com.google.android.gms:play-services-base:10.+'
+    // "compileOnly" means the library is compiled but not required at runtime.
+    compileOnly 'com.google.android.gms:play-services-base:10.+'
+
+    compileOnly 'com.android.support:support-v4:+'
 
     // for when i wanna test this against gms conscrypt
-    androidTestCompile 'com.google.android.gms:play-services-base:10.+'
+    androidTestImplementation 'com.google.android.gms:play-services-base:10.+'
 
     // mockito nom nom oh god im drunk
-    androidTestCompile "org.mockito:mockito-core:1.+"
-    androidTestCompile "com.google.dexmaker:dexmaker:1.2"
-    androidTestCompile "com.google.dexmaker:dexmaker-mockito:1.2"
+    androidTestImplementation "org.mockito:mockito-core:1.+"
+    androidTestImplementation "com.google.dexmaker:dexmaker:1.2"
+    androidTestImplementation "com.google.dexmaker:dexmaker-mockito:1.2"
 }
 
 android {
@@ -64,21 +49,9 @@ android {
 }
 
 // upload to maven task
-if (System.getenv().I_AM_KOUSH == 'true') {
+if (false && System.getenv().I_AM_KOUSH == 'true') {
     apply from: 'https://raw.githubusercontent.com/koush/mvn-repo/master/maven.gradle'
 
     apply plugin: 'maven'
     apply plugin: 'signing'
-
-    afterEvaluate { project ->
-        uploadArchives {
-            repositories {
-                mavenDeployer {
-                    pom*.whenConfigured { pom ->
-                        pom.dependencies.removeAll { dep -> dep.artifactId == 'support-v4' }
-                    }
-                }
-            }
-        }
-    }
 }
