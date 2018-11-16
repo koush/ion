@@ -69,4 +69,9 @@ public abstract class GsonParser<T extends JsonElement> implements AsyncParser<T
     public Type getType() {
         return clazz;
     }
+
+    @Override
+    public String getMime() {
+        return "application/json";
+    }
 }

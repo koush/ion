@@ -37,4 +37,9 @@ class InputStreamParser implements AsyncParser<InputStream> {
     public Type getType() {
         return InputStream.class;
     }
+
+    @Override
+    public String getMime() {
+        return null;
+    }
 }

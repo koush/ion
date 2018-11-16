@@ -30,4 +30,9 @@ class DataEmitterParser implements AsyncParser<DataEmitter> {
     public Type getType() {
         return DataEmitter.class;
     }
+
+    @Override
+    public String getMime() {
+        return null;
+    }
 }

@@ -639,6 +639,14 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     <T> ResponseFuture<T> execute(final AsyncParser<T> parser, Runnable cancel) {
         assert parser != null;
 
+        // only set the accept header if the default is currently in use
+        String mime = parser.getMime();
+        if (!TextUtils.isEmpty(mime)) {
+            String existingMime = getHeaders().get("Accept");
+            if (existingMime == AsyncHttpRequest.HEADER_ACCEPT_ALL)
+                setHeader("Accept", mime);
+        }
+
         final Uri uri = prepareURI();
         AsyncHttpRequest request = null;
 
@@ -728,6 +736,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             @Override
             public Type getType() {
                 return byte[].class;
+            }
+
+            @Override
+            public String getMime() {
+                return null;
             }
         });
     }

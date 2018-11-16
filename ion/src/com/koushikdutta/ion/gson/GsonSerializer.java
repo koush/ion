@@ -64,4 +64,9 @@ public class GsonSerializer<T> implements AsyncParser<T> {
     public Type getType() {
         return type;
     }
+
+    @Override
+    public String getMime() {
+        return "application/json";
+    }
 }
