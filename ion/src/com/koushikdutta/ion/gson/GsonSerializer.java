@@ -3,13 +3,11 @@ package com.koushikdutta.ion.gson;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.DataSink;
 import com.koushikdutta.async.Util;
 import com.koushikdutta.async.callback.CompletedCallback;
 import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.async.parser.AsyncParser;
 import com.koushikdutta.async.parser.ByteBufferListParser;
 import com.koushikdutta.async.stream.ByteBufferListInputStream;
@@ -36,13 +34,9 @@ public class GsonSerializer<T> implements AsyncParser<T> {
     @Override
     public Future<T> parse(DataEmitter emitter) {
         return new ByteBufferListParser().parse(emitter)
-        .then(new TransformFuture<T, ByteBufferList>() {
-            @Override
-            protected void transform(ByteBufferList result) throws Exception {
-                ByteBufferListInputStream bin = new ByteBufferListInputStream(result);
-                T ret = (T)gson.fromJson(new JsonReader(new InputStreamReader(bin)), type);
-                setComplete(ret);
-            }
+        .thenConvert(from -> {
+            ByteBufferListInputStream bin = new ByteBufferListInputStream(from);
+            return  (T)gson.fromJson(new JsonReader(new InputStreamReader(bin)), type);
         });
     }
 

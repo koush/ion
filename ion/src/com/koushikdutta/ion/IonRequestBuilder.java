@@ -720,12 +720,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             @Override
             public Future<byte[]> parse(DataEmitter emitter) {
                 return new ByteBufferListParser().parse(emitter)
-                .then(new TransformFuture<byte[], ByteBufferList>() {
-                    @Override
-                    protected void transform(ByteBufferList result) throws Exception {
-                        setComplete(result.getAllByteArray());
-                    }
-                });
+                .thenConvert(from -> from.getAllByteArray());
             }
 
             @Override

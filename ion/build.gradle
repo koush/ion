@@ -40,8 +40,13 @@ android {
     }
 
     defaultConfig {
-        targetSdkVersion 23
+        targetSdkVersion 28
         minSdkVersion 14
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
     }
 
     compileSdkVersion project.hasProperty('global_compileSdkVersion') ? global_compileSdkVersion : 25
