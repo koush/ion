@@ -114,6 +114,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return loadInternal(method, url);
     }
 
+    @Override
+    public IonRequestBuilder load(AsyncHttpRequest request) {
+        headers = new Headers(request.getHeaders().getMultiMap());
+        setBody(request.getBody());
+        return load(request.getMethod(), request.getUri().toString());
+    }
+
     Headers headers;
     private Headers getHeaders() {
         if (headers == null) {
