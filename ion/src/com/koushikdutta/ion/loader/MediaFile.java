@@ -310,7 +310,10 @@ public class MediaFile {
     }
 
     public static String getExtensionForMimeType(String mimeType) {
-        return sMimeTypeToExtensionMap.get(mimeType).toLowerCase();
+        String ret = sMimeTypeToExtensionMap.get(mimeType);
+        if (ret != null)
+            return ret.toLowerCase();
+        return null;
     }
 
     // generates a title based on file name
@@ -333,7 +336,7 @@ public class MediaFile {
 
     public static int getFileTypeForMimeType(String mimeType) {
         Integer value = sMimeTypeMap.get(mimeType);
-        return (value == null ? 0 : value.intValue());
+        return (value == null ? 0 : value);
     }
 
     public static String getMimeTypeForFile(String path) {
@@ -345,7 +348,7 @@ public class MediaFile {
         if (mimeType != null) {
             Integer value = sMimeTypeToFormatMap.get(mimeType);
             if (value != null) {
-                return value.intValue();
+                return value;
             }
         }
         int lastDot = fileName.lastIndexOf('.');
@@ -353,7 +356,7 @@ public class MediaFile {
             String extension = fileName.substring(lastDot + 1).toUpperCase(Locale.ROOT);
             Integer value = sFileTypeToFormatMap.get(extension);
             if (value != null) {
-                return value.intValue();
+                return value;
             }
         }
         return MtpConstants.FORMAT_UNDEFINED;
