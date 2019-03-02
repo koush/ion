@@ -2,18 +2,18 @@ apply plugin: 'com.android.library'
 
 dependencies {
     api project(':AndroidAsync:AndroidAsync')
-    api 'com.google.code.gson:gson:2.3'
+    api 'com.google.code.gson:gson:2.8.2'
 
     // Use play services if the linking app is using it. When play services isn't available
     // ConscryptMiddleware will throw ClassNotFoundErrors upon attempting to load it at runtime.
     // Conscrypt will fail to load, and the system SSL stack will be used.
     // "compileOnly" means the library is compiled but not required at runtime.
-    compileOnly 'com.google.android.gms:play-services-base:10.+'
+    compileOnly 'com.google.android.gms:play-services-base:16.1.0'
 
-    compileOnly 'com.android.support:support-v4:+'
+    compileOnly 'com.android.support:support-v4:28.0.0'
 
     // for when i wanna test this against gms conscrypt
-    androidTestImplementation 'com.google.android.gms:play-services-base:10.+'
+    androidTestImplementation 'com.google.android.gms:play-services-base:16.1.0'
 
     // mockito nom nom oh god im drunk
     androidTestImplementation "org.mockito:mockito-core:1.+"
