@@ -1,29 +1,23 @@
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: 'kotlin-android'
 
 buildscript {
-    ext.kotlin_version = '1.2.0'
+    ext.kotlin_version = '1.3.21'
     repositories {
         google()
         jcenter()
-        maven { url "https://dl.bintray.com/kotlin/kotlin-eap-1.1"}
     }
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-
-
         classpath project.hasProperty('global_gradleAndroidPlugin') ? global_gradleAndroidPlugin : 'com.android.tools.build:gradle:3.2.0'
-        classpath 'com.google.gms:google-services:3.0.0'
-        classpath 'com.google.appengine:gradle-appengine-plugin:1.9.28'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     compile project(':ion:ion')
-
-    androidTestCompile 'com.google.android.gms:play-services-base:10.+'
+    compileOnly 'com.android.support:support-v4:28.0.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 android {
@@ -46,5 +40,8 @@ android {
 
     compileSdkVersion project.hasProperty('global_compileSdkVersion') ? global_compileSdkVersion : 26
     buildToolsVersion project.hasProperty('global_buildToolsVersion') ? global_buildToolsVersion : '26.0.2'
+}
+repositories {
+    mavenCentral()
 }
 
