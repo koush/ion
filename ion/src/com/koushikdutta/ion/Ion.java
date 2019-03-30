@@ -13,8 +13,10 @@ import android.widget.ImageView;
 
 import com.google.gson.Gson;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.callback.ValueFunction;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.Headers;
@@ -62,6 +64,21 @@ public class Ion {
     static ExecutorService ioExecutorService = Executors.newFixedThreadPool(4);
     static ExecutorService bitmapExecutorService  = availableProcessors > 2 ? Executors.newFixedThreadPool(availableProcessors - 1) : Executors.newFixedThreadPool(1);
     static HashMap<String, Ion> instances = new HashMap<String, Ion>();
+
+    public static <T> Future<T> submitBackgroundTask(ValueFunction<T> task) {
+        SimpleFuture<T> ret = new SimpleFuture<>();
+        getIoExecutorService().submit(() -> {
+            if (ret.isCancelled())
+                return;
+            try {
+                ret.setComplete(task.getValue());
+            }
+            catch (Exception e) {
+                ret.setComplete(e);
+            }
+        });
+        return ret;
+    }
 
     /**
      * Get the default Ion object instance and begin building a request
