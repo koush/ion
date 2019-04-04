@@ -142,6 +142,7 @@ public class MediaFile {
     static void addFileType(String extension, int fileType, String mimeType) {
         sFileTypeMap.put(extension, new MediaFileType(fileType, mimeType));
         sMimeTypeMap.put(mimeType, Integer.valueOf(fileType));
+        sMimeTypeToExtensionMap.put(mimeType, extension);
     }
 
     static void addFileType(String extension, int fileType, String mimeType, int mtpFormatCode) {
@@ -149,7 +150,6 @@ public class MediaFile {
         sFileTypeToFormatMap.put(extension, Integer.valueOf(mtpFormatCode));
         sMimeTypeToFormatMap.put(mimeType, Integer.valueOf(mtpFormatCode));
         sFormatToMimeTypeMap.put(mtpFormatCode, mimeType);
-        sMimeTypeToExtensionMap.put(mimeType, extension);
     }
 
     /*
