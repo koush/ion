@@ -99,7 +99,7 @@ public class CookieMiddleware extends SimpleMiddleware {
     }
 
     @Override
-    public void onHeadersReceived(OnHeadersReceivedDataOnRequestSentData data) {
+    public void onHeadersReceived(OnHeadersReceivedData data) {
         maybeInit();
         try {
             put(URI.create(data.request.getUri().toString()), data.response.headers());
