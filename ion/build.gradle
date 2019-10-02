@@ -2,21 +2,21 @@ apply plugin: 'com.android.library'
 
 dependencies {
     api project(':AndroidAsync:AndroidAsync')
-    api 'com.google.code.gson:gson:2.8.2'
+    api 'com.google.code.gson:gson:2.8.5'
 
     // Use play services if the linking app is using it. When play services isn't available
     // ConscryptMiddleware will throw ClassNotFoundErrors upon attempting to load it at runtime.
     // Conscrypt will fail to load, and the system SSL stack will be used.
     // "compileOnly" means the library is compiled but not required at runtime.
-    compileOnly 'com.google.android.gms:play-services-base:17.0.0'
+    compileOnly 'com.google.android.gms:play-services-base:17.1.0'
 
     api 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // for when i wanna test this against gms conscrypt
-    androidTestImplementation 'com.google.android.gms:play-services-base:17.0.0'
+    androidTestImplementation 'com.google.android.gms:play-services-base:17.1.0'
 
     // mockito nom nom oh god im drunk
-    androidTestImplementation "org.mockito:mockito-core:1.+"
+    androidTestImplementation "org.mockito:mockito-core:"
     androidTestImplementation "com.google.dexmaker:dexmaker:1.2"
     androidTestImplementation "com.google.dexmaker:dexmaker-mockito:1.2"
 }
@@ -54,7 +54,7 @@ android {
 }
 
 // upload to maven task
-if (false && System.getenv().I_AM_KOUSH == 'true') {
+if (System.getenv().I_AM_KOUSH == 'true') {
     apply from: 'https://raw.githubusercontent.com/koush/mvn-repo/master/maven.gradle'
 
     apply plugin: 'maven'
