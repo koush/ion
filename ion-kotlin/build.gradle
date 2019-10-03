@@ -2,25 +2,24 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-android'
 
-buildscript {
-    ext.kotlin_version = '1.3.21'
-    repositories {
-        google()
-        jcenter()
-    }
-    dependencies {
-        classpath project.hasProperty('global_gradleAndroidPlugin') ? global_gradleAndroidPlugin : 'com.android.tools.build:gradle:3.2.0'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
-
 dependencies {
-    compile project(':ion:ion')
-    compileOnly 'com.android.support:support-v4:28.0.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    api project(':ion:ion')
+    api project(':AndroidAsync:AndroidAsync-Kotlin')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.3.50"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.2'
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.jetbrains.kotlin:kotlin-test-junit:1.0.6'
+    androidTestImplementation 'androidx.test:runner:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
 }
 
 android {
+    kotlinOptions {
+        apiVersion = "1.3"
+        languageVersion = "1.3"
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -33,15 +32,19 @@ android {
         androidTest.assets.srcDirs=['test/assets/']
     }
 
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+
     defaultConfig {
         targetSdkVersion 26
         minSdkVersion 14
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
     }
 
     compileSdkVersion project.hasProperty('global_compileSdkVersion') ? global_compileSdkVersion : 26
     buildToolsVersion project.hasProperty('global_buildToolsVersion') ? global_buildToolsVersion : '26.0.2'
 }
-repositories {
-    mavenCentral()
-}
-
