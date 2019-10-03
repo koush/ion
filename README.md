@@ -7,6 +7,7 @@
  * [Git](https://github.com/koush/ion#get-ion)
 
 #### Features
+ * [Kotlin coroutine/suspend support](https://github.com/koush/AndroidAsync/blob/master/AndroidAsync-Kotlin/README.md)
  * Asynchronously download:
    * [Images](https://github.com/koush/ion#load-an-image-into-an-imageview) into ImageViews or Bitmaps (animated GIFs supported too)
    * [JSON](https://github.com/koush/ion#get-json) (via [Gson](https://code.google.com/p/google-gson/))
