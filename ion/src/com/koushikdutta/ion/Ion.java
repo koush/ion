@@ -24,6 +24,7 @@ import com.koushikdutta.async.http.cache.ResponseCacheMiddleware;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.async.util.FileUtility;
 import com.koushikdutta.async.util.HashList;
+import com.koushikdutta.ion.apache.BrowserCompatHostnameVerifier;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.builder.Builders;
@@ -38,8 +39,6 @@ import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
 import com.koushikdutta.ion.loader.ResourceLoader;
 import com.koushikdutta.ion.loader.VideoLoader;
-
-import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier;
 
 import java.io.File;
 import java.io.IOException;
@@ -180,7 +179,6 @@ public class Ion {
 
         httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
-        httpClient.getSSLSocketMiddleware().setSpdyEnabled(false);
         httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
 
         File ionCacheDir = new File(context.getCacheDir(), name);
