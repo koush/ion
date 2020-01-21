@@ -400,12 +400,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                     AsyncServer.post(Ion.mainHandler, new Runnable() {
                         @Override
                         public void run() {
-                            invokeLoadRequest(request, ret);
+                            invokeLoadRequest(result, ret);
                         }
                     });
                     return;
                 }
-                invokeLoadRequest(request, ret);
+                invokeLoadRequest(result, ret);
             }
         });
     }
