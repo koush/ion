@@ -33,7 +33,7 @@ public class AssetLoader extends StreamLoader {
 
     @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().toString().startsWith("file:///android_asset/"))
+        if (request.getUri().getScheme() == null || !request.getUri().toString().startsWith("file:///android_asset/"))
             return null;
 
         final InputStreamDataEmitterFuture ret = new InputStreamDataEmitterFuture();

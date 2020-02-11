@@ -33,7 +33,7 @@ public class ContentLoader extends StreamLoader {
 
     @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().getScheme().startsWith("content"))
+        if (request.getUri().getScheme() == null || !request.getUri().getScheme().startsWith("content"))
             return null;
 
         final InputStreamDataEmitterFuture ret = new InputStreamDataEmitterFuture();

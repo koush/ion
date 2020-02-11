@@ -83,7 +83,7 @@ public class FileLoader extends StreamLoader {
 
     @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().getScheme().startsWith("file"))
+        if (request.getUri().getScheme() == null || !request.getUri().getScheme().startsWith("file"))
             return null;
         final FileFuture ret = new FileFuture();
         ion.getHttpClient().getServer().post(new Runnable() {

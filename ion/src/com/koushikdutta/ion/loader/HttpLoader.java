@@ -21,7 +21,7 @@ public class HttpLoader extends SimpleLoader {
     @SuppressWarnings("unchecked")
     @Override
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().getScheme().startsWith("http"))
+        if (request.getUri().getScheme() == null || !request.getUri().getScheme().startsWith("http"))
             return null;
         return (Future< DataEmitter >)(Future)ion.getHttpClient().execute(request, new HttpConnectCallback() {
             @Override
