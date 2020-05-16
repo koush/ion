@@ -53,7 +53,7 @@ android {
     buildToolsVersion project.hasProperty('global_buildToolsVersion') ? global_buildToolsVersion : '25.0.2'
 }
 
-if (false && System.getenv().I_AM_KOUSH == 'true') {
+if (System.getenv().I_AM_KOUSH == 'true') {
     apply from: 'https://raw.githubusercontent.com/koush/mvn-repo/master/maven.gradle'
 
     apply plugin: 'maven'
