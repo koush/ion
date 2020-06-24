@@ -397,5 +397,6 @@ public class Issues extends AndroidTestCase {
                 "https://raw.githubusercontent.com/%s/AndroidAsync/master/AndroidAsync/test/assets/test.json",
                 username)
                 .asString().get();
+        Assert.asserEquals(noFormatting, withFormatting);
     }
 }
