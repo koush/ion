@@ -16,6 +16,13 @@ public interface LoadBuilder<B> {
     public B load(String uri);
 
     /**
+     * @param format Format string in C's printf style.
+     * @param args Arguments referenced by the format specifiers in the format string.
+     * @return
+     */
+    public B load(String format, String... args);
+
+    /**
      * Load an url using the given an HTTP method such as GET or POST.
      * @param method HTTP method such as GET or POST.
      * @param url Url to load.
