@@ -1,35 +1,34 @@
-buildscript {
-    ext.kotlin_version = '1.1.3-eap-85'
-    repositories {
-        google()
-        jcenter()
-        maven { url "https://dl.bintray.com/kotlin/kotlin-eap-1.1"}
-    }
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-
-
-        classpath project.hasProperty('global_gradleAndroidPlugin') ? global_gradleAndroidPlugin : 'com.android.tools.build:gradle:3.2.0'
-        classpath 'com.google.gms:google-services:3.0.0'
-        classpath 'com.google.appengine:gradle-appengine-plugin:1.9.28'
-    }
-}
-
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
-dependencies {
-    compile 'com.makeramen:roundedimageview:+'
-    compile 'com.github.chrisbanes.photoview:library:+'
-    compile 'com.flaviofaria:kenburnsview:1.0.6'
-    compile project (':ion:ion-kotlin')
+repositories {
+    google()
+    jcenter()
+    mavenCentral()
+}
 
-    compile 'com.google.android.gms:play-services-base:11.0.0'
-    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+dependencies {
+    implementation 'com.makeramen:roundedimageview:2.3.0'
+    implementation 'com.github.chrisbanes.photoview:library:1.2.4'
+    implementation 'com.flaviofaria:kenburnsview:1.0.6'
+
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.android.gms:play-services-base:17.4.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation project(":ion:ion")
 }
 
 android {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -40,11 +39,10 @@ android {
     }
 
     defaultConfig {
-        targetSdkVersion 23
-        minSdkVersion 14
+        targetSdkVersion 30
+        minSdkVersion 21
     }
 
-    compileSdkVersion project.hasProperty('global_compileSdkVersion') ? global_compileSdkVersion : 25
-    buildToolsVersion project.hasProperty('global_buildToolsVersion') ? global_buildToolsVersion : '25.0.2'
+    compileSdkVersion 30
+    buildToolsVersion '30.0.2'
 }
-

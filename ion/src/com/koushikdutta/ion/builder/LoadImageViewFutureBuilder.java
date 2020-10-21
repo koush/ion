@@ -2,8 +2,8 @@ package com.koushikdutta.ion.builder;
 
 import android.widget.ImageView;
 
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.ion.future.ImageViewFuture;
+import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.ion.ImageViewFuture;
 
 /**
 * Created by koush on 5/30/13.
@@ -24,5 +24,5 @@ public interface LoadImageViewFutureBuilder {
      * @param url
      * @return
      */
-    public Future<ImageView> load(String method, String url);
+    public Promise<ImageView> load(String method, String url);
 }

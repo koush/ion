@@ -17,19 +17,19 @@ public class ImageViewSample extends Activity {
     public void loadCenterCrop() {
         Ion.with(imageView)
         .centerCrop()
-        .load("http://media.salon.com/2013/05/original.jpg");
+        .load("https://www.vysor.io/vysor-desktop.jpg");
     }
 
     public void loadCenterInside() {
         Ion.with(imageView)
         .centerInside()
-        .load("http://media.salon.com/2013/05/original.jpg");
+        .load("https://www.vysor.io/vysor-desktop.jpg");
     }
 
     public void loadFitCenter() {
         Ion.with(imageView)
         .fitCenter()
-        .load("http://media.salon.com/2013/05/original.jpg");
+        .load("https://www.vysor.io/vysor-desktop.jpg");
     }
 
     public void loadGifCenterCrop() {

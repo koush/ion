@@ -9,10 +9,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
+import com.koushikdutta.scratch.Promise;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -25,7 +24,7 @@ public class ProgressBarUpload extends Activity {
     TextView uploadCount;
     ProgressBar progressBar;
 
-    Future<File> uploading;
+    Promise<File> uploading;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,17 +76,8 @@ public class ProgressBarUpload extends Activity {
                 .setMultipartFile("largefile", f)
                 .write(echoedFile)
                 // run a callback on completion
-                .setCallback(new FutureCallback<File>() {
-                    @Override
-                    public void onCompleted(Exception e, File result) {
-                        resetUpload();
-                        if (e != null) {
-                            Toast.makeText(ProgressBarUpload.this, "Error uploading file", Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        Toast.makeText(ProgressBarUpload.this, "File upload complete", Toast.LENGTH_LONG).show();
-                    }
-                });
+                .error(e -> Toast.makeText(ProgressBarUpload.this, "Error uploading file", Toast.LENGTH_LONG).show())
+                .result(result -> Toast.makeText(ProgressBarUpload.this, "File upload complete", Toast.LENGTH_LONG).show());
             }
         });
     }

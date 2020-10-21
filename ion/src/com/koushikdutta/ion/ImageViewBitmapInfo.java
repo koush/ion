@@ -8,8 +8,8 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
  * Created by koush on 7/1/14.
  */
 public class ImageViewBitmapInfo {
-    Exception exception;
-    public Exception getException() {
+    Throwable exception;
+    public Throwable getException() {
         return exception;
     }
 

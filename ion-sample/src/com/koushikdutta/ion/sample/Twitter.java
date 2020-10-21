@@ -12,9 +12,8 @@ import android.widget.Toast;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.scratch.Promise;
 
 public class Twitter extends Activity {
     // adapter that holds tweets, obviously :)
@@ -60,7 +59,7 @@ public class Twitter extends Activity {
                 // use a placeholder google_image if it needs to load from the network
                 .placeholder(R.drawable.twitter)
                 // load the url
-                .load(imageUrl);
+                .load(imageUrl.replace("_normal", ""));
 
                 // and finally, set the name and text
                 TextView handle = (TextView)convertView.findViewById(R.id.handle);
@@ -86,7 +85,7 @@ public class Twitter extends Activity {
     // in progress that will have a "Future" result.
     // You can attach callbacks (setCallback) for when the result is ready,
     // or cancel() it if you no longer need the result.
-    Future<JsonArray> loading;
+    Promise<JsonArray> loading;
 
     String accessToken;
     private void getCredentials() {
@@ -96,26 +95,20 @@ public class Twitter extends Activity {
         .basicAuthentication("e4LrcHB55R3WamRYHpNfA", "MIABn1DU5db3Aj0xXzhthsf4aUKMAdoWJTMxJJcY")
         .setBodyParameter("grant_type", "client_credentials")
         .asJsonObject()
-        .setCallback(new FutureCallback<JsonObject>() {
-            @Override
-            public void onCompleted(Exception e, JsonObject result) {
-                if (e != null) {
-                    Toast.makeText(Twitter.this, "Error loading tweets", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                accessToken = result.get("access_token").getAsString();
-                load();
-            }
+        .error(e -> Toast.makeText(Twitter.this, "Error loading tweets", Toast.LENGTH_LONG).show())
+        .result(result -> {
+            accessToken = result.get("access_token").getAsString();
+            load();
         });
     }
 
     private void load() {
         // don't attempt to load more if a load is already in progress
-        if (loading != null && !loading.isDone() && !loading.isCancelled())
+        if (loading != null && !loading.isCompleted() && !loading.isCancelled())
             return;
 
         // load the tweets
-        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=dog_rates&count=20";
+        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=koush&count=20";
         if (tweetAdapter.getCount() > 0) {
             // load from the "last" id
             JsonObject last = tweetAdapter.getItem(tweetAdapter.getCount() - 1);
@@ -133,18 +126,10 @@ public class Twitter extends Activity {
         .load(url)
         .setHeader("Authorization", "Bearer " + accessToken)
         .asJsonArray()
-        .setCallback(new FutureCallback<JsonArray>() {
-            @Override
-            public void onCompleted(Exception e, JsonArray result) {
-                // this is called back onto the ui thread, no Activity.runOnUiThread or Handler.post necessary.
-                if (e != null) {
-                    Toast.makeText(Twitter.this, "Error loading tweets", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                // add the tweets
-                for (int i = 0; i < result.size(); i++) {
-                    tweetAdapter.add(result.get(i).getAsJsonObject());
-                }
+        .error(e -> Toast.makeText(Twitter.this, "Error loading tweets", Toast.LENGTH_LONG).show())
+        .result(result -> {
+            for (int i = 0; i < result.size(); i++) {
+                tweetAdapter.add(result.get(i).getAsJsonObject());
             }
         });
     }

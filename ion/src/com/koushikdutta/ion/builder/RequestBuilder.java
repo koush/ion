@@ -7,9 +7,9 @@ import android.widget.ProgressBar;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.koushikdutta.async.http.NameValuePair;
 import com.koushikdutta.ion.HeadersCallback;
 import com.koushikdutta.ion.ProgressCallback;
+import com.koushikdutta.scratch.http.Header;
 
 import org.w3c.dom.Document;
 
@@ -120,7 +120,7 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @param header
      * @return
      */
-    public R setHeader(NameValuePair... header);
+    public R setHeader(Header... header);
 
     /**
      * Disable usage of the cache for this request
@@ -275,5 +275,5 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
      * @param length length of the input stream (in bytes) to read
      * @return
      */
-    public Builders.Any.F setStreamBody(InputStream inputStream, int length);
+    public Builders.Any.F setStreamBody(InputStream inputStream, long length);
 }

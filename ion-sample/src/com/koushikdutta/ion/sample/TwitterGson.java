@@ -11,12 +11,10 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.scratch.Promise;
 
 import java.util.List;
 
@@ -101,7 +99,7 @@ public class TwitterGson extends Activity {
     // in progress that will have a "Future" result.
     // You can attach callbacks (setCallback) for when the result is ready,
     // or cancel() it if you no longer need the result.
-    Future<List<Tweet>> loading;
+    Promise<List<Tweet>> loading;
 
     // Lets grab the authentication
     String accessToken;
@@ -112,22 +110,16 @@ public class TwitterGson extends Activity {
         .basicAuthentication("e4LrcHB55R3WamRYHpNfA", "MIABn1DU5db3Aj0xXzhthsf4aUKMAdoWJTMxJJcY")
         .setBodyParameter("grant_type", "client_credentials")
         .asJsonObject()
-        .setCallback(new FutureCallback<JsonObject>() {
-            @Override
-            public void onCompleted(Exception e, JsonObject result) {
-                if (e != null) {
-                    Toast.makeText(TwitterGson.this, "Error loading tweets", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                accessToken = result.get("access_token").getAsString();
-                load();
-            }
+        .error(e -> Toast.makeText(TwitterGson.this, "Error loading tweets", Toast.LENGTH_LONG).show())
+        .result(result -> {
+            accessToken = result.get("access_token").getAsString();
+            load();
         });
     }
 
     private void load() {
         // don't attempt to load more if a load is already in progress
-        if (loading != null && !loading.isDone() && !loading.isCancelled())
+        if (loading != null && !loading.isCompleted() && !loading.isCancelled())
             return;
 
         // load the tweets
@@ -150,18 +142,11 @@ public class TwitterGson extends Activity {
         .setHeader("Authorization", "Bearer " + accessToken)
         .as(new TypeToken<List<Tweet>>() {
         })
-        .setCallback(new FutureCallback<List<Tweet>>() {
-            @Override
-            public void onCompleted(Exception e, List<Tweet> result) {
-                // this is called back onto the ui thread, no Activity.runOnUiThread or Handler.post necessary.
-                if (e != null) {
-                    Toast.makeText(TwitterGson.this, "Error loading tweets", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                // add the tweets
-                for (int i = 0; i < result.size(); i++) {
-                    tweetAdapter.add(result.get(i));
-                }
+        .error(e -> Toast.makeText(TwitterGson.this, "Error loading tweets", Toast.LENGTH_LONG).show())
+        .result(result -> {
+            // add the tweets
+            for (int i = 0; i < result.size(); i++) {
+                tweetAdapter.add(result.get(i));
             }
         });
     }

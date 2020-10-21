@@ -2,8 +2,7 @@ package com.koushikdutta.ion.builder;
 
 import android.widget.ImageView;
 
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.ion.future.ImageViewFuture;
+import com.koushikdutta.ion.ImageViewFuture;
 
 /**
 * Created by koush on 5/30/13.

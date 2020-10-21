@@ -2,7 +2,7 @@ package com.koushikdutta.ion.builder;
 
 import android.graphics.Bitmap;
 
-import com.koushikdutta.async.future.Future;
+import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 
@@ -14,7 +14,7 @@ public interface BitmapFutureBuilder {
      * Perform the request and get the result as a Bitmap
      * @return
      */
-    public Future<Bitmap> asBitmap();
+    public Promise<Bitmap> asBitmap();
 
     /**
      * Attempt to immediately retrieve the cached Bitmap info from the memory cache

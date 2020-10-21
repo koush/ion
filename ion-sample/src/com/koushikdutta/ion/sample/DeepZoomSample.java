@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ImageView;
 
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 
 import uk.co.senab.photoview.PhotoView;
@@ -36,11 +34,6 @@ public class DeepZoomSample extends Activity {
         .withBitmap()
         .deepZoom()
         .intoImageView(photoView)
-        .setCallback(new FutureCallback<ImageView>() {
-            @Override
-            public void onCompleted(Exception e, ImageView result) {
-                dlg.cancel();
-            }
-        });
+        .complete(c -> dlg.cancel());
     }
 }

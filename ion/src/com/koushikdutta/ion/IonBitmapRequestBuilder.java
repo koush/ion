@@ -1,15 +1,10 @@
 package com.koushikdutta.ion;
 
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 
-import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.bitmap.PostProcess;
@@ -17,21 +12,18 @@ import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.AnimateGifMode;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
+import com.koushikdutta.ion.util.ByteBufferListParser;
+import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.event.FileStore;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
+
+import kotlin.NotImplementedError;
 
 /**
  * Created by koush on 5/23/13.
  */
 abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.Any.BF {
-    private static final SimpleFuture<Bitmap> FUTURE_BITMAP_NULL_URI = new SimpleFuture<Bitmap>() {
-        {
-            setComplete(new NullPointerException("uri"));
-        }
-    };
-
     IonRequestBuilder builder;
     Ion ion;
     ArrayList<Transform> transforms;
@@ -41,18 +33,6 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     AnimateGifMode animateGifMode = AnimateGifMode.ANIMATE;
     boolean deepZoom;
     ArrayList<PostProcess> postProcess;
-
-    void reset() {
-        ion = null;
-        transforms = null;
-        scaleMode = null;
-        resizeWidth = 0;
-        resizeHeight = 0;
-        animateGifMode = AnimateGifMode.ANIMATE;
-        builder = null;
-        deepZoom = false;
-        postProcess = null;
-    }
 
     public IonBitmapRequestBuilder(IonRequestBuilder builder) {
         this.builder = builder;
@@ -95,27 +75,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         if (this.postProcess == null)
             this.postProcess = new ArrayList<PostProcess>();
         this.postProcess.add(postProcess);
-        return transform(new TransformBitmap.PostProcessNullTransform(postProcess.key()));
-    }
-
-
-    private String computeDecodeKey() {
-        return computeDecodeKey(builder, resizeWidth, resizeHeight, animateGifMode != AnimateGifMode.NO_ANIMATE, deepZoom);
-    }
-
-    public static String computeDecodeKey(IonRequestBuilder builder, int resizeWidth, int resizeHeight, boolean animateGif, boolean deepZoom) {
-        // the decode key is a hash of the uri of the image, and any decode
-        // specific flags. this includes:
-        // inSampleSize (determined from resizeWidth/resizeHeight)
-        // gif animation mode
-        // deep zoom
-        String decodeKey = builder.uri;
-        decodeKey += "resize=" + resizeWidth + "," + resizeHeight;
-        if (!animateGif)
-            decodeKey += ":noAnimate";
-        if (deepZoom)
-            decodeKey += ":deepZoom";
-        return FileCache.toKeyString(decodeKey);
+        throw new NotImplementedError();
     }
 
     public void addDefaultTransform() {
@@ -129,23 +89,12 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         }
     }
 
-    public String computeBitmapKey(String decodeKey) {
-        return computeBitmapKey(decodeKey, transforms);
+    private String computeDecodeKey() {
+        return BitmapRequest.computeDecodeKey(builder, resizeWidth, resizeHeight, animateGifMode != AnimateGifMode.NO_ANIMATE, deepZoom);
     }
 
-    public static String computeBitmapKey(String decodeKey, List<Transform> transforms) {
-        assert decodeKey != null;
-
-        // determine the key for this bitmap after all transformations
-        String bitmapKey = decodeKey;
-        if (transforms != null && transforms.size() > 0) {
-            for (Transform transform : transforms) {
-                bitmapKey += transform.key();
-            }
-            bitmapKey = FileCache.toKeyString(bitmapKey);
-        }
-
-        return bitmapKey;
+    public String computeBitmapKey(String decodeKey) {
+        return BitmapRequest.computeBitmapKey(decodeKey, transforms);
     }
 
     @Override
@@ -159,7 +108,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         // memory cache
         if (info != null && info.exception == null)
             return LocallyCachedStatus.CACHED;
-        FileCache fileCache = ion.responseCache.getFileCache();
+        FileStore fileCache = ion.getCache();
         if (hasTransforms() && fileCache.exists(bitmapKey))
             return LocallyCachedStatus.CACHED;
         if (fileCache.exists(decodeKey))
@@ -173,8 +122,9 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         final String decodeKey = computeDecodeKey();
         addDefaultTransform();
         String bitmapKey = computeBitmapKey(decodeKey);
-        ion.responseCache.getFileCache().remove(decodeKey);
-        ion.responseCache.getFileCache().remove(bitmapKey);
+        FileStore fileCache = ion.getCache();
+        fileCache.removeAsync(decodeKey);
+        fileCache.removeAsync(bitmapKey);
         builder.ion.bitmapCache.remove(bitmapKey);
         builder.ion.bitmapCache.remove(decodeKey);
     }
@@ -187,64 +137,32 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         return builder.ion.bitmapCache.get(bitmapKey);
     }
 
-    BitmapFetcher executeCache() {
-        return executeCache(resizeWidth, resizeHeight);
+    BitmapRequest buildRequest() {
+        return buildRequest(resizeWidth, resizeHeight);
     }
 
-    BitmapFetcher executeCache(int sampleWidth, int sampleHeight) {
-        final String decodeKey = computeDecodeKey();
-        String bitmapKey = computeBitmapKey(decodeKey);
-
-        // TODO: eliminate this allocation?
-        BitmapFetcher ret = new BitmapFetcher();
-        ret.bitmapKey = bitmapKey;
-        ret.decodeKey = decodeKey;
-        ret.hasTransforms = hasTransforms();
+    BitmapRequest buildRequest(int sampleWidth, int sampleHeight) {
+        BitmapRequest ret = new BitmapRequest();
         ret.sampleWidth = sampleWidth;
         ret.sampleHeight = sampleHeight;
-        ret.builder = builder;
         ret.transforms = transforms;
         ret.animateGif = animateGifMode != AnimateGifMode.NO_ANIMATE;
         ret.deepZoom = deepZoom;
         ret.postProcess = postProcess;
-
-        // see if this request can be fulfilled from the cache
-        if (!builder.noCache) {
-            BitmapInfo bitmap = builder.ion.bitmapCache.get(bitmapKey);
-            if (bitmap != null) {
-                ret.info = bitmap;
-                return ret;
-            }
-        }
+        ret.executor = builder.prepareExecute(new ByteBufferListParser("image/*"), null);
 
         return ret;
     }
 
     @Override
-    public Future<Bitmap> asBitmap() {
-        if (builder.uri == null) {
-            return FUTURE_BITMAP_NULL_URI;
-        }
-
-        // see if we get something back synchronously
-        addDefaultTransform();
-        final BitmapFetcher bitmapFetcher = executeCache();
-        if (bitmapFetcher.info != null) {
-            SimpleFuture<Bitmap> ret = new SimpleFuture<Bitmap>();
-            ret.setComplete(bitmapFetcher.info.exception, bitmapFetcher.info.bitmap);
-            return ret;
-        }
-
-        final BitmapInfoToBitmap ret = new BitmapInfoToBitmap(builder.contextReference);
-        AsyncServer.post(Ion.mainHandler, new Runnable() {
-            @Override
-            public void run() {
-                bitmapFetcher.execute();
-                // we're loading, so let's register for the result.
-                ion.bitmapsPending.add(bitmapFetcher.bitmapKey, ret);
-            }
+    public Promise<Bitmap> asBitmap() {
+        BitmapRequest request = buildRequest();
+        return ion.bitmapManager.request(request)
+        .apply(bitmapInfo -> {
+            if (bitmapInfo.exception != null)
+                throw bitmapInfo.exception;
+            return bitmapInfo.bitmap;
         });
-        return ret;
     }
 
     private void checkNoTransforms(String name) {
@@ -333,8 +251,6 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
 
     @Override
     public IonBitmapRequestBuilder deepZoom() {
-        if (Build.VERSION.SDK_INT < 10)
-            return this;
         this.deepZoom = true;
         if (resizeWidth > 0 || resizeHeight > 0)
             throw new IllegalStateException("Can't deepZoom with resize.");

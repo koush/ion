@@ -9,12 +9,13 @@ import android.os.Looper;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 
-import com.koushikdutta.async.future.Future;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.builder.AnimateGifMode;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.ImageViewFutureBuilder;
-import com.koushikdutta.ion.future.ImageViewFuture;
+import com.koushikdutta.scratch.Deferred;
+import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.PromiseApplyCallback;
 
 /**
  * Created by koush on 7/4/14.
@@ -42,23 +43,6 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     }
 
     @Override
-    void reset() {
-        super.reset();
-        fadeIn = true;
-        crossfade = false;
-        imageViewPostRef = null;
-        placeholderDrawable = null;
-        bitmapDrawableFactory = BitmapDrawableFactory.DEFAULT;
-        placeholderResource = 0;
-        errorDrawable = null;
-        errorResource = 0;
-        inAnimation = null;
-        inAnimationResource = 0;
-        loadAnimation = null;
-        loadAnimationResource = 0;
-    }
-
-    @Override
     protected IonRequestBuilder ensureBuilder() {
         if (builder == null)
             builder = new IonRequestBuilder(ContextReference.fromContext(imageViewPostRef.getContext().getApplicationContext()), ion);
@@ -73,7 +57,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
     }
 
     @Override
-    public Future<ImageView> load(String method, String url) {
+    public Promise<ImageView> load(String method, String url) {
         ensureBuilder();
         builder.load(method, url);
         return intoImageView(imageViewPostRef.get());
@@ -85,17 +69,22 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         return this;
     }
 
-    private IonDrawable setIonDrawable(ImageView imageView, BitmapFetcher bitmapFetcher, ResponseServedFrom servedFrom) {
-        BitmapInfo info = null;
-        if (bitmapFetcher != null)
-            info = bitmapFetcher.info;
-        if (info != null)
-            bitmapFetcher = null;
+    private IonDrawable setIonDrawable(ImageView imageView, BitmapInfo bitmapInfo, ResponseServedFrom servedFrom) {
+        IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView);
+        ret.ion(ion)
+                .setBitmap(bitmapInfo, servedFrom);
+        return setIonDrawableInternal(ret, imageView);
+    }
 
-        IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView)
-        .ion(ion)
-        .setBitmap(info, servedFrom)
-        .setBitmapFetcher(bitmapFetcher)
+    private IonDrawable setIonDrawable(ImageView imageView, BitmapRequest bitmapFetcher) {
+        IonDrawable ret = IonDrawable.getOrCreateIonDrawable(imageView);
+        ret.ion(ion)
+                .setBitmapFetcher(bitmapFetcher);
+        return setIonDrawableInternal(ret, imageView);
+    }
+
+    private IonDrawable setIonDrawableInternal(IonDrawable ret, ImageView imageView) {
+        ret
         .setRepeatAnimation(animateGifMode == AnimateGifMode.ANIMATE)
         .setSize(resizeWidth, resizeHeight)
         .setError(errorResource, errorDrawable)
@@ -113,15 +102,6 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         return this;
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    private static boolean getAdjustViewBounds_16(ImageView imageView) {
-        return imageView.getAdjustViewBounds();
-    }
-
-    private static boolean getAdjustViewBounds(ImageView imageView) {
-        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN && getAdjustViewBounds_16(imageView);
-    }
-
     @Override
     public ImageViewFuture intoImageView(ImageView imageView) {
         assert Thread.currentThread() == Looper.getMainLooper().getThread();
@@ -130,8 +110,8 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
         // no uri? just set a placeholder and bail
         if (builder.uri == null) {
-            setIonDrawable(imageView, null, ResponseServedFrom.LOADED_FROM_NETWORK).cancel();
-            return ImageViewFutureImpl.FUTURE_IMAGEVIEW_NULL_URI;
+            setIonDrawable(imageView, null, ResponseServedFrom.LOADED_FROM_NETWORK);
+            return new ImageViewFuture(imageViewPostRef, Promise.reject(new NullPointerException("uri")));
         }
 
         withImageView(imageView);
@@ -149,7 +129,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         int sampleHeight = resizeHeight;
         // see if we need default transforms, or this if the imageview
         // will request the actual size on measure
-        if (resizeHeight == 0 && resizeWidth == 0 && !getAdjustViewBounds(imageView)) {
+        if (resizeHeight == 0 && resizeWidth == 0 && !imageView.getAdjustViewBounds()) {
             // set the sample size hints from the current dimensions
             // but don't actually apply a transform.
             // this may be zero, in which case IonDrawable
@@ -163,28 +143,80 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         }
 
         // executeCache the request, see if we get a bitmap from cache.
-        BitmapFetcher bitmapFetcher = executeCache(sampleWidth, sampleHeight);
-        if (bitmapFetcher.info != null) {
+        BitmapRequest bitmapFetcher = buildRequest(sampleWidth, sampleHeight);
+        BitmapInfo bitmapInfo = ion.bitmapManager.checkCache(bitmapFetcher);
+
+        if (bitmapInfo != null) {
             doAnimation(imageView, null, 0);
-            IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, ResponseServedFrom.LOADED_FROM_MEMORY);
-            drawable.cancel();
-            ImageViewFutureImpl imageViewFuture = ImageViewFutureImpl.getOrCreateImageViewFuture(imageViewPostRef, drawable)
-            .setInAnimation(inAnimation, inAnimationResource)
-            .setScaleMode(scaleMode);
-            ImageViewFutureImpl.applyScaleMode(imageView, scaleMode);
-            imageViewFuture.reset();
-            imageViewFuture.setComplete(bitmapFetcher.info.exception, imageView);
+            IonDrawable drawable = setIonDrawable(imageView, bitmapInfo, ResponseServedFrom.LOADED_FROM_MEMORY);
+            ImageViewBitmapInfo info = new ImageViewBitmapInfo();
+            info.exception = bitmapInfo.exception;
+            info.imageView = imageView;
+            info.info = bitmapInfo;
+            ImageViewFuture imageViewFuture = new ImageViewFuture(imageViewPostRef, Promise.resolve(info));
+            applyScaleMode(imageView, scaleMode);
             return imageViewFuture;
         }
 
-        IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher, ResponseServedFrom.LOADED_FROM_NETWORK);
+        IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher);
         doAnimation(imageView, loadAnimation, loadAnimationResource);
-        ImageViewFutureImpl imageViewFuture = ImageViewFutureImpl.getOrCreateImageViewFuture(imageViewPostRef, drawable)
-        .setInAnimation(inAnimation, inAnimationResource)
-        .setScaleMode(scaleMode);
-        imageViewFuture.reset();
+        Deferred<BitmapInfo> load = new Deferred<>();
+        drawable.setDrawLoad(load);
 
-        return imageViewFuture;
+        ContextReference.ImageViewContextReference ref = new ContextReference.ImageViewContextReference(imageView);
+        ImageViewCallback callback = new ImageViewCallback();
+        callback.ref = ref;
+        callback.inAnimation = inAnimation;
+        callback.inAnimationResource = inAnimationResource;
+        callback.drawable = drawable;
+        callback.scaleMode = scaleMode;
+
+        return new ImageViewFuture(ref, load.getPromise().apply(callback));
+    }
+
+    static class ImageViewCallback implements PromiseApplyCallback<ImageViewBitmapInfo, BitmapInfo> {
+        ContextReference.ImageViewContextReference ref;
+        Animation inAnimation;
+        int inAnimationResource;
+        IonDrawable drawable;
+        ScaleMode scaleMode;
+
+        @Override
+        public ImageViewBitmapInfo apply(BitmapInfo bitmapInfo) {
+            ImageViewBitmapInfo info = new ImageViewBitmapInfo();
+            ImageView imageView = ref.get();
+            info.imageView = imageView;
+            info.info = bitmapInfo;
+            info.exception = bitmapInfo.exception;
+
+            if (info.exception == null)
+                applyScaleMode(imageView, scaleMode);
+
+            IonBitmapRequestBuilder.doAnimation(imageView, inAnimation, inAnimationResource);
+            imageView.setImageDrawable(null);
+            imageView.setImageDrawable(drawable);
+
+            return info;
+        }
+    }
+
+    public static void applyScaleMode(ImageView imageView, ScaleMode scaleMode) {
+        if (scaleMode == null)
+            return;
+        switch (scaleMode) {
+            case CenterCrop:
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                break;
+            case FitCenter:
+                imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                break;
+            case CenterInside:
+                imageView.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                break;
+            case FitXY:
+                imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+                break;
+        }
     }
 
     private Drawable getImageViewDrawable() {

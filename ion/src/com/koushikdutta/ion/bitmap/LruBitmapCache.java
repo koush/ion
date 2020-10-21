@@ -1,6 +1,6 @@
 package com.koushikdutta.ion.bitmap;
 
-import com.koushikdutta.async.util.LruCache;
+import com.koushikdutta.ion.util.LruCache;
 
 class LruBitmapCache extends LruCache<String, BitmapInfo> {
     private SoftReferenceHashtable<String, BitmapInfo> soft = new SoftReferenceHashtable<String, BitmapInfo>();

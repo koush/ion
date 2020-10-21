@@ -16,9 +16,8 @@ import android.widget.Toast;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.scratch.Promise;
 
 /**
  * Created by koush on 6/4/13.
@@ -55,9 +54,9 @@ public class ImageSearch extends Activity {
         }
     }
 
-    Future<JsonObject> loading;
+    Promise<JsonObject> loading;
     void loadMore() {
-        if (loading != null && !loading.isDone() && !loading.isCancelled())
+        if (loading != null && !loading.isCompleted() && !loading.isCancelled())
             return;
 
         String url = getApiUrl(searchText.getText().toString(), mAdapter.getCount());
@@ -67,21 +66,8 @@ public class ImageSearch extends Activity {
         .load(url)
         // get the results as json
         .asJsonObject()
-        .setCallback(new FutureCallback<JsonObject>() {
-            @Override
-            public void onCompleted(Exception e, JsonObject result) {
-                try {
-                    if (e != null)
-                        throw e;
-                    processApiResult(result);
-                }
-                catch (Exception ex) {
-                    // toast any error we encounter (most image search APIs have a throttling limit that sometimes gets hit)
-                    Toast.makeText(ImageSearch.this, ex.toString(), Toast.LENGTH_LONG).show();
-                }
-
-            }
-        });
+        .result(this::processApiResult)
+        .error(e -> Toast.makeText(ImageSearch.this, e.toString(), Toast.LENGTH_LONG).show());
     }
 
     /**

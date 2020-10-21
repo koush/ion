@@ -1,6 +1,6 @@
 package com.koushikdutta.ion.builder;
 
-import com.koushikdutta.async.http.AsyncHttpRequest;
+import com.koushikdutta.scratch.http.AsyncHttpRequest;
 
 import java.io.File;
 

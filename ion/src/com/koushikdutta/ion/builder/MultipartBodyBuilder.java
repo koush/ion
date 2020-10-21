@@ -1,6 +1,6 @@
 package com.koushikdutta.ion.builder;
 
-import com.koushikdutta.async.http.body.Part;
+import com.koushikdutta.scratch.parser.Part;
 
 import java.io.File;
 import java.util.List;

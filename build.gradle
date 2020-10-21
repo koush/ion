@@ -1,22 +1,12 @@
 buildscript {
     repositories {
-        jcenter()
         google()
         mavenCentral()
+        jcenter()
     }
+
     dependencies {
-        classpath project.hasProperty('global_gradleAndroidPlugin') ? global_gradleAndroidPlugin : 'com.android.tools.build:gradle:3.2.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.10"
+        classpath 'com.android.tools.build:gradle:4.0.2'
     }
-}
-
-subprojects {
-    repositories {
-        jcenter()
-        google()
-        mavenCentral()
-    }
-
-    ext.global_compileSdkVersion = project.hasProperty('global_compileSdkVersion') ? global_compileSdkVersion : 28
-    ext.global_buildToolsVersion = project.hasProperty('global_buildToolsVersion') ? global_buildToolsVersion : '28.0.3'
-    ext.global_gradleAndroidPlugin = project.hasProperty('global_gradleAndroidPlugin') ? global_gradleAndroidPlugin : 'com.android.tools.build:gradle:3.2.0'
 }

@@ -2,39 +2,43 @@ package com.koushikdutta.ion.loader;
 
 import android.content.Context;
 
-import com.koushikdutta.async.DataEmitter;
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.future.ResponseFuture;
+import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.http.AsyncHttpRequest;
 
-import java.io.InputStream;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.reflect.Type;
 
 /**
  * Created by koush on 12/22/13.
  */
 public class SimpleLoader implements Loader {
+    @Nullable
     @Override
-    public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, FutureCallback<LoaderEmitter> callback) {
+    public Promise<LoaderResult> load(@NotNull Ion ion, @NotNull AsyncHttpRequest request) {
         return null;
     }
 
+    @Nullable
     @Override
-    public Future<BitmapInfo> loadBitmap(Context context, Ion ion, String key, String uri, int resizeWidth, int resizeHeight, boolean animateGif) {
+    public Promise<BitmapInfo> loadBitmap(@NotNull Context context, @NotNull Ion ion, @NotNull String key, @NotNull AsyncHttpRequest request, int resizeWidth, int resizeHeight, boolean animateGif) {
         return null;
     }
 
+    @Nullable
     @Override
-    public Future<AsyncHttpRequest> resolve(Context context, Ion ion, AsyncHttpRequest request) {
+    public Promise<AsyncHttpRequest> resolve(@NotNull Context context, @NotNull Ion ion, @NotNull AsyncHttpRequest request) {
         return null;
     }
 
+    @Nullable
     @Override
-    public <T> ResponseFuture<T> load(Ion ion, AsyncHttpRequest request, Type type) {
+    public <T> ResponseFuture<T> load(@NotNull Ion ion, @NotNull AsyncHttpRequest request, @NotNull Type type) {
         return null;
     }
 }

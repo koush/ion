@@ -1,27 +1,42 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+repositories {
+    google()
+    jcenter()
+    mavenCentral()
+}
 
 dependencies {
-    api project(':AndroidAsync:AndroidAsync')
-    api 'com.google.code.gson:gson:2.8.5'
+    api 'com.google.code.gson:gson:2.8.6'
 
     // Use play services if the linking app is using it. When play services isn't available
     // ConscryptMiddleware will throw ClassNotFoundErrors upon attempting to load it at runtime.
     // Conscrypt will fail to load, and the system SSL stack will be used.
     // "compileOnly" means the library is compiled but not required at runtime.
-    compileOnly 'com.google.android.gms:play-services-base:17.1.0'
+    compileOnly 'com.google.android.gms:play-services-base:17.4.0'
 
     api 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // for when i wanna test this against gms conscrypt
-    androidTestImplementation 'com.google.android.gms:play-services-base:17.1.0'
+    androidTestImplementation 'com.google.android.gms:play-services-base:17.4.0'
 
-    // mockito nom nom oh god im drunk
-    androidTestImplementation "org.mockito:mockito-core:"
-    androidTestImplementation "com.google.dexmaker:dexmaker:1.2"
-    androidTestImplementation "com.google.dexmaker:dexmaker-mockito:1.2"
+    api project(":scratch:core")
+
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0';
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-test:$kotlin_version"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlin_version"
+    androidTestImplementation "org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version"
 }
 
 android {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -30,9 +45,9 @@ android {
                 srcDir 'src/'
             }
         }
-//        androidTest.java.srcDirs=['test/src/']
-//        androidTest.res.srcDirs=['test/res/']
-//        androidTest.assets.srcDirs=['test/assets/']
+        androidTest.java.srcDirs=['test/src/']
+        androidTest.res.srcDirs=['test/res/']
+        androidTest.assets.srcDirs=['test/assets/']
     }
 
     lintOptions {
@@ -40,8 +55,10 @@ android {
     }
 
     defaultConfig {
-        targetSdkVersion 28
-        minSdkVersion 14
+        targetSdkVersion 30
+        minSdkVersion 21
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -49,13 +66,7 @@ android {
         targetCompatibility 1.8
     }
 
-    compileSdkVersion project.hasProperty('global_compileSdkVersion') ? global_compileSdkVersion : 25
-    buildToolsVersion project.hasProperty('global_buildToolsVersion') ? global_buildToolsVersion : '25.0.2'
+    compileSdkVersion 30
+    buildToolsVersion '30.0.2'
 }
 
-if (System.getenv().I_AM_KOUSH == 'true') {
-    apply from: 'https://raw.githubusercontent.com/koush/mvn-repo/master/maven.gradle'
-
-    apply plugin: 'maven'
-    apply plugin: 'signing'
-}

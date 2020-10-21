@@ -17,8 +17,8 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.WindowManager;
 
-import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
+import com.koushikdutta.ion.util.StreamUtility;
 
 import java.io.File;
 import java.io.FileInputStream;

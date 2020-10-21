@@ -1,8 +1,9 @@
 package com.koushikdutta.ion.builder;
 
-import com.koushikdutta.async.DataEmitter;
-import com.koushikdutta.async.parser.AsyncParser;
+import com.koushikdutta.ion.util.AsyncParser;
+import com.koushikdutta.ion.util.AsyncSerializer;
 import com.koushikdutta.ion.future.ResponseFuture;
+import com.koushikdutta.scratch.AsyncInput;
 
 import org.w3c.dom.Document;
 
@@ -40,7 +41,8 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * Execute the request and get the result as a DataEmitter.
      * @return
      */
-    public ResponseFuture<DataEmitter> asDataEmitter();
+    @Deprecated
+    public ResponseFuture<AsyncInput> asDataEmitter();
 
     /**
      * Execute the request and get the result as an XML Document
@@ -60,6 +62,7 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @param outputStream OutputStream to write the request
      * @return
      */
+    @Deprecated
     public <T extends OutputStream> ResponseFuture<T> write(T outputStream);
 
     /**
@@ -69,6 +72,7 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @param close Indicate whether the OutputStream should be closed on completion.
      * @return
      */
+    @Deprecated
     public <T extends OutputStream> ResponseFuture<T> write(T outputStream, boolean close);
 
     /**

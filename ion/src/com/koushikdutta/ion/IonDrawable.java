@@ -13,21 +13,27 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.text.TextUtils;
 import android.widget.ImageView;
 
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.gif.GifDecoder;
 import com.koushikdutta.ion.gif.GifFrame;
+import com.koushikdutta.scratch.Deferred;
+import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.PromiseCompleteCallback;
+import com.koushikdutta.scratch.Result;
+import com.koushikdutta.scratch.event.FileStore;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.ref.WeakReference;
+
+import kotlin.NotImplementedError;
 
 /**
  * Created by koush on 6/8/13.
  */
-class IonDrawable extends LayerDrawable {
+public class IonDrawable extends LayerDrawable {
     private static final double LOG_2 = Math.log(2);
     private static final int TILE_DIM = 256;
     private static final long FADE_DURATION = 200;
@@ -47,9 +53,10 @@ class IonDrawable extends LayerDrawable {
     private int resizeHeight;
     private boolean repeatAnimation;
     private Ion ion;
-    private BitmapFetcher bitmapFetcher;
+    private BitmapRequest bitmapFetcher;
     private IonDrawableCallback callback;
-    private FutureCallback<IonDrawable> loadCallback;
+    private Deferred<BitmapInfo> drawLoad;
+    private Promise<BitmapInfo> pendingLoad;
     private IonGifDecoder gifDecoder;
     private Drawable bitmapDrawable;
     private int textureDim;
@@ -60,13 +67,8 @@ class IonDrawable extends LayerDrawable {
     private final Drawable NULL_BITMAPINFO;
     private final Drawable NULL_ERROR;
 
-    public FutureCallback<IonDrawable> getLoadCallback() {
-        return loadCallback;
-    }
-
-    public IonDrawable setLoadCallback(FutureCallback<IonDrawable> loadCallback) {
-        this.loadCallback = loadCallback;
-        return this;
+    public void setDrawLoad(Deferred<BitmapInfo> drawLoad) {
+        this.drawLoad = drawLoad;
     }
 
     public IonDrawable ion(Ion ion) {
@@ -104,73 +106,29 @@ class IonDrawable extends LayerDrawable {
 
     // create an internal static class that can act as a callback.
     // dont let it hold strong references to anything.
-    static class IonDrawableCallback implements FutureCallback<BitmapInfo> {
+    static class IonDrawableCallback implements PromiseCompleteCallback<BitmapInfo> {
         private WeakReference<IonDrawable> ionDrawableRef;
-        private String bitmapKey;
-        private Ion ion;
         public IonDrawableCallback(IonDrawable drawable) {
             ionDrawableRef = new WeakReference<IonDrawable>(drawable);
-//            imageViewRef = new ContextReference.ImageViewContextReference(imageView);
-        }
-
-        public void register(Ion ion, String bitmapKey) {
-            String previousKey = this.bitmapKey;
-            Ion previousIon = this.ion;
-            if (TextUtils.equals(previousKey, bitmapKey) && this.ion == ion)
-                return;
-            this.ion = ion;
-            this.bitmapKey = bitmapKey;
-            if (ion != null)
-                ion.bitmapsPending.add(bitmapKey, this);
-            unregister(previousIon, previousKey);
-        }
-
-        private void unregister(Ion ion, String key) {
-            if (key == null)
-                return;
-            // unregister this drawable from the bitmaps that are
-            // pending.
-
-            // if this drawable was the only thing waiting for this bitmap,
-            // then the removeItem call will return the TransformBitmap/LoadBitmap instance
-            // that was providing the result.
-            if (ion.bitmapsPending.removeItem(key, this)) {
-                // find out who owns this thing, to see if it is a candidate for removal
-                Object owner = ion.bitmapsPending.tag(key);
-                if (owner instanceof TransformBitmap) {
-                    TransformBitmap info = (TransformBitmap)owner;
-                    ion.bitmapsPending.remove(info.key);
-                    // this transform is also backed by a LoadBitmap* or a DeferredLoadBitmap, grab that
-                    // if it is the only waiter
-                    if (ion.bitmapsPending.removeItem(info.downloadKey, info))
-                        owner = ion.bitmapsPending.tag(info.downloadKey);
-                }
-                // only cancel deferred loads... LoadBitmap means a download is already in progress.
-                // due to view recycling, cancelling that may be bad, as it may be rerequested again
-                // during the recycle process.
-                if (owner instanceof DeferredLoadBitmap) {
-                    DeferredLoadBitmap defer = (DeferredLoadBitmap)owner;
-                    ion.bitmapsPending.remove(defer.key);
-                }
-            }
-
-            ion.processDeferred();
         }
 
         @Override
-        public void onCompleted(Exception e, BitmapInfo result) {
+        public void complete(@NotNull Result<BitmapInfo> result) {
             assert Thread.currentThread() == Looper.getMainLooper().getThread();
             assert result != null;
             // see if the imageview is still alive and cares about this result
             IonDrawable drawable = ionDrawableRef.get();
             if (drawable == null)
                 return;
+            BitmapInfo info = result.getOrThrow();
             drawable
-            .setBitmap(result, result.servedFrom)
+            .setBitmap(info, info.servedFrom)
             .updateLayers();
-            FutureCallback<IonDrawable> callback = drawable.loadCallback;
-            if (callback != null)
-                callback.onCompleted(e, drawable);
+            Deferred<BitmapInfo> drawLoad = drawable.drawLoad;
+            drawable.drawLoad = null;
+            drawable.pendingLoad = null;
+            if (drawLoad != null)
+                drawLoad.resolve(info);
         }
     }
 
@@ -260,21 +218,25 @@ class IonDrawable extends LayerDrawable {
         return this;
     }
 
-    public IonDrawable setBitmapFetcher(BitmapFetcher bitmapFetcher) {
+    private void cancelPendingLoad() {
+        this.drawLoad = null;
+        if (this.pendingLoad != null) {
+            this.pendingLoad.cancel();
+            this.pendingLoad = null;
+        }
+        ion.processDeferred();
+    }
+
+    public IonDrawable setBitmapFetcher(BitmapRequest bitmapFetcher) {
+        cancelPendingLoad();
         this.bitmapFetcher = bitmapFetcher;
-        if (ion == null)
-            throw new AssertionError("null ion");
+        this.info = null;
         return this;
     }
 
     public IonDrawable setBitmapDrawableFactory(BitmapDrawableFactory factory) {
         this.bitmapDrawableFactory = factory;
         return this;
-    }
-
-    public void cancel() {
-        callback.register(null, null);
-        bitmapFetcher = null;
     }
 
     public IonDrawable(Resources resources) {
@@ -332,10 +294,11 @@ class IonDrawable extends LayerDrawable {
     }
 
     public IonDrawable setBitmap(BitmapInfo info, ResponseServedFrom servedFrom) {
+        cancelPendingLoad();
+
         if (this.info == info)
             return this;
 
-        cancel();
         this.servedFrom = servedFrom;
         this.info = info;
         gifDecoder = null;
@@ -432,12 +395,7 @@ class IonDrawable extends LayerDrawable {
         return placeholder;
     }
 
-    private FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
-        @Override
-        public void onCompleted(Exception e, BitmapInfo result) {
-            invalidateSelf();
-        }
-    };
+    private PromiseCompleteCallback<BitmapInfo> tileCallback = result -> invalidateSelf();
 
     @Override
     public int getIntrinsicWidth() {
@@ -498,6 +456,9 @@ class IonDrawable extends LayerDrawable {
 
             // see if we can fetch a bitmap
             if (bitmapFetcher != null) {
+                assert(this.pendingLoad == null);
+
+                // if
                 if (bitmapFetcher.sampleWidth == 0 && bitmapFetcher.sampleHeight == 0) {
                     if (canvas.getWidth() != 1)
                         bitmapFetcher.sampleWidth = canvas.getWidth();
@@ -505,28 +466,22 @@ class IonDrawable extends LayerDrawable {
                         bitmapFetcher.sampleHeight = canvas.getHeight();
 
                     // now that we have final dimensions, reattempt to find the image in the cache
-                    bitmapFetcher.recomputeDecodeKey();
-                    BitmapInfo found = ion.bitmapCache.get(bitmapFetcher.bitmapKey);
-                    if (found != null) {
-                        // won't be needing THIS anymore
-                        bitmapFetcher = null;
-                        // found what we're looking for, but can't draw at this very moment,
-                        // since we need to trigger a new measure.
-                        callback.onCompleted(null, found);
-                        return;
-                    }
+                    bitmapFetcher.computeKeys();
+                }
+
+                BitmapInfo found = ion.bitmapCache.get(bitmapFetcher.bitmapKey);
+                if (found != null) {
+                    // found what we're looking for, but can't draw at this very moment,
+                    // since we need to trigger a new measure.
+                    callback.complete(Result.Companion.success(found));
+                    return;
                 }
 
                 // no image found fetch it.
-                callback.register(ion, bitmapFetcher.bitmapKey);
+                BitmapPromise fetch = ion.bitmapManager.requestLazyLoad(bitmapFetcher);
+                fetch.complete(callback);
+                this.pendingLoad = fetch;
 
-                // check to see if there's too many imageview loads
-                // already in progress
-                if (BitmapFetcher.shouldDeferImageView(ion)) {
-                    bitmapFetcher.defer();
-                } else {
-                    bitmapFetcher.execute();
-                }
                 // won't be needing THIS anymore
                 bitmapFetcher = null;
             }
@@ -690,7 +645,7 @@ class IonDrawable extends LayerDrawable {
 
                 // find, render/fetch
 //                    System.out.println("rendering: " + texRect + " for: " + bounds);
-                String tileKey = FileCache.toKeyString(info.key, ",", level, ",", x, ",", y);
+                String tileKey = FileStore.toSafeFilename(info.key, ",", level, ",", x, ",", y);
                 BitmapInfo tile = ion.bitmapCache.get(tileKey);
                 if (tile != null && tile.bitmap != null) {
                     // render it
@@ -700,12 +655,15 @@ class IonDrawable extends LayerDrawable {
                 }
 
                 // TODO: cancellation of unnecessary regions when fast pan/zooming
-                if (ion.bitmapsPending.tag(tileKey) == null) {
-                    // fetch it
-//                        System.out.println(info.key + ": fetching region: " + texRect + " sample size: " + sampleSize);
-                    LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.decoder, texRect, sampleSize);
-                }
-                ion.bitmapsPending.add(tileKey, tileCallback);
+                if (true) throw new NotImplementedError();
+//                if (ion.bitmapsPending.tag(tileKey) == null) {
+//                    // fetch it
+////                        System.out.println(info.key + ": fetching region: " + texRect + " sample size: " + sampleSize);
+//
+//                    LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.decoder, texRect, sampleSize);
+//                }
+
+//                ion.bitmapsPending.add(tileKey, tileCallback);
 
                 int parentLeft = 0;
                 int parentTop = 0;
@@ -719,7 +677,7 @@ class IonDrawable extends LayerDrawable {
                 int parentY = y >> 1;
 
                 while (parentLevel >= 0) {
-                    tileKey = FileCache.toKeyString(info.key, ",", parentLevel, ",", parentX, ",", parentY);
+                    tileKey = FileStore.toSafeFilename(info.key, ",", parentLevel, ",", parentX, ",", parentY);
                     tile = ion.bitmapCache.get(tileKey);
                     if (tile != null && tile.bitmap != null)
                         break;
@@ -785,7 +743,7 @@ class IonDrawable extends LayerDrawable {
     static IonDrawable getOrCreateIonDrawable(ImageView imageView) {
         Drawable current = imageView.getDrawable();
         IonDrawable ret;
-        if (current == null || !(current instanceof IonDrawable))
+        if (!(current instanceof IonDrawable))
             ret = new IonDrawable(imageView.getResources());
         else
             ret = (IonDrawable)current;

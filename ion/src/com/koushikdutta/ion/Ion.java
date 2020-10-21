@@ -3,34 +3,15 @@ package com.koushikdutta.ion;
 import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.content.Context;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
-import android.util.Log;
 import android.widget.ImageView;
 
 import com.google.gson.Gson;
-import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.callback.ValueFunction;
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.http.AsyncHttpClient;
-import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.Headers;
-import com.koushikdutta.async.http.cache.ResponseCacheMiddleware;
-import com.koushikdutta.async.util.FileCache;
-import com.koushikdutta.async.util.FileUtility;
-import com.koushikdutta.async.util.HashList;
-import com.koushikdutta.ion.apache.BrowserCompatHostnameVerifier;
-import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.LoadBuilder;
-import com.koushikdutta.ion.conscrypt.ConscryptMiddleware;
-import com.koushikdutta.ion.cookie.CookieMiddleware;
 import com.koushikdutta.ion.loader.AssetLoader;
 import com.koushikdutta.ion.loader.AsyncHttpRequestFactory;
 import com.koushikdutta.ion.loader.ContentLoader;
@@ -38,21 +19,20 @@ import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
 import com.koushikdutta.ion.loader.ResourceLoader;
-import com.koushikdutta.ion.loader.VideoLoader;
+import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.event.FileStore;
+import com.koushikdutta.scratch.event.NIOEventLoop;
+import com.koushikdutta.scratch.event.NamedThreadFactory;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-import javax.net.ssl.SSLContext;
+import kotlin.NotImplementedError;
 
 /**
  * Created by koush on 5/21/13.
@@ -60,24 +40,10 @@ import javax.net.ssl.SSLContext;
 public class Ion {
     static final Handler mainHandler = new Handler(Looper.getMainLooper());
     static int availableProcessors = Runtime.getRuntime().availableProcessors();
-    static ExecutorService ioExecutorService = Executors.newFixedThreadPool(4);
-    static ExecutorService bitmapExecutorService  = availableProcessors > 2 ? Executors.newFixedThreadPool(availableProcessors - 1) : Executors.newFixedThreadPool(1);
+    static ExecutorService ioExecutorService = NamedThreadFactory.newSynchronousWorkers("ion-io", 4);
+    static int numBitmapExecutors = availableProcessors > 2 ? availableProcessors - 1 : 1;
+    static ExecutorService bitmapExecutorService = NamedThreadFactory.newSynchronousWorkers("ion-bitmap", numBitmapExecutors);
     static HashMap<String, Ion> instances = new HashMap<String, Ion>();
-
-    public static <T> Future<T> submitBackgroundTask(ValueFunction<T> task) {
-        SimpleFuture<T> ret = new SimpleFuture<>();
-        getIoExecutorService().submit(() -> {
-            if (ret.isCancelled())
-                return;
-            try {
-                ret.setComplete(task.getValue());
-            }
-            catch (Exception e) {
-                ret.setComplete(e);
-            }
-        });
-        return ret;
-    }
 
     /**
      * Get the default Ion object instance and begin building a request
@@ -149,16 +115,13 @@ public class Ion {
         return getDefault(imageView.getContext()).build(imageView);
     }
 
-    AsyncHttpClient httpClient;
-    ConscryptMiddleware conscryptMiddleware;
-    CookieMiddleware cookieMiddleware;
-    ResponseCacheMiddleware responseCache;
-    FileCache storeCache;
+    NIOEventLoop loop;
+    FileStore fileStore;
+    FileStore cacheStore;
     HttpLoader httpLoader;
     ContentLoader contentLoader;
     ResourceLoader resourceLoader;
     AssetLoader assetLoader;
-    VideoLoader videoLoader;
     PackageIconLoader packageIconLoader;
     FileLoader fileLoader;
     String logtag;
@@ -167,50 +130,35 @@ public class Ion {
     String userAgent;
     ArrayList<Loader> loaders = new ArrayList<Loader>();
     String name;
-    HashList<FutureCallback<BitmapInfo>> bitmapsPending = new HashList<FutureCallback<BitmapInfo>>();
     Config config = new Config();
     IonBitmapCache bitmapCache;
+    BitmapManager bitmapManager;
     Context context;
-    IonImageViewRequestBuilder bitmapBuilder = new IonImageViewRequestBuilder(this);
+
+    public NIOEventLoop getLoop() {
+        return loop;
+    }
 
     private Ion(Context context, String name) {
         this.context = context = context.getApplicationContext();
         this.name = name;
 
-        httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
-        httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
-        httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
-
-        File ionCacheDir = new File(context.getCacheDir(), name);
-        try {
-            responseCache = ResponseCacheMiddleware.addCache(httpClient, ionCacheDir, 10L * 1024L * 1024L);
-        }
-        catch (IOException e) {
-            IonLog.w("unable to set up response cache, clearing", e);
-            FileUtility.deleteDirectory(ionCacheDir);
-            try {
-                responseCache = ResponseCacheMiddleware.addCache(httpClient, ionCacheDir, 10L * 1024L * 1024L);
+        loop = new NIOEventLoop();
+        new Thread("ion-" + name) {
+            @Override
+            public void run() {
+                loop.run();
             }
-            catch (IOException ex) {
-                IonLog.w("unable to set up response cache, failing", e);
-            }
-        }
+        }.start();
 
-        storeCache = new FileCache(new File(context.getFilesDir(), name), Long.MAX_VALUE, false);
-
-        // TODO: Support pre GB?
-        if (Build.VERSION.SDK_INT >= 9)
-            addCookieMiddleware();
-
-        httpClient.getSocketMiddleware().setConnectAllAddresses(true);
-        httpClient.getSSLSocketMiddleware().setConnectAllAddresses(true);
-
+        fileStore = new FileStore(loop, true, () -> new File(this.context.getFilesDir(), name));
+        cacheStore = new FileStore(loop, true, () -> new File(this.context.getCacheDir(), name));
         bitmapCache = new IonBitmapCache(this);
+        bitmapManager = new BitmapManager(this);
 
         configure()
-                .addLoader(videoLoader = new VideoLoader())
                 .addLoader(packageIconLoader = new PackageIconLoader())
-                .addLoader(httpLoader = new HttpLoader())
+                .addLoader(httpLoader = new HttpLoader(loop))
                 .addLoader(contentLoader = new ContentLoader())
                 .addLoader(resourceLoader = new ResourceLoader())
                 .addLoader(assetLoader = new AssetLoader())
@@ -269,9 +217,7 @@ public class Ion {
     public Builders.IV.F<? extends Builders.IV.F<?>> build(ImageView imageView) {
         if (Thread.currentThread() != Looper.getMainLooper().getThread())
             throw new IllegalStateException("must be called from UI thread");
-        bitmapBuilder.reset();
-        bitmapBuilder.ion = this;
-        return bitmapBuilder.withImageView(imageView);
+        return new IonImageViewRequestBuilder(this).withImageView(imageView);
     }
 
     int groupCount(Object group) {
@@ -286,13 +232,13 @@ public class Ion {
         return members.size();
     }
 
-    private static Comparator<DeferredLoadBitmap> DEFERRED_COMPARATOR = new Comparator<DeferredLoadBitmap>() {
+    private static Comparator<BitmapPromise> DEFERRED_COMPARATOR = new Comparator<BitmapPromise>() {
         @Override
-        public int compare(DeferredLoadBitmap lhs, DeferredLoadBitmap rhs) {
+        public int compare(BitmapPromise lhs, BitmapPromise rhs) {
             // higher is more recent
-            if (lhs.priority == rhs.priority)
+            if (lhs.getLazyPriority() == rhs.getLazyPriority())
                 return 0;
-            if (lhs.priority < rhs.priority)
+            if (lhs.getLazyPriority() < rhs.getLazyPriority())
                 return 1;
             return -1;
         }
@@ -301,32 +247,7 @@ public class Ion {
     private Runnable processDeferred = new Runnable() {
         @Override
         public void run() {
-            if (BitmapFetcher.shouldDeferImageView(Ion.this))
-                return;
-            ArrayList<DeferredLoadBitmap> deferred = null;
-            for (String key: bitmapsPending.keySet()) {
-                Object owner = bitmapsPending.tag(key);
-                if (owner instanceof DeferredLoadBitmap) {
-                    DeferredLoadBitmap deferredLoadBitmap = (DeferredLoadBitmap)owner;
-                    if (deferred == null)
-                        deferred = new ArrayList<DeferredLoadBitmap>();
-                    deferred.add(deferredLoadBitmap);
-                }
-            }
-
-            if (deferred == null)
-                return;
-            int count = 0;
-            Collections.sort(deferred, DEFERRED_COMPARATOR);
-            for (DeferredLoadBitmap deferredLoadBitmap: deferred) {
-                bitmapsPending.tag(deferredLoadBitmap.key, null);
-                bitmapsPending.tag(deferredLoadBitmap.fetcher.bitmapKey, null);
-                deferredLoadBitmap.fetcher.execute();
-                count++;
-                // do MAX_IMAGEVIEW_LOAD max. this may end up going over the MAX_IMAGEVIEW_LOAD threshhold
-                if (count > BitmapFetcher.MAX_IMAGEVIEW_LOAD)
-                    return;
-            }
+            bitmapManager.processDeferred();
         }
     };
 
@@ -348,14 +269,14 @@ public class Ion {
         if (members == null)
             return;
 
-        for (Future future: members.keySet()) {
+        for (Promise<?> future: members.keySet()) {
             if (future != null)
                 future.cancel();
         }
     }
 
-    void addFutureInFlight(Future future, Object group) {
-        if (group == null || future == null || future.isDone() || future.isCancelled())
+    void addFutureInFlight(Promise<?> future, Object group) {
+        if (group == null || future == null)
             return;
 
         FutureSet members;
@@ -398,20 +319,11 @@ public class Ion {
             if (members == null)
                 return 0;
             int ret = 0;
-            for (Future future: members.keySet()) {
-                if (!future.isCancelled() && !future.isDone())
+            for (Promise future: members.keySet()) {
+                if (!future.isCancelled() && !future.isCompleted())
                     ret++;
             }
             return ret;
-        }
-    }
-
-    public void dump() {
-        bitmapCache.dump();
-        Log.i(logtag, "Pending bitmaps: " + bitmapsPending.size());
-        Log.i(logtag, "Groups: " + inFlight.size());
-        for (FutureSet futures: inFlight.values()) {
-            Log.i(logtag, "Group size: " + futures.size());
         }
     }
 
@@ -423,37 +335,17 @@ public class Ion {
         return context;
     }
 
-    static class FutureSet extends WeakHashMap<Future, Boolean> {
+    static class FutureSet extends WeakHashMap<Promise, Boolean> {
     }
     // maintain a list of futures that are in being processed, allow for bulk cancellation
     WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
 
-    private void addCookieMiddleware() {
-        httpClient.insertMiddleware(cookieMiddleware = new CookieMiddleware(this));
+    public FileStore getCache() {
+        return cacheStore;
     }
 
-    /**
-     * Get or put an item from the cache
-     * @return
-     */
-    public FileCacheStore cache(String key) {
-        return new FileCacheStore(this, responseCache.getFileCache(), key);
-    }
-
-    public FileCache getCache() {
-        return responseCache.getFileCache();
-    }
-
-    /**
-     * Get or put an item in the persistent store
-     * @return
-     */
-    public FileCacheStore store(String key) {
-        return new FileCacheStore(this, storeCache, key);
-    }
-
-    public FileCache getStore() {
-        return storeCache;
+    public FileStore getStore() {
+        return fileStore;
     }
 
     public String getName() {
@@ -461,40 +353,16 @@ public class Ion {
     }
 
     /**
-     * Get the Cookie middleware that is attached to the AsyncHttpClient instance.
-     * @return
-     */
-    public CookieMiddleware getCookieMiddleware() {
-        return cookieMiddleware;
-    }
-
-    public ConscryptMiddleware getConscryptMiddleware() {
-        return conscryptMiddleware;
-    }
-
-    /**
-     * Get the AsyncHttpClient object in use by this Ion instance
-     * @return
-     */
-    public AsyncHttpClient getHttpClient() {
-        return httpClient;
-    }
-
-    /**
      * Get the AsyncServer reactor in use by this Ion instance
      * @return
      */
-    public AsyncServer getServer() {
-        return httpClient.getServer();
+    public NIOEventLoop getServer() {
+        return loop;
     }
 
     public class Config {
         public HttpLoader getHttpLoader() {
             return httpLoader;
-        }
-
-        public VideoLoader getVideoLoader() {
-            return videoLoader;
         }
 
         public PackageIconLoader getPackageIconLoader() {
@@ -507,15 +375,6 @@ public class Ion {
 
         public FileLoader getFileLoader() {
             return fileLoader;
-        }
-
-        public ResponseCacheMiddleware getResponseCache() {
-            return responseCache;
-        }
-
-        public SSLContext createSSLContext(String algorithm) throws NoSuchAlgorithmException {
-            conscryptMiddleware.initialize();
-            return SSLContext.getInstance(algorithm);
         }
 
         /**
@@ -548,7 +407,7 @@ public class Ion {
          * @param port
          */
         public void proxy(String host, int port) {
-            httpClient.getSocketMiddleware().enableProxy(host, port);
+            throw new NotImplementedError();
         }
 
         /**
@@ -559,21 +418,21 @@ public class Ion {
          * @param port
          */
         public void proxySecure(String host, int port) {
-            httpClient.getSSLSocketMiddleware().enableProxy(host, port);
+            throw new NotImplementedError();
         }
 
         /**
          * Disable routing of http requests through a previous provided proxy
          */
         public void disableProxy() {
-            httpClient.getSocketMiddleware().disableProxy();
+            throw new NotImplementedError();
         }
 
         /**
          * Disable routing of https requests through a previous provided proxy
          */
         public void disableSecureProxy() {
-            httpClient.getSSLSocketMiddleware().disableProxy();
+            throw new NotImplementedError();
         }
 
         /**
@@ -586,15 +445,7 @@ public class Ion {
             Ion.this.gson = gson;
         }
 
-        AsyncHttpRequestFactory asyncHttpRequestFactory = new AsyncHttpRequestFactory() {
-            @Override
-            public AsyncHttpRequest createAsyncHttpRequest(Uri uri, String method, Headers headers) {
-                AsyncHttpRequest request = new AsyncHttpRequest(uri, method, headers);
-                if (!TextUtils.isEmpty(userAgent))
-                    request.getHeaders().set("User-Agent", userAgent);
-                return request;
-            }
-        };
+        AsyncHttpRequestFactory asyncHttpRequestFactory = new DefaultAsyncHttpRequestFactory();
 
         public AsyncHttpRequestFactory getAsyncHttpRequestFactory() {
             return asyncHttpRequestFactory;

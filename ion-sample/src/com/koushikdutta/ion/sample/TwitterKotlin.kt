@@ -7,10 +7,8 @@ import android.view.ViewGroup
 import android.widget.*
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import com.koushikdutta.async.future.Future
-import com.koushikdutta.async.future.FutureCallback
 import com.koushikdutta.ion.Ion
-import com.koushikdutta.ion.kotlin.async
+import com.koushikdutta.scratch.Promise
 
 class TwitterKotlin : Activity() {
     // adapter that holds tweets, obviously :)
@@ -25,28 +23,28 @@ class TwitterKotlin : Activity() {
         // create a tweet adapter for our list view
         tweetAdapter = object : ArrayAdapter<JsonObject>(this, 0) {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-                var convertView = convertView
-                if (convertView == null)
-                    convertView = getLayoutInflater().inflate(R.layout.tweet, null)
+                var view = convertView
+                if (view == null)
+                    view = getLayoutInflater().inflate(R.layout.tweet, null)
 
                 // we're near the end of the list adapter, so load more items
-                if (position >= getCount() - 3)
+                if (position >= count - 3)
                     load()
 
                 // grab the tweet (or retweet)
                 var tweet = getItem(position)
-                val retweet = tweet.getAsJsonObject("retweeted_status")
+                val retweet = tweet!!.getAsJsonObject("retweeted_status")
                 if (retweet != null)
                     tweet = retweet
 
                 // grab the user info... name, profile picture, tweet text
-                val user = tweet.getAsJsonObject("user")
+                val user = tweet!!.getAsJsonObject("user")
                 val twitterId = user.get("screen_name").getAsString()
 
                 // set the profile photo using Ion
                 val imageUrl = user.get("profile_image_url").getAsString()
 
-                val imageView = convertView!!.findViewById<ImageView>(R.id.image)
+                val imageView = view!!.findViewById<ImageView>(R.id.image)
 
                 // Use Ion's builder set the google_image on an ImageView from a URL
 
@@ -58,12 +56,12 @@ class TwitterKotlin : Activity() {
                         .load(imageUrl.replace("_normal", ""))
 
                 // and finally, set the name and text
-                val handle = convertView!!.findViewById<TextView>(R.id.handle)
+                val handle = view!!.findViewById<TextView>(R.id.handle)
                 handle.setText(twitterId)
 
-                val text = convertView!!.findViewById<TextView>(R.id.tweet)
+                val text = view!!.findViewById<TextView>(R.id.tweet)
                 text.setText(tweet.get("text").getAsString())
-                return convertView
+                return view
             }
         }
 
@@ -76,7 +74,7 @@ class TwitterKotlin : Activity() {
         getCredentials()
     }
 
-    private fun getCredentials() = async {
+    private fun getCredentials() = Promise {
         try {
             val credentials = Ion.with(this)
                     .load("https://api.twitter.com/oauth2/token")
@@ -99,21 +97,21 @@ class TwitterKotlin : Activity() {
     // in progress that will have a "Future" result.
     // You can "await" any Future to wait for the result asynchronously
     // or cancel() it if you no longer need the result.
-    internal var loading: Future<JsonArray>? = null
+    internal var loading: Promise<JsonArray>? = null
 
     internal var accessToken: String? = null
 
-    private fun load() = async() {
+    private fun load() = Promise {
         // don't attempt to load more if a load is already in progress
-        if (loading != null && !loading!!.isDone() && !loading!!.isCancelled())
-            return@async
+        if (loading != null && !loading!!.isCompleted && !loading!!.isCancelled)
+            return@Promise
 
         // load the tweets
         var url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=dog_rates&count=20"
         if (tweetAdapter!!.getCount() > 0) {
             // load from the "last" id
             val last = tweetAdapter!!.getItem(tweetAdapter!!.getCount() - 1)
-            url += "&max_id=" + last.get("id_str").getAsString()
+            url += "&max_id=" + last!!.get("id_str").getAsString()
         }
 
         // Request tweets from Twitter using Ion.
@@ -131,8 +129,8 @@ class TwitterKotlin : Activity() {
             val result = loading!!.await()
 
             // add the tweets
-            for (i in 0..result.size() - 1) {
-                tweetAdapter!!.add(result.get(i).getAsJsonObject())
+            for (i in 0 until result.size()) {
+                tweetAdapter!!.add(result.get(i).asJsonObject)
             }
         }
         catch (e: Exception) {

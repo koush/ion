@@ -2,9 +2,7 @@ package com.koushikdutta.ion;
 
 import android.app.ProgressDialog;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
@@ -14,67 +12,65 @@ import android.widget.ProgressBar;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
-import com.koushikdutta.async.AsyncServer;
-import com.koushikdutta.async.ByteBufferList;
-import com.koushikdutta.async.DataEmitter;
-import com.koushikdutta.async.DataSink;
-import com.koushikdutta.async.DataTrackingEmitter;
-import com.koushikdutta.async.DataTrackingEmitter.DataTracker;
-import com.koushikdutta.async.FilteredDataEmitter;
-import com.koushikdutta.async.Util;
-import com.koushikdutta.async.callback.CompletedCallback;
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
-import com.koushikdutta.async.future.SimpleFuture;
-import com.koushikdutta.async.future.TransformFuture;
-import com.koushikdutta.async.http.AsyncHttpGet;
-import com.koushikdutta.async.http.AsyncHttpPost;
-import com.koushikdutta.async.http.AsyncHttpRequest;
-import com.koushikdutta.async.http.Headers;
-import com.koushikdutta.async.http.Multimap;
-import com.koushikdutta.async.http.NameValuePair;
-import com.koushikdutta.async.http.body.AsyncHttpRequestBody;
-import com.koushikdutta.async.http.body.DocumentBody;
-import com.koushikdutta.async.http.body.FileBody;
-import com.koushikdutta.async.http.body.FilePart;
-import com.koushikdutta.async.http.body.MultipartFormDataBody;
-import com.koushikdutta.async.http.body.Part;
-import com.koushikdutta.async.http.body.StreamBody;
-import com.koushikdutta.async.http.body.StringBody;
-import com.koushikdutta.async.http.body.UrlEncodedFormBody;
-import com.koushikdutta.async.http.server.AsyncHttpServer;
-import com.koushikdutta.async.parser.AsyncParser;
-import com.koushikdutta.async.parser.ByteBufferListParser;
-import com.koushikdutta.async.parser.DocumentParser;
-import com.koushikdutta.async.parser.StringParser;
-import com.koushikdutta.async.stream.FileDataSink;
-import com.koushikdutta.async.stream.OutputStreamDataSink;
-import com.koushikdutta.ion.Loader.LoaderEmitter;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
 import com.koushikdutta.ion.builder.LoadBuilder;
-import com.koushikdutta.ion.future.ImageViewFuture;
 import com.koushikdutta.ion.future.ResponseFuture;
 import com.koushikdutta.ion.gson.GsonArrayParser;
-import com.koushikdutta.ion.gson.GsonBody;
+import com.koushikdutta.ion.gson.GsonArraySerializer;
 import com.koushikdutta.ion.gson.GsonObjectParser;
-import com.koushikdutta.ion.gson.GsonSerializer;
-import com.koushikdutta.ion.gson.PojoBody;
+import com.koushikdutta.ion.gson.GsonObjectSerializer;
+import com.koushikdutta.ion.gson.PojoParser;
+import com.koushikdutta.ion.gson.PojoSerializer;
+import com.koushikdutta.ion.util.AsyncParser;
+import com.koushikdutta.ion.util.AsyncSerializer;
+import com.koushikdutta.ion.util.ByteBufferListParser;
+import com.koushikdutta.ion.util.ByteBufferListSerializer;
+import com.koushikdutta.ion.util.ContentDisposition;
+import com.koushikdutta.ion.util.DocumentParser;
+import com.koushikdutta.ion.util.DocumentSerializer;
+import com.koushikdutta.ion.util.FileParser;
+import com.koushikdutta.ion.util.FileSerializer;
+import com.koushikdutta.ion.util.InputStreamParser;
+import com.koushikdutta.ion.util.InputStreamSerializer;
+import com.koushikdutta.ion.util.MultipartBody;
+import com.koushikdutta.ion.util.ParserMessageBody;
+import com.koushikdutta.ion.util.QueryString;
+import com.koushikdutta.ion.util.StringParser;
+import com.koushikdutta.ion.util.StringSerializer;
+import com.koushikdutta.ion.util.UrlEncodedFormBody;
+import com.koushikdutta.scratch.AsyncInput;
+import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.buffers.ByteBufferList;
+import com.koushikdutta.scratch.buffers.WritableBuffers;
+import com.koushikdutta.scratch.http.AsyncHttpMessageBody;
+import com.koushikdutta.scratch.http.AsyncHttpRequest;
+import com.koushikdutta.scratch.http.Header;
+import com.koushikdutta.scratch.http.Headers;
+import com.koushikdutta.scratch.http.Methods;
+import com.koushikdutta.scratch.parser.Part;
 
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import kotlin.NotImplementedError;
+import kotlin.coroutines.Continuation;
+import kotlin.jvm.functions.Function2;
+import kotlin.text.Charsets;
+import kotlinx.coroutines.Deferred;
 
 /**
  * Created by koush on 5/21/13.
@@ -83,8 +79,9 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     Ion ion;
     IonContext contextReference;
     Handler handler = Ion.mainHandler;
-    String method = AsyncHttpGet.METHOD;
+    String method = Methods.GET.name();
     String uri;
+    AsyncHttpRequest rawRequest;
 
     public IonRequestBuilder(IonContext contextReference, Ion ion) {
         String alive = contextReference.isAlive();
@@ -96,7 +93,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder load(String url) {
-        return loadInternal(AsyncHttpGet.METHOD, url);
+        return loadInternal(method, url);
     }
 
     private IonRequestBuilder loadInternal(String method, String url) {
@@ -116,17 +113,14 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder load(AsyncHttpRequest request) {
-        headers = new Headers(request.getHeaders().getMultiMap());
-        setBody(request.getBody());
-        return load(request.getMethod(), request.getUri().toString());
+        rawRequest = request;
+        return this;
     }
 
     Headers headers;
     private Headers getHeaders() {
-        if (headers == null) {
+        if (headers == null)
             headers = new Headers();
-            AsyncHttpRequest.setDefaultHeaders(headers, uri == null ? null : Uri.parse(uri));
-        }
         return headers;
     }
 
@@ -140,7 +134,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public IonRequestBuilder setHeader(String name, String value) {
         if (value == null)
-            getHeaders().removeAll(name);
+            getHeaders().remove(name);
         else
             getHeaders().set(name, value);
         return this;
@@ -159,7 +153,9 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             return this;
         Headers headers = getHeaders();
         for (Map.Entry<String, List<String>> entry: params.entrySet()) {
-            headers.addAll(entry.getKey(), entry.getValue());
+            for (String value: entry.getValue()) {
+                headers.add(entry.getKey(), value);
+            }
         }
         return this;
     }
@@ -171,13 +167,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return setHeader("Cache-Control", "no-cache");
     }
 
-    Multimap query;
+    QueryString query;
     @Override
     public IonRequestBuilder addQuery(String name, String value) {
         if (value == null)
             return this;
         if (query == null)
-            query = new Multimap();
+            query = new QueryString();
         query.add(name, value);
         return this;
     }
@@ -185,12 +181,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public IonRequestBuilder addQueries(Map<String, List<String>> params) {
        if (query == null)
-          query = new Multimap();
-       query.putAll(params);
+          query = new QueryString();
+       query.getMap().putAll(params);
        return this;
     }
 
-    int timeoutMilliseconds = AsyncHttpRequest.DEFAULT_TIMEOUT;
+    int timeoutMilliseconds = 10000;
     @Override
     public IonRequestBuilder setTimeout(int timeoutMilliseconds) {
         this.timeoutMilliseconds = timeoutMilliseconds;
@@ -203,27 +199,34 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return this;
     }
 
-    AsyncHttpRequestBody body;
-    private <T> IonRequestBuilder setBody(AsyncHttpRequestBody<T> body) {
+    Deferred<AsyncHttpMessageBody> body;
+    private IonRequestBuilder setBody(Deferred<AsyncHttpMessageBody> body) {
         if (!methodWasSet)
-            method = AsyncHttpPost.METHOD;
+            method = Methods.POST.name();
         this.body = body;
+        return this;
+    }
+
+    private <T> IonRequestBuilder setBody(T value, AsyncSerializer<T> parser) {
+        if (!methodWasSet)
+            method = Methods.POST.name();
+        this.body = new ParserMessageBody<>(value, parser).defer();
         return this;
     }
 
     @Override
     public IonRequestBuilder setJsonObjectBody(JsonObject jsonObject) {
-        return setBody(new GsonBody<JsonObject>(ion.configure().getGson(), jsonObject));
+        return setBody(jsonObject, new GsonObjectSerializer());
     }
 
     @Override
     public IonRequestBuilder setJsonArrayBody(JsonArray jsonArray) {
-        return setBody(new GsonBody<JsonArray>(ion.configure().getGson(), jsonArray));
+        return setBody(jsonArray, new GsonArraySerializer());
     }
 
     @Override
     public IonRequestBuilder setStringBody(String string) {
-        return setBody(new StringBody(string));
+        return setBody(string, new StringSerializer(Charsets.UTF_8, "text/plain"));
     }
 
     boolean followRedirect = true;
@@ -231,353 +234,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     public IonRequestBuilder followRedirect(boolean follow) {
         followRedirect = follow;
         return this;
-    }
-
-    private <T> void postExecute(final EmitterTransform<T> future, final Exception ex, final T value) {
-        final Runnable runner = new Runnable() {
-            @Override
-            public void run() {
-                // check if the context is still alive...
-                String deadReason = contextReference.isAlive();
-                if (deadReason != null) {
-                    future.initialRequest.logd("context has died: " + deadReason);
-                    future.cancelSilently();
-                    return;
-                }
-
-                // unless we're invoked onto the handler/main/service thread, there's no frakking way to avoid a
-                // race condition where the service or activity dies before this callback is invoked.
-                if (ex != null)
-                    future.setComplete(ex);
-                else
-                    future.setComplete(value);
-            }
-        };
-
-        if (handler == null)
-            ion.httpClient.getServer().post(runner);
-        else
-            AsyncServer.post(handler, runner);
-    }
-
-    private Uri prepareURI() {
-        Uri uri;
-        try {
-            if (query != null) {
-                Uri.Builder builder = Uri.parse(this.uri).buildUpon();
-                for (String key: query.keySet()) {
-                    for (String value: query.get(key)) {
-                        builder = builder.appendQueryParameter(key, value);
-                    }
-                }
-                uri = builder.build();
-            }
-            else {
-                uri = Uri.parse(this.uri);
-            }
-        }
-        catch (Exception e) {
-            uri = null;
-        }
-        if (uri == null || uri.getScheme() == null)
-            return null;
-
-        return uri;
-    }
-
-    private AsyncHttpRequest prepareRequest(Uri uri) {
-        AsyncHttpRequest request = ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers);
-        request.setFollowRedirect(followRedirect);
-        request.setBody(body);
-        request.setLogging(ion.logtag, ion.logLevel);
-        if (logTag != null)
-            request.setLogging(logTag, logLevel);
-        request.enableProxy(proxyHost, proxyPort);
-        request.setTimeout(timeoutMilliseconds);
-        request.logd("preparing request");
-        return request;
-    }
-
-    static interface LoadRequestCallback {
-        boolean loadRequest(AsyncHttpRequest request);
-    }
-
-    LoadRequestCallback loadRequestCallback;
-
-    private <T> void getLoaderEmitter(final EmitterTransform<T> ret) {
-        Uri uri = prepareURI();
-        if (uri == null) {
-            ret.setComplete(new Exception("Invalid URI"));
-            return;
-        }
-
-        AsyncHttpRequest request = prepareRequest(uri);
-        ret.initialRequest = request;
-
-        getLoaderEmitter(ret, request);
-    }
-
-    private <T> void getLoaderEmitter(final EmitterTransform<T> ret, AsyncHttpRequest request) {
-        if (body != null && (uploadProgressHandler != null || uploadProgressBar != null || uploadProgress != null || uploadProgressDialog != null)) {
-            AsyncHttpRequestBody wrappedBody = new RequestBodyUploadObserver(body, new ProgressCallback() {
-                    @Override
-                    public void onProgress(final long downloaded, final long total) {
-                    assert Thread.currentThread() != Looper.getMainLooper().getThread();
-
-                    final int percent = (int)((float)downloaded / total * 100f);
-
-                    if (uploadProgressBar != null)
-                        uploadProgressBar.setProgress(percent);
-
-                    if (uploadProgressDialog != null)
-                        uploadProgressDialog.setProgress(percent);
-
-                    if (uploadProgress != null)
-                        uploadProgress.onProgress(downloaded, total);
-
-                    if (uploadProgressHandler != null) {
-                        AsyncServer.post(Ion.mainHandler, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (ret.isCancelled() || ret.isDone())
-                                    return;
-                                uploadProgressHandler.onProgress(downloaded, total);
-                            }
-                        });
-                    }
-                }
-            });
-
-            request.setBody(wrappedBody);
-        }
-
-        resolveAndLoadRequest(request, ret);
-    }
-
-    Future<AsyncHttpRequest> recursiveResolveRequest(final AsyncHttpRequest request) {
-        final SimpleFuture<AsyncHttpRequest> ret = new SimpleFuture<AsyncHttpRequest>();
-
-        Runnable resolver = new Runnable() {
-            AsyncHttpRequest inRequest = request;
-            Runnable runner = this;
-
-            @Override
-            public void run() {
-                Future<AsyncHttpRequest> resolved = resolveRequest(inRequest);
-                if (resolved == null) {
-                    ret.setComplete(inRequest);
-                    return;
-                }
-                resolved.setCallback(new FutureCallback<AsyncHttpRequest>() {
-                    @Override
-                    public void onCompleted(Exception e, final AsyncHttpRequest result) {
-                        if (e != null) {
-                            ret.setComplete(e);
-                            return;
-                        }
-                        inRequest = result;
-                        runner.run();
-                    }
-                });
-            }
-        };
-        resolver.run();
-        return ret;
-    }
-
-    <T> void resolveAndLoadRequest(final AsyncHttpRequest request, final EmitterTransform<T> ret) {
-        recursiveResolveRequest(request)
-        .setCallback(new FutureCallback<AsyncHttpRequest>() {
-            @Override
-            public void onCompleted(Exception e, AsyncHttpRequest result) {
-                if (e != null) {
-                    ret.setComplete(e);
-                    return;
-                }
-                ret.finalRequest = result;
-
-                if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
-                    AsyncServer.post(Ion.mainHandler, new Runnable() {
-                        @Override
-                        public void run() {
-                            invokeLoadRequest(result, ret);
-                        }
-                    });
-                    return;
-                }
-                invokeLoadRequest(result, ret);
-            }
-        });
-    }
-
-    <T> void invokeLoadRequest(final AsyncHttpRequest request, final EmitterTransform<T> ret) {
-        if (loadRequestCallback == null || loadRequestCallback.loadRequest(request))
-            loadRequest(request, ret);
-    }
-
-    <T> void loadRequest(AsyncHttpRequest request, final EmitterTransform<T> ret) {
-        // now attempt to fetch it directly
-        for (Loader loader: ion.loaders) {
-            Future<DataEmitter> emitter = loader.load(ion, request, ret);
-            if (emitter != null) {
-                request.logi("Using loader: " + loader);
-                ret.setParent(emitter);
-                return;
-            }
-        }
-        ret.setComplete(new Exception("Unknown uri scheme"));
-    }
-
-    <T> Future<AsyncHttpRequest> resolveRequest(AsyncHttpRequest request) {
-        // first attempt to resolve the url
-        for (Loader loader: ion.loaders) {
-            Future<AsyncHttpRequest> resolved = loader.resolve(contextReference.getContext(), ion, request);
-            if (resolved != null)
-                return resolved;
-
-        }
-        return null;
-    }
-
-    // transforms a LoaderEmitter, which is a DataEmitter and all associated properties about the data source
-    // into the final result.
-    class EmitterTransform<T> extends TransformFuture<T, LoaderEmitter> implements ResponseFuture<T> {
-        AsyncHttpRequest initialRequest;
-        AsyncHttpRequest finalRequest;
-        ResponseServedFrom servedFrom;
-        Runnable cancelCallback;
-        HeadersResponse headers;
-        DataEmitter emitter;
-
-        public Response<T> getResponse(Exception e, T result) {
-            return new Response<T>(finalRequest, servedFrom, headers, e, result);
-        }
-
-        @Override
-        public Future<Response<T>> withResponse() {
-            final SimpleFuture<Response<T>> ret = new SimpleFuture<Response<T>>();
-            setCallback(new FutureCallback<T>() {
-                @Override
-                public void onCompleted(Exception e, T result) {
-                    if (emitter != null) {
-                        ret.setComplete(getResponse(e, result));
-                        return;
-                    }
-                    ret.setComplete(e, null);
-                }
-            });
-            ret.setParent(this);
-            return ret;
-        }
-
-        public EmitterTransform(Runnable cancelCallback) {
-            this.cancelCallback = cancelCallback;
-            ion.addFutureInFlight(this, contextReference.getContext());
-            if (groups == null)
-                return;
-            for (WeakReference<Object> ref: groups) {
-                Object group = ref.get();
-                if (group != null)
-                    ion.addFutureInFlight(this, group);
-            }
-        }
-
-        @Override
-        protected void cancelCleanup() {
-            super.cancelCleanup();
-            if (emitter != null)
-                emitter.close();
-            if (cancelCallback != null)
-                cancelCallback.run();
-        }
-
-        @Override
-        protected void error(Exception e) {
-            // don't call superclass which calls setComplete... get onto handler thread.
-            postExecute(this, e, null);
-        }
-
-        @Override
-        protected void transform(LoaderEmitter emitter) throws Exception {
-            this.emitter = emitter.getDataEmitter();
-            this.servedFrom = emitter.getServedFrom();
-            this.headers = emitter.getHeaders();
-            this.finalRequest = emitter.getRequest();
-
-            if (headersCallback != null) {
-                final HeadersResponse headers = emitter.getHeaders();
-                // what do we do on loaders that don't have headers? files, content://, etc.
-                AsyncServer.post(handler, new Runnable() {
-                    @Override
-                    public void run() {
-                        headersCallback.onHeaders(headers);
-                    }
-                });
-            }
-
-            // hook up data progress callbacks
-            final long total = emitter.length();
-            DataTrackingEmitter tracker;
-            if (!(this.emitter instanceof DataTrackingEmitter)) {
-                tracker = new FilteredDataEmitter();
-                tracker.setDataEmitter(this.emitter);
-            }
-            else {
-                tracker = (DataTrackingEmitter)this.emitter;
-            }
-            this.emitter = tracker;
-            tracker.setDataTracker(new DataTracker() {
-                int lastPercent;
-                @Override
-                public void onData(final int totalBytesRead) {
-                    assert Thread.currentThread() != Looper.getMainLooper().getThread();
-                    // if the requesting context dies during the transfer... cancel
-                    String deadReason = contextReference.isAlive();
-                    if (deadReason != null) {
-                        initialRequest.logd("context has died, cancelling");
-                        cancelSilently();
-                        return;
-                    }
-
-                    final int percent = (int)((float)totalBytesRead / total * 100f);
-
-                    if ((progressBar != null || progressDialog != null) && percent != lastPercent) {
-                        AsyncServer.post(Ion.mainHandler, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (isCancelled() || isDone())
-                                    return;
-                                if (progressBar != null) {
-                                    ProgressBar bar = progressBar.get();
-                                    if (bar != null)
-                                        bar.setProgress(percent);
-                                }
-                                if (progressDialog != null) {
-                                    ProgressDialog dlg = progressDialog.get();
-                                    if (dlg != null)
-                                        dlg.setProgress(percent);
-                                }
-                            }
-                        });
-                    }
-                    lastPercent = percent;
-
-                    if (progress != null)
-                        progress.onProgress(totalBytesRead, total);
-
-                    if (progressHandler != null) {
-                        AsyncServer.post(Ion.mainHandler, new Runnable() {
-                            @Override
-                            public void run() {
-                                if (isCancelled() || isDone())
-                                    return;
-                                progressHandler.onProgress(totalBytesRead, total);
-                            }
-                        });
-                    }
-                }
-            });
-        }
     }
 
     @Override
@@ -609,86 +265,21 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return this;
     }
 
-    <T> EmitterTransform<T> execute(final DataSink sink, final boolean close, final T result) {
-        return execute(sink, close, result, null);
+    static interface LoadRequestCallback {
+        boolean loadRequest(AsyncHttpRequest request);
     }
-
-
-    <T> EmitterTransform<T> execute(final DataSink sink, final boolean close, final T result, final Runnable cancel) {
-        EmitterTransform<T> ret = new EmitterTransform<T>(cancel) {
-            @Override
-            protected void cleanup() {
-                super.cleanup();
-                if (close)
-                    sink.end();
-            }
-
-            EmitterTransform<T> self = this;
-            @Override
-            protected void transform(LoaderEmitter emitter) throws Exception {
-                super.transform(emitter);
-                Util.pump(this.emitter, sink, new CompletedCallback() {
-                    @Override
-                    public void onCompleted(Exception ex) {
-                        postExecute(self, ex, result);
-                    }
-                });
-            }
-        };
-        getLoaderEmitter(ret);
-        return ret;
-    }
+    LoadRequestCallback loadRequestCallback;
 
     <T> ResponseFuture<T> execute(final AsyncParser<T> parser) {
         return execute(parser, null);
     }
 
     <T> ResponseFuture<T> execute(final AsyncParser<T> parser, Runnable cancel) {
-        assert parser != null;
+        return prepareExecute(parser, cancel).execute();
+    }
 
-        // only set the accept header if the default is currently in use
-        String mime = parser.getMime();
-        if (!TextUtils.isEmpty(mime)) {
-            String existingMime = getHeaders().get("Accept");
-            if (existingMime == AsyncHttpRequest.HEADER_ACCEPT_ALL)
-                setHeader("Accept", mime);
-        }
-
-        final Uri uri = prepareURI();
-        AsyncHttpRequest request = null;
-
-        if (uri != null) {
-            request = prepareRequest(uri);
-            Type type = parser.getType();
-            for (Loader loader: ion.loaders) {
-                ResponseFuture<T> quickLoad = loader.load(ion, request, type);
-                if (quickLoad != null)
-                    return quickLoad;
-            }
-        }
-
-        EmitterTransform<T> ret = new EmitterTransform<T>(cancel) {
-            EmitterTransform<T> self = this;
-            @Override
-            protected void transform(LoaderEmitter emitter) throws Exception {
-                super.transform(emitter);
-                parser.parse(this.emitter).setCallback(new FutureCallback<T>() {
-                    @Override
-                    public void onCompleted(Exception e, T result) {
-                        postExecute(self, e, result);
-                    }
-                });
-            }
-        };
-
-        if (uri == null) {
-            ret.setComplete(new Exception("Invalid URI"));
-            return ret;
-        }
-
-        ret.initialRequest = request;
-        getLoaderEmitter(ret);
-        return ret;
+    <T> IonExecutor<T> prepareExecute(final AsyncParser<T> parser, Runnable cancel) {
+        return new IonExecutor<>(this, parser, cancel);
     }
 
     @Override
@@ -718,31 +309,28 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public ResponseFuture<String> asString(Charset charset) {
-        return execute(new StringParser(charset));
+        return execute(new StringParser(charset, "text/plain"));
     }
 
     @Override
     public ResponseFuture<byte[]> asByteArray() {
         return execute(new AsyncParser<byte[]>() {
+            @NotNull
             @Override
-            public Future<byte[]> parse(DataEmitter emitter) {
-                return new ByteBufferListParser().parse(emitter)
-                .thenConvert(from -> from.getAllByteArray());
+            public Promise<byte[]> parse(@NotNull Function2<? super WritableBuffers, ? super Continuation<? super Boolean>, ?> read) {
+                return new ByteBufferListParser().parse(read).apply(byteBufferList -> byteBufferList.readBytes(byteBufferList.remaining()));
             }
 
+            @NotNull
             @Override
-            public void write(DataSink sink, byte[] value, CompletedCallback completed) {
-                new ByteBufferListParser().write(sink, new ByteBufferList(value), completed);
+            public String getContentType() {
+                return "application/octet-stream";
             }
 
+            @NotNull
             @Override
             public Type getType() {
                 return byte[].class;
-            }
-
-            @Override
-            public String getMime() {
-                return null;
             }
         });
     }
@@ -753,89 +341,88 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public ResponseFuture<DataEmitter> asDataEmitter() {
-        return execute(new DataEmitterParser());
-    }
-
-    @Override
     public <T> ResponseFuture<T> as(AsyncParser<T> parser) {
         return execute(parser);
     }
 
     @Override
+    public ResponseFuture<AsyncInput> asDataEmitter() {
+        throw new NotImplementedError();
+    }
+
+    @Override
     public <F extends OutputStream> ResponseFuture<F> write(F outputStream, boolean close) {
-        return execute(new OutputStreamDataSink(ion.getServer(), outputStream), close, outputStream);
+        throw new NotImplementedError();
     }
 
     @Override
     public <F extends OutputStream> ResponseFuture<F> write(F outputStream) {
-        return execute(new OutputStreamDataSink(ion.getServer(), outputStream), true, outputStream);
+        throw new NotImplementedError();
     }
 
     @Override
-    public EmitterTransform<File> write(final File file) {
-        return execute(new FileDataSink(ion.getServer(), file), true, file, new Runnable() {
-            @Override
-            public void run() {
-                file.delete();
-            }
-        });
+    public ResponseFuture<File> write(final File file) {
+        return execute(new FileParser(ion.loop, file, "application/octet-stream"));
     }
 
-    Multimap bodyParameters;
+    UrlEncodedFormBody bodyParameters;
+    private void prepareUrlEncodedFormBody() {
+        if (bodyParameters == null) {
+            bodyParameters = new UrlEncodedFormBody();
+            setBody(bodyParameters.defer());
+        }
+    }
+
     @Override
     public IonRequestBuilder setBodyParameter(String name, String value) {
-        if (bodyParameters == null) {
-            bodyParameters = new Multimap();
-            setBody(new UrlEncodedFormBody(bodyParameters));
-        }
+        prepareUrlEncodedFormBody();
         if (value != null)
             bodyParameters.add(name, value);
         return this;
     }
 
     public IonRequestBuilder setBodyParameters(Map<String, List<String>> params) {
-       if (bodyParameters == null) {
-           bodyParameters = new Multimap();
-           setBody(new UrlEncodedFormBody(bodyParameters));
-       }
-       bodyParameters.putAll(params);
+       prepareUrlEncodedFormBody();
+       bodyParameters.getMap().putAll(params);
        return this;
     }
 
-    MultipartFormDataBody multipartBody;
+    MultipartBody multipartBody;
+
     @Override
     public IonRequestBuilder setMultipartFile(String name, File file) {
         return setMultipartFile(name, null, file);
     }
 
+    private void prepareMultipartBody() {
+        if (multipartBody != null)
+            return;
+        multipartBody = new MultipartBody();
+        setBody(multipartBody.getDeferred());
+    }
+
+    private ContentDisposition prepareMultipartContentDisposition(String name) {
+        ContentDisposition cd = new ContentDisposition();
+        cd.setName(name);
+        return cd;
+    }
+
     @Override
     public IonRequestBuilder setMultipartFile(String name, String contentType, File file) {
-        if (multipartBody == null) {
-            multipartBody = new MultipartFormDataBody();
-            setBody(multipartBody);
-        }
-
-        FilePart part = new FilePart(name, file);
-
+        prepareMultipartBody();
         if (contentType == null)
-            contentType = AsyncHttpServer.tryGetContentType(file.getAbsolutePath());
-
-        if (contentType != null)
-            part.setContentType(contentType);
-
-        multipartBody.addPart(part);
+            contentType = "application/octet-stream";
+        ContentDisposition cd = prepareMultipartContentDisposition(name);
+        cd.setFilename(file.getName());
+        multipartBody.addPart(cd, new ParserMessageBody<>(file, new FileSerializer(ion.loop, contentType)).defer());
         return this;
     }
 
     @Override
     public IonRequestBuilder setMultipartParameter(String name, String value) {
-        if (multipartBody == null) {
-            multipartBody = new MultipartFormDataBody();
-            setBody(multipartBody);
-        }
-        if (value != null)
-            multipartBody.addStringPart(name, value);
+        prepareMultipartBody();
+        ContentDisposition cd = prepareMultipartContentDisposition(name);
+        multipartBody.addPart(cd, new ParserMessageBody<>(value, new StringSerializer(Charsets.UTF_8, "text/plain")).defer());
         return this;
     }
 
@@ -852,10 +439,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder addMultipartParts(Iterable<Part> parameters) {
-        if (multipartBody == null) {
-            multipartBody = new MultipartFormDataBody();
-            setBody(multipartBody);
-        }
+        prepareMultipartBody();
 
         for (Part part: parameters) {
             multipartBody.addPart(part);
@@ -865,10 +449,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public Builders.Any.M addMultipartParts(Part... parameters) {
-        if (multipartBody == null) {
-            multipartBody = new MultipartFormDataBody();
-            setBody(multipartBody);
-        }
+        prepareMultipartBody();
 
         for (Part part: parameters) {
             multipartBody.addPart(part);
@@ -878,12 +459,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonRequestBuilder setMultipartContentType(String contentType) {
-        if (multipartBody == null) {
-            multipartBody = new MultipartFormDataBody();
-            setBody(multipartBody);
-        }
-        multipartBody.setContentType(contentType);
-        return this;
+        throw new NotImplementedError();
     }
 
     @Override
@@ -918,7 +494,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public Future<Bitmap> asBitmap() {
+    public Promise<Bitmap> asBitmap() {
         return new IonImageViewRequestBuilder(this).asBitmap();
     }
 
@@ -933,12 +509,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public <T> ResponseFuture<T> as(Class<T> clazz) {
-        return execute(new GsonSerializer<T>(ion.configure().getGson(), clazz));
+        return execute(new PojoParser<T>(ion.configure().getGson(), clazz));
     }
 
     @Override
     public <T> ResponseFuture<T> as(TypeToken<T> token) {
-        return execute(new GsonSerializer<T>(ion.configure().getGson(), token));
+        return execute(new PojoParser<>(ion.configure().getGson(), token.getType()));
     }
 
     ArrayList<WeakReference<Object>> groups;
@@ -960,14 +536,14 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public IonRequestBuilder setJsonPojoBody(Object object, TypeToken token) {
-        setBody(new PojoBody(ion.configure().getGson(), object, token));
+    public <T> IonRequestBuilder setJsonPojoBody(T object, TypeToken<T> token) {
+        setBody(object, new PojoSerializer<>(ion.configure().getGson(), token.getType()));
         return this;
     }
 
     @Override
-    public IonRequestBuilder setJsonPojoBody(Object object) {
-        setBody(new PojoBody(ion.configure().getGson(), object, null));
+    public <T> IonRequestBuilder setJsonPojoBody(T object) {
+        setBody(object, new PojoSerializer<>(ion.configure().getGson(), object.getClass()));
         return this;
     }
 
@@ -1013,7 +589,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public Builders.Any.F setDocumentBody(Document document) {
-        setBody(new DocumentBody(document));
+        setBody(document, new DocumentSerializer());
         return this;
     }
 
@@ -1024,34 +600,34 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public Builders.Any.F setFileBody(File file) {
-        setBody(new FileBody(file));
+        setBody(file, new FileSerializer(ion.loop, "application/octet-stream"));
         return this;
     }
 
     @Override
     public Builders.Any.F setByteArrayBody(byte[] bytes) {
-        if (bytes != null)
-            setBody(new StreamBody(new ByteArrayInputStream(bytes), bytes.length));
+        ByteBufferList buffer = new ByteBufferList(ByteBuffer.wrap(bytes));
+        setBody(buffer, new ByteBufferListSerializer());
         return this;
     }
 
     @Override
     public Builders.Any.F setStreamBody(InputStream inputStream) {
-        setBody(new StreamBody(inputStream, -1));
+        setBody(inputStream, new InputStreamSerializer(null, "application/octet-stream"));
         return this;
     }
 
     @Override
-    public Builders.Any.F setStreamBody(InputStream inputStream, int length) {
-        setBody(new StreamBody(inputStream, length));
+    public Builders.Any.F setStreamBody(InputStream inputStream, long length) {
+        setBody(inputStream, new InputStreamSerializer(length, "application/octet-stream"));
         return this;
     }
 
     @Override
-    public Builders.Any.B setHeader(NameValuePair... header) {
+    public Builders.Any.B setHeader(Header... header) {
         Headers headers = getHeaders();
-        for (NameValuePair h: header) {
-            headers.set(h.getName(), h.getValue());
+        for (Header h: header) {
+            headers.set(h);
         }
         return this;
     }

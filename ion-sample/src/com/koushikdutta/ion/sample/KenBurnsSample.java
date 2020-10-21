@@ -4,13 +4,9 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ImageView;
 
 import com.flaviofaria.kenburnsview.KenBurnsView;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-
-import uk.co.senab.photoview.PhotoView;
 
 /**
  * Created by koush on 2/1/14.
@@ -36,11 +32,6 @@ public class KenBurnsSample extends Activity {
         .withBitmap()
         .deepZoom()
         .intoImageView(view)
-        .setCallback(new FutureCallback<ImageView>() {
-            @Override
-            public void onCompleted(Exception e, ImageView result) {
-                dlg.cancel();
-            }
-        });
+        .complete(iv -> dlg.cancel());
     }
 }

@@ -8,10 +8,10 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.koushikdutta.async.future.Future;
-import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.ProgressCallback;
+import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.Result;
 
 import java.io.File;
 
@@ -23,7 +23,7 @@ public class ProgressBarDownload extends Activity {
     TextView downloadCount;
     ProgressBar progressBar;
 
-    Future<File> downloading;
+    Promise<Result<File>> downloading;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,17 +65,9 @@ public class ProgressBarDownload extends Activity {
                     // write to a file
                     .write(getFileStreamPath("zip-" + System.currentTimeMillis() + ".zip"))
                     // run a callback on completion
-                    .setCallback(new FutureCallback<File>() {
-                        @Override
-                        public void onCompleted(Exception e, File result) {
-                            resetDownload();
-                            if (e != null) {
-                                Toast.makeText(ProgressBarDownload.this, "Error downloading file", Toast.LENGTH_LONG).show();
-                                return;
-                            }
-                            Toast.makeText(ProgressBarDownload.this, "File upload complete", Toast.LENGTH_LONG).show();
-                        }
-                    });
+                    .complete(c -> resetDownload())
+                    .error(e -> Toast.makeText(ProgressBarDownload.this, "Error downloading file", Toast.LENGTH_LONG).show())
+                    .result(result -> Toast.makeText(ProgressBarDownload.this, "File upload complete", Toast.LENGTH_LONG).show());
             }
         });
     }

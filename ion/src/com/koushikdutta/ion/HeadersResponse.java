@@ -1,6 +1,7 @@
 package com.koushikdutta.ion;
 
-import com.koushikdutta.async.http.Headers;
+import com.koushikdutta.scratch.http.AsyncHttpResponse;
+import com.koushikdutta.scratch.http.Headers;
 
 /**
  * Created by koush on 7/22/14.
@@ -10,6 +11,12 @@ public class HeadersResponse {
         this.headers = headers;
         this.code = code;
         this.message = message;
+    }
+
+    public HeadersResponse(AsyncHttpResponse response) {
+        this.headers = response.getHeaders();
+        this.code = response.getCode();
+        this.message = response.getMessage();
     }
 
     Headers headers;
