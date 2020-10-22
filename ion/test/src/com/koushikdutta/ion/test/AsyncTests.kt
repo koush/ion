@@ -37,6 +37,8 @@ open class AsyncTests(val timeout: Long = 1000L) {
             scope.ion.loop.await()
             block(scope)
         }
+
+        promise
         .finally {
             scope.ion.loop.post()
             semaphore.release()

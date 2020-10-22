@@ -108,6 +108,6 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
             response.await().result.getOrThrow()
         }
 
-        return ResponsePromise<T>(result, response.asPromise())
+        return ResponsePromise(result, affinity, response.asPromise())
     }
 }

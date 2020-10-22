@@ -43,6 +43,7 @@ import com.koushikdutta.ion.util.StringParser;
 import com.koushikdutta.ion.util.StringSerializer;
 import com.koushikdutta.ion.util.UrlEncodedFormBody;
 import com.koushikdutta.scratch.AsyncInput;
+import com.koushikdutta.scratch.LooperKt;
 import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.buffers.ByteBufferList;
 import com.koushikdutta.scratch.buffers.WritableBuffers;
@@ -496,7 +497,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonPromise<Bitmap> asBitmap() {
-        return new IonPromise<>(new IonImageViewRequestBuilder(this).asBitmap());
+        return new IonPromise<>(handler != null ? LooperKt.createAsyncAffinity(handler) : null, new IonImageViewRequestBuilder(this).asBitmap());
     }
 
     String logTag;
