@@ -16,8 +16,9 @@ import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.LocallyCachedStatus;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.FutureBuilder;
+import com.koushikdutta.ion.builder.IonPromise;
 import com.koushikdutta.ion.builder.LoadBuilder;
-import com.koushikdutta.ion.future.ResponseFuture;
+import com.koushikdutta.ion.builder.ResponsePromise;
 import com.koushikdutta.ion.gson.GsonArrayParser;
 import com.koushikdutta.ion.gson.GsonArraySerializer;
 import com.koushikdutta.ion.gson.GsonObjectParser;
@@ -270,11 +271,11 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
     LoadRequestCallback loadRequestCallback;
 
-    <T> ResponseFuture<T> execute(final AsyncParser<T> parser) {
+    <T> ResponsePromise<T> execute(final AsyncParser<T> parser) {
         return execute(parser, null);
     }
 
-    <T> ResponseFuture<T> execute(final AsyncParser<T> parser, Runnable cancel) {
+    <T> ResponsePromise<T> execute(final AsyncParser<T> parser, Runnable cancel) {
         return prepareExecute(parser, cancel).execute();
     }
 
@@ -283,37 +284,37 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public ResponseFuture<JsonObject> asJsonObject() {
+    public ResponsePromise<JsonObject> asJsonObject() {
         return execute(new GsonObjectParser());
     }
 
     @Override
-    public ResponseFuture<JsonArray> asJsonArray() {
+    public ResponsePromise<JsonArray> asJsonArray() {
         return execute(new GsonArrayParser());
     }
 
     @Override
-    public ResponseFuture<JsonObject> asJsonObject(Charset charset) {
+    public ResponsePromise<JsonObject> asJsonObject(Charset charset) {
         return execute(new GsonObjectParser(charset));
     }
 
     @Override
-    public ResponseFuture<JsonArray> asJsonArray(Charset charset) {
+    public ResponsePromise<JsonArray> asJsonArray(Charset charset) {
         return execute(new GsonArrayParser(charset));
     }
 
     @Override
-    public ResponseFuture<String> asString() {
+    public ResponsePromise<String> asString() {
         return execute(new StringParser());
     }
 
     @Override
-    public ResponseFuture<String> asString(Charset charset) {
+    public ResponsePromise<String> asString(Charset charset) {
         return execute(new StringParser(charset, "text/plain"));
     }
 
     @Override
-    public ResponseFuture<byte[]> asByteArray() {
+    public ResponsePromise<byte[]> asByteArray() {
         return execute(new AsyncParser<byte[]>() {
             @NotNull
             @Override
@@ -336,32 +337,32 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public ResponseFuture<InputStream> asInputStream() {
+    public ResponsePromise<InputStream> asInputStream() {
         return execute(new InputStreamParser());
     }
 
     @Override
-    public <T> ResponseFuture<T> as(AsyncParser<T> parser) {
+    public <T> ResponsePromise<T> as(AsyncParser<T> parser) {
         return execute(parser);
     }
 
     @Override
-    public ResponseFuture<AsyncInput> asDataEmitter() {
+    public ResponsePromise<AsyncInput> asDataEmitter() {
         throw new NotImplementedError();
     }
 
     @Override
-    public <F extends OutputStream> ResponseFuture<F> write(F outputStream, boolean close) {
+    public <F extends OutputStream> ResponsePromise<F> write(F outputStream, boolean close) {
         throw new NotImplementedError();
     }
 
     @Override
-    public <F extends OutputStream> ResponseFuture<F> write(F outputStream) {
+    public <F extends OutputStream> ResponsePromise<F> write(F outputStream) {
         throw new NotImplementedError();
     }
 
     @Override
-    public ResponseFuture<File> write(final File file) {
+    public ResponsePromise<File> write(final File file) {
         return execute(new FileParser(ion.loop, file, "application/octet-stream"));
     }
 
@@ -494,8 +495,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public Promise<Bitmap> asBitmap() {
-        return new IonImageViewRequestBuilder(this).asBitmap();
+    public IonPromise<Bitmap> asBitmap() {
+        return new IonPromise<>(new IonImageViewRequestBuilder(this).asBitmap());
     }
 
     String logTag;
@@ -508,12 +509,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public <T> ResponseFuture<T> as(Class<T> clazz) {
+    public <T> ResponsePromise<T> as(Class<T> clazz) {
         return execute(new PojoParser<T>(ion.configure().getGson(), clazz));
     }
 
     @Override
-    public <T> ResponseFuture<T> as(TypeToken<T> token) {
+    public <T> ResponsePromise<T> as(TypeToken<T> token) {
         return execute(new PojoParser<>(ion.configure().getGson(), token.getType()));
     }
 
@@ -594,7 +595,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public ResponseFuture<Document> asDocument() {
+    public ResponsePromise<Document> asDocument() {
         return execute(new DocumentParser());
     }
 

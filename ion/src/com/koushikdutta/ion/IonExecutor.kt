@@ -1,10 +1,8 @@
 package com.koushikdutta.ion
 
-import com.koushikdutta.ion.future.ResponseFuture
+import com.koushikdutta.ion.builder.ResponsePromise
 import com.koushikdutta.ion.util.AsyncParser
-import com.koushikdutta.scratch.AsyncAffinity
 import com.koushikdutta.scratch.asPromise
-import com.koushikdutta.scratch.async.async
 import com.koushikdutta.scratch.createAsyncAffinity
 import com.koushikdutta.scratch.http.AsyncHttpRequest
 import com.koushikdutta.scratch.http.Headers
@@ -87,7 +85,7 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
         return rawRequest ?: prepareURI()
     }
 
-    fun execute(): ResponseFuture<T> {
+    fun execute(): ResponsePromise<T> {
         val response: kotlinx.coroutines.Deferred<Response<T>> = GlobalScope.async(Dispatchers.Unconfined) {
             val finalRequest = resolvedRequest.await()
             val emitter = loadRequest(finalRequest)
@@ -110,6 +108,6 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
             response.await().result.getOrThrow()
         }
 
-        return ResponseFuture<T>(result, response.asPromise())
+        return ResponsePromise<T>(result, response.asPromise())
     }
 }

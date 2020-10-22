@@ -12,6 +12,7 @@ import com.koushikdutta.ion.bitmap.Transform;
 import com.koushikdutta.ion.builder.AnimateGifMode;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
+import com.koushikdutta.ion.builder.IonPromise;
 import com.koushikdutta.ion.util.ByteBufferListParser;
 import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.event.FileStore;
@@ -172,14 +173,14 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     }
 
     @Override
-    public Promise<Bitmap> asBitmap() {
+    public IonPromise<Bitmap> asBitmap() {
         BitmapRequest request = buildRequest();
-        return ion.bitmapManager.request(request)
+        return new IonPromise<>(ion.bitmapManager.request(request)
         .apply(bitmapInfo -> {
             if (bitmapInfo.exception != null)
                 throw bitmapInfo.exception;
             return bitmapInfo.bitmap;
-        });
+        }));
     }
 
     private void checkNoTransforms(String name) {

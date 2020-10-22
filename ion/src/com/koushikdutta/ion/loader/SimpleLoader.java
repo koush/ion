@@ -5,7 +5,7 @@ import android.content.Context;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
-import com.koushikdutta.ion.future.ResponseFuture;
+import com.koushikdutta.ion.builder.ResponsePromise;
 import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.http.AsyncHttpRequest;
 
@@ -38,7 +38,7 @@ public class SimpleLoader implements Loader {
 
     @Nullable
     @Override
-    public <T> ResponseFuture<T> load(@NotNull Ion ion, @NotNull AsyncHttpRequest request, @NotNull Type type) {
+    public <T> ResponsePromise<T> load(@NotNull Ion ion, @NotNull AsyncHttpRequest request, @NotNull Type type) {
         return null;
     }
 }

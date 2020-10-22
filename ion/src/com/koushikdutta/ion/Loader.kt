@@ -2,7 +2,7 @@ package com.koushikdutta.ion
 
 import android.content.Context
 import com.koushikdutta.ion.bitmap.BitmapInfo
-import com.koushikdutta.ion.future.ResponseFuture
+import com.koushikdutta.ion.builder.ResponsePromise
 import com.koushikdutta.scratch.AsyncInput
 import com.koushikdutta.scratch.Promise
 import com.koushikdutta.scratch.http.AsyncHttpRequest
@@ -53,5 +53,5 @@ interface Loader {
      * @param type
      * @return
      */
-    fun <T> load(ion: Ion, request: AsyncHttpRequest, type: Type): ResponseFuture<T>?
+    fun <T> load(ion: Ion, request: AsyncHttpRequest, type: Type): ResponsePromise<T>?
 }

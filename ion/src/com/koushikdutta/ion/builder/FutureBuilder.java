@@ -1,8 +1,6 @@
 package com.koushikdutta.ion.builder;
 
 import com.koushikdutta.ion.util.AsyncParser;
-import com.koushikdutta.ion.util.AsyncSerializer;
-import com.koushikdutta.ion.future.ResponseFuture;
 import com.koushikdutta.scratch.AsyncInput;
 
 import org.w3c.dom.Document;
@@ -20,14 +18,14 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * Execute the request and get the result as a String
      * @return
      */
-    public ResponseFuture<String> asString();
+    public ResponsePromise<String> asString();
 
     /**
      * Execute the request and get the result as a String
      * @param charset Specify a charset to use.
      * @return
      */
-    public ResponseFuture<String> asString(Charset charset);
+    public ResponsePromise<String> asString(Charset charset);
 
     /**
      * Execute the request and get the result as an InputStream.
@@ -35,20 +33,20 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * and should not be used for large responses.
      * @return
      */
-    public ResponseFuture<InputStream> asInputStream();
+    public ResponsePromise<InputStream> asInputStream();
 
     /**
      * Execute the request and get the result as a DataEmitter.
      * @return
      */
     @Deprecated
-    public ResponseFuture<AsyncInput> asDataEmitter();
+    public ResponsePromise<AsyncInput> asDataEmitter();
 
     /**
      * Execute the request and get the result as an XML Document
      * @return
      */
-    public ResponseFuture<Document> asDocument();
+    public ResponsePromise<Document> asDocument();
 
     /**
      * Use the request as a Bitmap which can then be modified and/or applied to an ImageView.
@@ -63,7 +61,7 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @return
      */
     @Deprecated
-    public <T extends OutputStream> ResponseFuture<T> write(T outputStream);
+    public <T extends OutputStream> ResponsePromise<T> write(T outputStream);
 
     /**
      * Execute the request and write it to the given OutputStream.
@@ -73,14 +71,14 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @return
      */
     @Deprecated
-    public <T extends OutputStream> ResponseFuture<T> write(T outputStream, boolean close);
+    public <T extends OutputStream> ResponsePromise<T> write(T outputStream, boolean close);
 
     /**
      * Execute the request and write the results to a file
      * @param file File to write
      * @return
      */
-    public ResponseFuture<File> write(File file);
+    public ResponsePromise<File> write(File file);
 
     /**
      * Deserialize a response into an object given a custom parser.
@@ -88,13 +86,13 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
      * @param <T>
      * @return
      */
-    public <T> ResponseFuture<T> as(AsyncParser<T> parser);
+    public <T> ResponsePromise<T> as(AsyncParser<T> parser);
 
     /**
      * Execute the request and get the result as a byte array
      * @return
      */
-    public ResponseFuture<byte[]> asByteArray();
+    public ResponsePromise<byte[]> asByteArray();
 
     /**
      * Add this request to a group specified by groupKey. This key can be used in a later call to

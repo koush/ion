@@ -14,7 +14,7 @@ public interface BitmapFutureBuilder {
      * Perform the request and get the result as a Bitmap
      * @return
      */
-    public Promise<Bitmap> asBitmap();
+    public IonPromise<Bitmap> asBitmap();
 
     /**
      * Attempt to immediately retrieve the cached Bitmap info from the memory cache

@@ -14,11 +14,6 @@ internal fun requireMainThread() {
 }
 
 internal class BitmapPromise(val lazyPriority: Int? = null, block: suspend() -> BitmapInfo): Promise<BitmapInfo>(start = CoroutineStart.LAZY, block) {
-    fun load() {
-        requireMainThread()
-        start()
-    }
-
     val isLazyLoad
         get() = lazyPriority != null
     val isLoading
