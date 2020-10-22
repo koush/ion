@@ -73,9 +73,26 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     @Override
     public IonBitmapRequestBuilder postProcess(PostProcess postProcess) {
         if (this.postProcess == null)
-            this.postProcess = new ArrayList<PostProcess>();
+            this.postProcess = new ArrayList<>();
         this.postProcess.add(postProcess);
-        throw new NotImplementedError();
+        return transform(new PostProcessNullTransform(postProcess.key()));
+    }
+
+    static class PostProcessNullTransform implements Transform {
+        String key;
+        public PostProcessNullTransform(String key) {
+            this.key = key;
+        }
+
+        @Override
+        public Bitmap transform(Bitmap b) {
+            return b;
+        }
+
+        @Override
+        public String key() {
+            return key;
+        }
     }
 
     public void addDefaultTransform() {

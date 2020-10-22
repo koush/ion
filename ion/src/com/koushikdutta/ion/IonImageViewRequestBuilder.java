@@ -161,7 +161,6 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         IonDrawable drawable = setIonDrawable(imageView, bitmapFetcher);
         doAnimation(imageView, loadAnimation, loadAnimationResource);
         Deferred<BitmapInfo> load = new Deferred<>();
-        drawable.setDrawLoad(load);
 
         ContextReference.ImageViewContextReference ref = new ContextReference.ImageViewContextReference(imageView);
         ImageViewCallback callback = new ImageViewCallback();
@@ -170,6 +169,7 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
         callback.inAnimationResource = inAnimationResource;
         callback.drawable = drawable;
         callback.scaleMode = scaleMode;
+        drawable.setDrawLoad(load);
 
         return new ImageViewFuture(ref, load.getPromise().apply(callback));
     }

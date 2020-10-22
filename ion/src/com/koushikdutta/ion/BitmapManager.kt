@@ -63,6 +63,10 @@ internal class BitmapManager(val ion: Ion) {
             bi
         }
 
+        newPromise.finally {
+            pendingBitmaps.remove(key)
+        }
+
         pendingBitmaps[key] = newPromise
         if (start)
             newPromise.start()

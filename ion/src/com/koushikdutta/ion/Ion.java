@@ -19,6 +19,7 @@ import com.koushikdutta.ion.loader.FileLoader;
 import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
 import com.koushikdutta.ion.loader.ResourceLoader;
+import com.koushikdutta.ion.loader.VideoLoader;
 import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.event.FileStore;
 import com.koushikdutta.scratch.event.NIOEventLoop;
@@ -122,6 +123,7 @@ public class Ion {
     ContentLoader contentLoader;
     ResourceLoader resourceLoader;
     AssetLoader assetLoader;
+    VideoLoader videoLoader;
     PackageIconLoader packageIconLoader;
     FileLoader fileLoader;
     String logtag;
@@ -157,6 +159,7 @@ public class Ion {
         bitmapManager = new BitmapManager(this);
 
         configure()
+                .addLoader(videoLoader = new VideoLoader())
                 .addLoader(packageIconLoader = new PackageIconLoader())
                 .addLoader(httpLoader = new HttpLoader(loop))
                 .addLoader(contentLoader = new ContentLoader())

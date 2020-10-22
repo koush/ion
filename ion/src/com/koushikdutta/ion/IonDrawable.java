@@ -120,11 +120,11 @@ public class IonDrawable extends LayerDrawable {
             IonDrawable drawable = ionDrawableRef.get();
             if (drawable == null)
                 return;
+            Deferred<BitmapInfo> drawLoad = drawable.drawLoad;
             BitmapInfo info = result.getOrThrow();
             drawable
             .setBitmap(info, info.servedFrom)
             .updateLayers();
-            Deferred<BitmapInfo> drawLoad = drawable.drawLoad;
             drawable.drawLoad = null;
             drawable.pendingLoad = null;
             if (drawLoad != null)

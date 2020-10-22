@@ -6,6 +6,7 @@ import android.graphics.Point;
 
 import com.koushikdutta.ion.ResponseServedFrom;
 import com.koushikdutta.ion.gif.GifDecoder;
+import com.koushikdutta.ion.util.UntypedHashtable;
 
 import java.io.File;
 
@@ -31,6 +32,7 @@ public class BitmapInfo {
     public BitmapRegionDecoder decoder;
     public File decoderFile;
     public final String mimeType;
+    public final UntypedHashtable extras = new UntypedHashtable();
 
     public int sizeOf() {
         if (bitmap != null)
