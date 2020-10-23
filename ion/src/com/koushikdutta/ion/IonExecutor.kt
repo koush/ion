@@ -6,6 +6,7 @@ import com.koushikdutta.scratch.asPromise
 import com.koushikdutta.scratch.createAsyncAffinity
 import com.koushikdutta.scratch.http.AsyncHttpRequest
 import com.koushikdutta.scratch.http.Headers
+import com.koushikdutta.scratch.http.client.executor.setProxy
 import com.koushikdutta.scratch.http.contentType
 import kotlinx.coroutines.*
 import java.lang.Runnable
@@ -21,6 +22,8 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     val uri = ionRequestBuilder.uri
     val method = ionRequestBuilder.method
     val body = ionRequestBuilder.body
+    val proxyHost = ionRequestBuilder.proxyHost
+    val proxyPort = ionRequestBuilder.proxyPort
     val affinity = handler?.createAsyncAffinity()
 
     suspend fun loadRequest(request: AsyncHttpRequest): Loader.LoaderResult {
@@ -82,7 +85,10 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     }
 
     suspend fun prepareRequest(): AsyncHttpRequest {
-        return rawRequest ?: prepareURI()
+        val request = rawRequest ?: prepareURI()
+        if (proxyHost != null)
+            request.setProxy(proxyHost, proxyPort)
+        return request
     }
 
     fun execute(): ResponsePromise<T> {
