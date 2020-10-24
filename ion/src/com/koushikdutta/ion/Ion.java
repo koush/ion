@@ -22,7 +22,7 @@ import com.koushikdutta.ion.loader.ResourceLoader;
 import com.koushikdutta.ion.loader.VideoLoader;
 import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.event.FileStore;
-import com.koushikdutta.scratch.event.NIOEventLoop;
+import com.koushikdutta.scratch.event.AsyncEventLoop;
 import com.koushikdutta.scratch.event.NamedThreadFactory;
 
 import java.io.File;
@@ -114,7 +114,7 @@ public class Ion {
         return getDefault(imageView.getContext()).build(imageView);
     }
 
-    NIOEventLoop loop;
+    AsyncEventLoop loop;
     FileStore fileStore;
     FileStore cacheStore;
     HttpLoader httpLoader;
@@ -135,7 +135,7 @@ public class Ion {
     BitmapManager bitmapManager;
     Context context;
 
-    public NIOEventLoop getLoop() {
+    public AsyncEventLoop getLoop() {
         return loop;
     }
 
@@ -143,7 +143,7 @@ public class Ion {
         this.context = context = context.getApplicationContext();
         this.name = name;
 
-        loop = new NIOEventLoop();
+        loop = new AsyncEventLoop();
         new Thread("ion-" + name) {
             @Override
             public void run() {
@@ -357,7 +357,7 @@ public class Ion {
      * Get the AsyncServer reactor in use by this Ion instance
      * @return
      */
-    public NIOEventLoop getServer() {
+    public AsyncEventLoop getServer() {
         return loop;
     }
 
