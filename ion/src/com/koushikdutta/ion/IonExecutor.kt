@@ -3,7 +3,8 @@ package com.koushikdutta.ion
 import com.koushikdutta.ion.builder.ResponsePromise
 import com.koushikdutta.ion.util.AsyncParser
 import com.koushikdutta.scratch.asPromise
-import com.koushikdutta.scratch.createAsyncAffinity
+import com.koushikdutta.scratch.createScheduler
+import com.koushikdutta.scratch.event.timeout
 import com.koushikdutta.scratch.http.AsyncHttpRequest
 import com.koushikdutta.scratch.http.Headers
 import com.koushikdutta.scratch.http.client.executor.setProxy
@@ -24,7 +25,8 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     val body = ionRequestBuilder.body
     val proxyHost = ionRequestBuilder.proxyHost
     val proxyPort = ionRequestBuilder.proxyPort
-    val affinity = handler?.createAsyncAffinity()
+    val timeoutMilliseconds = ionRequestBuilder.timeoutMilliseconds
+    val affinity = handler?.createScheduler()
 
     suspend fun loadRequest(request: AsyncHttpRequest): Loader.LoaderResult {
         // now attempt to fetch it directly
@@ -92,29 +94,30 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     }
 
     fun <F> executeParser(parser: AsyncParser<F>): ResponsePromise<F> {
-        val response: kotlinx.coroutines.Deferred<Response<F>> = GlobalScope.async(Dispatchers.Unconfined) {
-            val finalRequest = resolvedRequest.await()
-            val emitter = loadRequest(finalRequest)
-            val response: Response<F> = try {
-                val value = parser.parse(emitter.input::read).await()
-                Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.success(value))
-            }
-            catch (throwable: Throwable) {
-                Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.failure(throwable))
-            }
-            finally {
-                emitter.input.close()
-            }
+        val response: Deferred<Response<F>> = GlobalScope.async(Dispatchers.Unconfined) {
+            ion.loop.timeout(timeoutMilliseconds.toLong()) {
+                val finalRequest = resolvedRequest.await()
+                val emitter = loadRequest(finalRequest)
+                val response: Response<F> = try {
+                    val value = parser.parse(emitter.input::read).await()
+                    Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.success(value))
+                }
+                catch (throwable: Throwable) {
+                    Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.failure(throwable))
+                }
+                finally {
+                    emitter.input.close()
+                }
 
-            affinity?.await()
-            response
+                response
+            }
         }
 
         val result = GlobalScope.async(Dispatchers.Unconfined) {
             response.await().result.getOrThrow()
         }
 
-        return ResponsePromise(result, affinity, response.asPromise())
+        return ResponsePromise(result, affinity, response)
     }
 
     fun execute(): ResponsePromise<T> {

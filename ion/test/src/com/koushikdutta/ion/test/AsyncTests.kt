@@ -1,11 +1,9 @@
 package com.koushikdutta.ion.test
 
-import android.os.Handler
-import android.os.Looper
 import androidx.test.platform.app.InstrumentationRegistry
 import com.koushikdutta.ion.Ion
 import com.koushikdutta.scratch.Promise
-import com.koushikdutta.scratch.createAsyncAffinity
+import com.koushikdutta.scratch.event.post
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 

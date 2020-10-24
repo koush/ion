@@ -4,8 +4,14 @@ import android.os.Looper
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.JsonObject
 import com.koushikdutta.ion.Ion
+import com.koushikdutta.ion.builder.IonPromise
+import com.koushikdutta.scratch.createScheduler
+import com.koushikdutta.scratch.event.sleep
+import kotlinx.coroutines.CompletableDeferred
 import org.junit.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class BasicTests: AsyncTests() {
     val EXIF_ASSET = "file:///android_asset_observe/exif.jpg"
@@ -135,5 +141,33 @@ class BasicTests: AsyncTests() {
                 .await()
 
         assertEquals(assetObserver.loadObserved, 2)
+    }
+
+    @Test
+    fun testIonPromise() = testAsync {
+        val affinity = Looper.getMainLooper().createScheduler()
+        assertFalse(affinity.isAffinityThread)
+        val promise = IonPromise(Looper.getMainLooper().createScheduler()) {
+            42
+        }
+
+        promise.await()
+        assertTrue(affinity.isAffinityThread)
+    }
+
+
+    @Test
+    fun testIonPromise2() = testAsync {
+        val affinity = Looper.getMainLooper().createScheduler()
+        assertFalse(affinity.isAffinityThread)
+        val promise = IonPromise(Looper.getMainLooper().createScheduler()) {
+            42
+        }
+
+        promise.get()
+        assertTrue(!affinity.isAffinityThread)
+
+        promise.await()
+        assertTrue(affinity.isAffinityThread)
     }
 }

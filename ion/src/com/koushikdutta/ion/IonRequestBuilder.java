@@ -492,7 +492,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonPromise<Bitmap> asBitmap() {
-        return new IonPromise<>(handler != null ? LooperKt.createAsyncAffinity(handler) : null, new IonImageViewRequestBuilder(this).asBitmap());
+        return new IonPromise<>(handler != null ? LooperKt.createScheduler(handler) : null, new IonImageViewRequestBuilder(this).asBitmap());
     }
 
     String logTag;

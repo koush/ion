@@ -1,6 +1,5 @@
 package com.koushikdutta.ion
 
-import android.R.attr
 import android.graphics.*
 import android.os.Looper
 import android.text.TextUtils
@@ -14,7 +13,7 @@ import com.koushikdutta.ion.util.StreamUtility
 import com.koushikdutta.scratch.AsyncAffinity
 import com.koushikdutta.scratch.buffers.ByteBuffer
 import com.koushikdutta.scratch.buffers.ByteBufferList
-import com.koushikdutta.scratch.createAsyncAffinity
+import com.koushikdutta.scratch.createScheduler
 import com.koushikdutta.scratch.event.await
 import java.io.File
 import java.io.InputStream
@@ -23,7 +22,7 @@ import java.io.InputStream
 private class UncacheableThrowable(val throwable: Throwable): Throwable(throwable)
 
 internal class BitmapManager(val ion: Ion) {
-    private val mainAffinity = Looper.getMainLooper().createAsyncAffinity()
+    private val mainAffinity = Looper.getMainLooper().createScheduler()
 
     val pendingBitmaps = mutableMapOf<String, BitmapPromise>()
 
