@@ -33,8 +33,6 @@ import java.util.List;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 
-import kotlin.NotImplementedError;
-
 /**
  * Created by koush on 5/21/13.
  */
@@ -402,40 +400,6 @@ public class Ion {
             Ion.this.logtag = logtag;
             Ion.this.logLevel = logLevel;
             return this;
-        }
-
-        /**
-         * Route all http requests through the given proxy.
-         * @param host
-         * @param port
-         */
-        public void proxy(String host, int port) {
-            throw new NotImplementedError();
-        }
-
-        /**
-         * Route all https requests through the given proxy.
-         * Note that https proxying requires that the Android device has the appropriate
-         * root certificate installed to function properly.
-         * @param host
-         * @param port
-         */
-        public void proxySecure(String host, int port) {
-            throw new NotImplementedError();
-        }
-
-        /**
-         * Disable routing of http requests through a previous provided proxy
-         */
-        public void disableProxy() {
-            throw new NotImplementedError();
-        }
-
-        /**
-         * Disable routing of https requests through a previous provided proxy
-         */
-        public void disableSecureProxy() {
-            throw new NotImplementedError();
         }
 
         /**

@@ -15,12 +15,9 @@ import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.IonPromise;
 import com.koushikdutta.ion.util.ByteBufferListParser;
 import com.koushikdutta.scratch.LooperKt;
-import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.event.FileStore;
 
 import java.util.ArrayList;
-
-import kotlin.NotImplementedError;
 
 /**
  * Created by koush on 5/23/13.

@@ -91,11 +91,11 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
         return request
     }
 
-    fun execute(): ResponsePromise<T> {
-        val response: kotlinx.coroutines.Deferred<Response<T>> = GlobalScope.async(Dispatchers.Unconfined) {
+    fun <F> executeParser(parser: AsyncParser<F>): ResponsePromise<F> {
+        val response: kotlinx.coroutines.Deferred<Response<F>> = GlobalScope.async(Dispatchers.Unconfined) {
             val finalRequest = resolvedRequest.await()
             val emitter = loadRequest(finalRequest)
-            val response: Response<T> = try {
+            val response: Response<F> = try {
                 val value = parser.parse(emitter.input::read).await()
                 Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.success(value))
             }
@@ -115,5 +115,9 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
         }
 
         return ResponsePromise(result, affinity, response.asPromise())
+    }
+
+    fun execute(): ResponsePromise<T> {
+        return executeParser(parser)
     }
 }

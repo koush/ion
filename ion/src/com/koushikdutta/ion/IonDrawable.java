@@ -21,6 +21,7 @@ import com.koushikdutta.ion.gif.GifFrame;
 import com.koushikdutta.scratch.Deferred;
 import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.PromiseCompleteCallback;
+import com.koushikdutta.scratch.PromiseResultCallback;
 import com.koushikdutta.scratch.Result;
 import com.koushikdutta.scratch.event.FileStore;
 
@@ -395,8 +396,6 @@ public class IonDrawable extends LayerDrawable {
         return placeholder;
     }
 
-    private PromiseCompleteCallback<BitmapInfo> tileCallback = result -> invalidateSelf();
-
     @Override
     public int getIntrinsicWidth() {
         // first check if image was loaded
@@ -469,7 +468,7 @@ public class IonDrawable extends LayerDrawable {
                     bitmapFetcher.computeKeys();
                 }
 
-                BitmapInfo found = ion.bitmapCache.get(bitmapFetcher.bitmapKey);
+                BitmapInfo found = ion.bitmapManager.checkCache(bitmapFetcher.bitmapKey);
                 if (found != null) {
                     // found what we're looking for, but can't draw at this very moment,
                     // since we need to trigger a new measure.
@@ -645,8 +644,9 @@ public class IonDrawable extends LayerDrawable {
 
                 // find, render/fetch
 //                    System.out.println("rendering: " + texRect + " for: " + bounds);
-                String tileKey = FileStore.toSafeFilename(info.key, ",", level, ",", x, ",", y);
-                BitmapInfo tile = ion.bitmapCache.get(tileKey);
+//                String tileKey = FileStore.toSafeFilename(info.key, ",", level, ",", x, ",", y);
+                String tileKey = BitmapRequest.computeRegionKey(info.key, texRect, sampleSize);
+                BitmapInfo tile = ion.bitmapManager.checkCache(tileKey);
                 if (tile != null && tile.bitmap != null) {
                     // render it
 //                        System.out.println("bitmap is: " + tile.bitmaps[0].getWidth() + "x" + tile.bitmaps[0].getHeight());
@@ -655,15 +655,8 @@ public class IonDrawable extends LayerDrawable {
                 }
 
                 // TODO: cancellation of unnecessary regions when fast pan/zooming
-                if (true) throw new NotImplementedError();
-//                if (ion.bitmapsPending.tag(tileKey) == null) {
-//                    // fetch it
-////                        System.out.println(info.key + ": fetching region: " + texRect + " sample size: " + sampleSize);
-//
-//                    LoadBitmapRegion region = new LoadBitmapRegion(ion, tileKey, info.decoder, texRect, sampleSize);
-//                }
-
-//                ion.bitmapsPending.add(tileKey, tileCallback);
+                ion.bitmapManager.requestRegion(info, texRect, sampleSize)
+                .result(bitmapInfo -> invalidateSelf());
 
                 int parentLeft = 0;
                 int parentTop = 0;

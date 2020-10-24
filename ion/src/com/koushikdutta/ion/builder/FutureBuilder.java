@@ -36,13 +36,6 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
     public ResponsePromise<InputStream> asInputStream();
 
     /**
-     * Execute the request and get the result as a DataEmitter.
-     * @return
-     */
-    @Deprecated
-    public ResponsePromise<AsyncInput> asDataEmitter();
-
-    /**
      * Execute the request and get the result as an XML Document
      * @return
      */
@@ -57,6 +50,8 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
     /**
      * Execute the request and write it to the given OutputStream.
      * The OutputStream will be closed upon finishing.
+     * The OutputStream must be a non-blocking stream, such as FileOutputStream
+     * or ByteArrayOutputStream.
      * @param outputStream OutputStream to write the request
      * @return
      */
@@ -66,6 +61,8 @@ public interface FutureBuilder extends BitmapFutureBuilder, ImageViewFutureBuild
     /**
      * Execute the request and write it to the given OutputStream.
      * Specify whether the OutputStream will be closed upon finishing.
+     * The OutputStream must be a non-blocking stream, such as FileOutputStream
+     * or ByteArrayOutputStream.
      * @param outputStream OutputStream to write the request
      * @param close Indicate whether the OutputStream should be closed on completion.
      * @return

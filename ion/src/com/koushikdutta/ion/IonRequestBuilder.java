@@ -37,12 +37,12 @@ import com.koushikdutta.ion.util.FileSerializer;
 import com.koushikdutta.ion.util.InputStreamParser;
 import com.koushikdutta.ion.util.InputStreamSerializer;
 import com.koushikdutta.ion.util.MultipartBody;
+import com.koushikdutta.ion.util.OutputStreamParser;
 import com.koushikdutta.ion.util.ParserMessageBody;
 import com.koushikdutta.ion.util.QueryString;
 import com.koushikdutta.ion.util.StringParser;
 import com.koushikdutta.ion.util.StringSerializer;
 import com.koushikdutta.ion.util.UrlEncodedFormBody;
-import com.koushikdutta.scratch.AsyncInput;
 import com.koushikdutta.scratch.LooperKt;
 import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.buffers.ByteBufferList;
@@ -348,18 +348,13 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public ResponsePromise<AsyncInput> asDataEmitter() {
-        throw new NotImplementedError();
-    }
-
-    @Override
     public <F extends OutputStream> ResponsePromise<F> write(F outputStream, boolean close) {
-        throw new NotImplementedError();
+        return execute(new OutputStreamParser<>(outputStream, close, "application/octet-stream"));
     }
 
     @Override
     public <F extends OutputStream> ResponsePromise<F> write(F outputStream) {
-        throw new NotImplementedError();
+        return write(outputStream, true);
     }
 
     @Override

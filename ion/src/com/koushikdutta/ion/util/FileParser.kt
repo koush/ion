@@ -22,6 +22,7 @@ class FileParser(val loop: AsyncEventLoop, val file: File, override val contentT
 
 class FileSerializer(val loop: AsyncEventLoop, val contentType: String = "application/octet-stream") : AsyncSerializer<File> {
     override fun write(value: File) = Promise<AsyncHttpMessageBody> {
+        val tmp = loop.openFile(File(value, ".tmp"))
         val storage = loop.openFile(value)
         val length = storage.size()
         val read = storage::read

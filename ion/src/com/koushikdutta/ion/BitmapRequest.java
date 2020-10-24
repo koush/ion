@@ -1,5 +1,8 @@
 package com.koushikdutta.ion;
 
+import android.graphics.Rect;
+import android.graphics.Region;
+
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.PostProcess;
 import com.koushikdutta.ion.bitmap.Transform;
@@ -48,6 +51,10 @@ class BitmapRequest {
         if (deepZoom)
             decodeKey += ":deepZoom";
         return decodeKey;
+    }
+
+    public static String computeRegionKey(String key, Rect region, int sampleSize) {
+        return key + ":region:" + region.toString() + ":" + sampleSize;
     }
 
     public static String computeBitmapKey(String decodeKey, List<Transform> transforms) {

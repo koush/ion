@@ -2,6 +2,7 @@ package com.koushikdutta.ion
 
 import android.os.Looper
 import com.koushikdutta.ion.bitmap.BitmapInfo
+import com.koushikdutta.scratch.AsyncAffinity
 import com.koushikdutta.scratch.Promise
 import kotlinx.coroutines.CoroutineStart
 
@@ -13,11 +14,20 @@ internal fun requireMainThread() {
         throw IllegalStateException("must only call from main thread")
 }
 
-internal class BitmapPromise(val lazyPriority: Int? = null, block: suspend() -> BitmapInfo): Promise<BitmapInfo>(start = CoroutineStart.LAZY, block) {
+internal class BitmapPromise(val lazyPriority: Int? = null, val affinity: AsyncAffinity?, block: suspend() -> BitmapInfo): Promise<BitmapInfo>(start = CoroutineStart.LAZY, block) {
     val isLazyLoad
         get() = lazyPriority != null
     val isLoading
         get() = isStarted
+
+    override suspend fun await(): BitmapInfo {
+        try {
+            return super.await()
+        }
+        finally {
+            affinity?.await()
+        }
+    }
 
     companion object {
         // atomic safety doesn't matter for access on this, it is just an ordering hint
