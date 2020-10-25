@@ -6,19 +6,20 @@ import android.graphics.drawable.BitmapDrawable
 import com.koushikdutta.ion.Ion
 import com.koushikdutta.ion.ResponseServedFrom
 import com.koushikdutta.ion.bitmap.BitmapInfo
-import com.koushikdutta.scratch.Promise
+import com.koushikdutta.scratch.async.async
 import com.koushikdutta.scratch.event.await
 import com.koushikdutta.scratch.http.AsyncHttpRequest
+import kotlinx.coroutines.Deferred
 
 /**
  * Created by koush on 11/3/13.
  */
 class PackageIconLoader : SimpleLoader() {
-    override fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Promise<BitmapInfo>? {
+    override fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Deferred<BitmapInfo>? {
         if (request.uri.scheme != "package")
             return null
 
-        return Promise {
+        return ion.loop.async {
             Ion.getBitmapLoadExecutorService().await()
 
             val pkg = request.uri.authority!!

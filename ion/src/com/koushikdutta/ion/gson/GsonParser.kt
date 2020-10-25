@@ -20,18 +20,17 @@ import java.nio.charset.Charset
 /**
  * Created by koush on 5/27/13.
  */
-abstract class GsonParser<T : JsonElement?>(private val clazz: Class<out T>, private val charset: Charset = Charsets.UTF_8) : AsyncParser<T> {
+abstract class GsonParser<T : JsonElement?>(override val type: Class<T>, private val charset: Charset = Charsets.UTF_8) : AsyncParser<T> {
     override fun parse(read: AsyncRead) = ByteBufferListParser().parse(read).then {
         val bis = ByteBufferListInputStream(it)
         val isr = InputStreamReader(bis, charset)
         val parsed = JsonParser.parseReader(JsonReader(isr))
         if (parsed.isJsonNull || parsed.isJsonPrimitive) throw JsonParseException("unable to parse json")
-        if (!clazz.isInstance(parsed)) throw ClassCastException(parsed.javaClass.canonicalName + " can not be casted to " + clazz.canonicalName)
+        if (!type.isInstance(parsed)) throw ClassCastException(parsed.javaClass.canonicalName + " can not be casted to " + type.canonicalName)
         parsed as T
     }
 
     override val contentType = "application/json"
-    override val type = clazz
 }
 
 abstract class GsonSerializer<T : JsonElement?>(private val charset: Charset = Charsets.UTF_8) : AsyncSerializer<T> {

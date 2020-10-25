@@ -12,7 +12,7 @@ public class SampleApplication extends Application {
         super.onCreate();
         StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
         .detectAll()
-        .penaltyDeath()
+        .penaltyFlashScreen()
         .build());
     }
 }

@@ -3,6 +3,7 @@ package com.koushikdutta.ion.test
 import android.content.Context
 import android.net.Uri
 import com.koushikdutta.ion.Ion
+import com.koushikdutta.ion.IonRequestOptions
 import com.koushikdutta.ion.Loader
 import com.koushikdutta.ion.bitmap.BitmapInfo
 import com.koushikdutta.ion.loader.StreamLoader
@@ -17,8 +18,8 @@ class AssetObserverLoader: StreamLoader() {
     var loadObserved = 0
     var loadBitmapObserved = 0
 
-    override fun load(ion: Ion, request: AsyncHttpRequest): Promise<Loader.LoaderResult>? {
-        val ret = super.load(ion, request)
+    override fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Promise<Loader.LoaderResult>? {
+        val ret = super.load(ion, request, )
         if (ret != null)
             loadObserved++
         return ret

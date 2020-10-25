@@ -18,9 +18,25 @@ import java.lang.reflect.Type
 /**
  * Created by koush on 6/5/13.
  */
-class PojoParser<T>(val gson: Gson, override val type: Type) : AsyncParser<T> {
+class PojoParser<T>: AsyncParser<T> {
+    val gson: Gson
+    override val type: Class<T>?
+    val typeToken: Type
+
+    constructor(gson: Gson, typeToken: Class<T>) {
+        this.gson = gson
+        this.typeToken = typeToken
+        this.type = typeToken
+    }
+
+    constructor(gson: Gson, typeToken: Type) {
+        this.gson = gson
+        this.typeToken = typeToken
+        this.type = null
+    }
+
     override fun parse(read: AsyncRead): Promise<T> = ByteBufferListParser().parse(read).then {
-        gson.fromJson(InputStreamReader(ByteBufferListInputStream(it)), type)
+        gson.fromJson(InputStreamReader(ByteBufferListInputStream(it)), typeToken)
     }
 
     override val contentType = "application/json"

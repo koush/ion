@@ -2,7 +2,6 @@ package com.koushikdutta.ion
 
 import com.koushikdutta.ion.builder.ResponsePromise
 import com.koushikdutta.ion.util.AsyncParser
-import com.koushikdutta.scratch.asPromise
 import com.koushikdutta.scratch.createScheduler
 import com.koushikdutta.scratch.event.timeout
 import com.koushikdutta.scratch.http.AsyncHttpRequest
@@ -10,10 +9,12 @@ import com.koushikdutta.scratch.http.Headers
 import com.koushikdutta.scratch.http.client.executor.setProxy
 import com.koushikdutta.scratch.http.contentType
 import kotlinx.coroutines.*
-import java.lang.Runnable
 
+interface IonRequestOptions {
+    val followRedirect: Boolean
+}
 
-internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: AsyncParser<T>, val cancel: Runnable?) {
+internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: AsyncParser<T>, val cancel: Runnable?): IonRequestOptions {
     val ion = ionRequestBuilder.ion
     val contextReference = ionRequestBuilder.contextReference
     val headers = ionRequestBuilder.headers ?: Headers()
@@ -27,11 +28,12 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     val proxyPort = ionRequestBuilder.proxyPort
     val timeoutMilliseconds = ionRequestBuilder.timeoutMilliseconds
     val affinity = handler?.createScheduler()
+    override val followRedirect = ionRequestBuilder.followRedirect
 
     suspend fun loadRequest(request: AsyncHttpRequest): Loader.LoaderResult {
         // now attempt to fetch it directly
         for (loader in ion.loaders) {
-            val emitter = loader.load(ion, request)
+            val emitter = loader.load(ion, this, request)
             if (emitter != null) {
 //                request.logi("Using loader: $loader")
 //                ret.setParent(emitter)
@@ -93,10 +95,13 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
         return request
     }
 
-    fun <F> executeParser(parser: AsyncParser<F>): ResponsePromise<F> {
+    fun <F> executeParser(parser: AsyncParser<F>, fastLoad: suspend(request: AsyncHttpRequest) -> Response<F>? = { null }): ResponsePromise<F> {
         val response: Deferred<Response<F>> = GlobalScope.async(Dispatchers.Unconfined) {
             ion.loop.timeout(timeoutMilliseconds.toLong()) {
                 val finalRequest = resolvedRequest.await()
+                fastLoad(finalRequest)?.let {
+                    return@timeout it
+                }
                 val emitter = loadRequest(finalRequest)
                 val response: Response<F> = try {
                     val value = parser.parse(emitter.input::read).await()
@@ -121,6 +126,16 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     }
 
     fun execute(): ResponsePromise<T> {
-        return executeParser(parser)
+        return executeParser(parser) {
+            val type = parser.type
+            if (type != null) {
+                for (loader in ion.loaders) {
+                    loader?.load(ion, it, type)?.let { fastLoad ->
+                        return@executeParser fastLoad.await()
+                    }
+                }
+            }
+            null
+        }
     }
 }

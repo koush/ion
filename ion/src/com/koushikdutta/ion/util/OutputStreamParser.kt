@@ -6,8 +6,8 @@ import com.koushikdutta.scratch.buffers.ByteBufferList
 import java.io.OutputStream
 import java.lang.reflect.Type
 
-class OutputStreamParser<F: OutputStream>(val outputStream: F, val close: Boolean, override val contentType: String = "application/octet-stream") : AsyncParser<F> {
-    override fun parse(read: AsyncRead): Promise<F> {
+class OutputStreamParser(val outputStream: OutputStream, val close: Boolean, override val contentType: String = "application/octet-stream") : AsyncParser<OutputStream> {
+    override fun parse(read: AsyncRead): Promise<OutputStream> {
         return Promise {
             val buffer = ByteBufferList()
             while (read(buffer)) {
@@ -21,5 +21,5 @@ class OutputStreamParser<F: OutputStream>(val outputStream: F, val close: Boolea
         }
     }
 
-    override val type: Type = OutputStream::class.java
+    override val type = OutputStream::class.java
 }

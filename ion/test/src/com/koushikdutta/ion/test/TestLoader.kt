@@ -1,10 +1,6 @@
 package com.koushikdutta.ion.test
 
-import android.content.Context
-import com.koushikdutta.ion.HeadersResponse
-import com.koushikdutta.ion.Ion
-import com.koushikdutta.ion.Loader
-import com.koushikdutta.ion.ResponseServedFrom
+import com.koushikdutta.ion.*
 import com.koushikdutta.ion.loader.SimpleLoader
 import com.koushikdutta.scratch.AsyncReader
 import com.koushikdutta.scratch.Promise
@@ -76,7 +72,7 @@ class TestLoader : SimpleLoader() {
         }
     }
 
-    override fun load(ion: Ion, request: AsyncHttpRequest): Promise<Loader.LoaderResult>? {
+    override fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Promise<Loader.LoaderResult>? {
         if (request.uri.scheme != "test")
             return null
 

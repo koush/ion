@@ -2,10 +2,9 @@ package com.koushikdutta.ion
 
 import android.content.Context
 import com.koushikdutta.ion.bitmap.BitmapInfo
-import com.koushikdutta.ion.builder.ResponsePromise
 import com.koushikdutta.scratch.AsyncInput
-import com.koushikdutta.scratch.Promise
 import com.koushikdutta.scratch.http.AsyncHttpRequest
+import kotlinx.coroutines.Deferred
 import java.lang.reflect.Type
 
 /**
@@ -24,7 +23,7 @@ interface Loader {
      * @param callback
      * @return
      */
-    fun load(ion: Ion, request: AsyncHttpRequest): Promise<LoaderResult>?
+    fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Deferred<LoaderResult>?
 
     /**
      * returns a future if the laoder can handle the request as a bitmap
@@ -36,7 +35,7 @@ interface Loader {
      * @param resizeHeight
      * @return
      */
-    fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Promise<BitmapInfo>?
+    fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Deferred<BitmapInfo>?
 
     /**
      * Resolve a request into another request.
@@ -44,7 +43,7 @@ interface Loader {
      * @param request
      * @return
      */
-    fun resolve(context: Context, ion: Ion, request: AsyncHttpRequest): Promise<AsyncHttpRequest>?
+    fun resolve(context: Context, ion: Ion, request: AsyncHttpRequest): Deferred<AsyncHttpRequest>?
 
     /**
      * Resolve a request to a Response<T extends type>
@@ -53,5 +52,5 @@ interface Loader {
      * @param type
      * @return
      */
-    fun <T> load(ion: Ion, request: AsyncHttpRequest, type: Type): ResponsePromise<T>?
+    fun <T> load(ion: Ion, request: AsyncHttpRequest, type: Class<T>): Deferred<Response<T>>?
 }

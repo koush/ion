@@ -15,5 +15,5 @@ interface AsyncSerializer<T> {
 interface AsyncParser<T> {
     fun parse(read: AsyncRead): Promise<T>
     val contentType: String
-    val type: Type
+    val type: Class<T>?
 }

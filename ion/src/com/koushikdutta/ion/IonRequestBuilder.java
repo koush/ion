@@ -27,7 +27,7 @@ import com.koushikdutta.ion.gson.PojoParser;
 import com.koushikdutta.ion.gson.PojoSerializer;
 import com.koushikdutta.ion.util.AsyncParser;
 import com.koushikdutta.ion.util.AsyncSerializer;
-import com.koushikdutta.ion.util.ByteBufferListParser;
+import com.koushikdutta.ion.util.ByteArrayParser;
 import com.koushikdutta.ion.util.ByteBufferListSerializer;
 import com.koushikdutta.ion.util.ContentDisposition;
 import com.koushikdutta.ion.util.DocumentParser;
@@ -44,9 +44,7 @@ import com.koushikdutta.ion.util.StringParser;
 import com.koushikdutta.ion.util.StringSerializer;
 import com.koushikdutta.ion.util.UrlEncodedFormBody;
 import com.koushikdutta.scratch.LooperKt;
-import com.koushikdutta.scratch.Promise;
 import com.koushikdutta.scratch.buffers.ByteBufferList;
-import com.koushikdutta.scratch.buffers.WritableBuffers;
 import com.koushikdutta.scratch.http.AsyncHttpMessageBody;
 import com.koushikdutta.scratch.http.AsyncHttpRequest;
 import com.koushikdutta.scratch.http.Header;
@@ -54,14 +52,12 @@ import com.koushikdutta.scratch.http.Headers;
 import com.koushikdutta.scratch.http.Methods;
 import com.koushikdutta.scratch.parser.Part;
 
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -69,8 +65,6 @@ import java.util.List;
 import java.util.Map;
 
 import kotlin.NotImplementedError;
-import kotlin.coroutines.Continuation;
-import kotlin.jvm.functions.Function2;
 import kotlin.text.Charsets;
 import kotlinx.coroutines.Deferred;
 
@@ -316,25 +310,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public ResponsePromise<byte[]> asByteArray() {
-        return execute(new AsyncParser<byte[]>() {
-            @NotNull
-            @Override
-            public Promise<byte[]> parse(@NotNull Function2<? super WritableBuffers, ? super Continuation<? super Boolean>, ?> read) {
-                return new ByteBufferListParser().parse(read).apply(byteBufferList -> byteBufferList.readBytes(byteBufferList.remaining()));
-            }
-
-            @NotNull
-            @Override
-            public String getContentType() {
-                return "application/octet-stream";
-            }
-
-            @NotNull
-            @Override
-            public Type getType() {
-                return byte[].class;
-            }
-        });
+        return execute(new ByteArrayParser("application/octet-stream"));
     }
 
     @Override
@@ -348,12 +324,12 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
-    public <F extends OutputStream> ResponsePromise<F> write(F outputStream, boolean close) {
-        return execute(new OutputStreamParser<>(outputStream, close, "application/octet-stream"));
+    public ResponsePromise<OutputStream> write(OutputStream outputStream, boolean close) {
+        return execute(new OutputStreamParser(outputStream, close, "application/octet-stream"));
     }
 
     @Override
-    public <F extends OutputStream> ResponsePromise<F> write(F outputStream) {
+    public ResponsePromise<OutputStream> write(OutputStream outputStream) {
         return write(outputStream, true);
     }
 
@@ -506,7 +482,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public <T> ResponsePromise<T> as(Class<T> clazz) {
-        return execute(new PojoParser<T>(ion.configure().getGson(), clazz));
+        return execute(new PojoParser<>(ion.configure().getGson(), clazz));
     }
 
     @Override
@@ -518,8 +494,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public FutureBuilder group(Object groupKey) {
         if (groups == null)
-            groups = new ArrayList<WeakReference<Object>>();
-        groups.add(new WeakReference<Object>(groupKey));
+            groups = new ArrayList<>();
+        groups.add(new WeakReference<>(groupKey));
         return this;
     }
 

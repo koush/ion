@@ -47,9 +47,9 @@ public class ProgressBarDownload extends Activity {
                 }
 
                 download.setText("Cancel");
-                // this is a 180MB zip file to test with
+                // this is a big zip file to test with
                 downloading = Ion.with(ProgressBarDownload.this)
-                .load("http://developer.clockworkmod.com/downloads/51/4883/cm-10.1-20130512-CPUFREQ-m7.zip")
+                .load("https://github.com/koush/vysor.io/releases/download/v3.1.4/Vysor-mac-3.1.4.zip")
                     // attach the percentage report to a progress bar.
                     // can also attach to a ProgressDialog with progressDialog.
                     .progressBar(progressBar)
@@ -63,7 +63,7 @@ public class ProgressBarDownload extends Activity {
                         }
                     })
                     // write to a file
-                    .write(getFileStreamPath("zip-" + System.currentTimeMillis() + ".zip"))
+                    .write(new File(getFilesDir(), "zip-" + System.currentTimeMillis() + ".zip"))
                     // run a callback on completion
                     .complete(c -> resetDownload())
                     .error(e -> Toast.makeText(ProgressBarDownload.this, "Error downloading file", Toast.LENGTH_LONG).show())

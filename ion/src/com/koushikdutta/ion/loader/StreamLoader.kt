@@ -2,14 +2,9 @@ package com.koushikdutta.ion.loader
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import com.koushikdutta.ion.BitmapManager
-import com.koushikdutta.ion.Ion
-import com.koushikdutta.ion.Loader
-import com.koushikdutta.ion.ResponseServedFrom
+import com.koushikdutta.ion.*
 import com.koushikdutta.ion.bitmap.BitmapInfo
 import com.koushikdutta.ion.util.StreamUtility
-import com.koushikdutta.scratch.Promise
-import com.koushikdutta.scratch.asPromise
 import com.koushikdutta.scratch.async.async
 import com.koushikdutta.scratch.event.await
 import com.koushikdutta.scratch.http.AsyncHttpRequest
@@ -27,7 +22,7 @@ open class StreamLoader : SimpleLoader() {
         return null
     }
 
-    override fun load(ion: Ion, request: AsyncHttpRequest): Promise<Loader.LoaderResult>? {
+    override fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Deferred<Loader.LoaderResult>? {
         val deferredStream = getInputStream(ion, request.uri)
         if (deferredStream == null)
             return null
@@ -40,10 +35,9 @@ open class StreamLoader : SimpleLoader() {
 
             Loader.LoaderResult(input, available, ResponseServedFrom.LOADED_FROM_CACHE, null, request)
         }
-        .asPromise()
     }
 
-    override fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Promise<BitmapInfo>? {
+    override fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Deferred<BitmapInfo>? {
         val deferredStream = getInputStream(ion, request.uri)
         if (deferredStream == null)
             return null
@@ -61,6 +55,5 @@ open class StreamLoader : SimpleLoader() {
                 StreamUtility.closeQuietly(stream)
             }
         }
-        .asPromise()
     }
 }

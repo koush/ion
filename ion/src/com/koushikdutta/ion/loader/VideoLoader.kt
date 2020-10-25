@@ -9,9 +9,10 @@ import android.os.Build
 import com.koushikdutta.ion.Ion
 import com.koushikdutta.ion.ResponseServedFrom
 import com.koushikdutta.ion.bitmap.BitmapInfo
-import com.koushikdutta.scratch.Promise
+import com.koushikdutta.scratch.async.async
 import com.koushikdutta.scratch.event.await
 import com.koushikdutta.scratch.http.AsyncHttpRequest
+import kotlinx.coroutines.Deferred
 import java.io.File
 import java.net.URI
 
@@ -19,7 +20,7 @@ import java.net.URI
  * Created by koush on 11/6/13.
  */
 class VideoLoader : SimpleLoader() {
-    override fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Promise<BitmapInfo>? {
+    override fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Deferred<BitmapInfo>? {
         if (request.uri.scheme != "file")
             return null;
 
@@ -27,7 +28,7 @@ class VideoLoader : SimpleLoader() {
         if (type == null || !MediaFile.isVideoFileType(type.fileType))
             return null
 
-        return Promise {
+        return ion.loop.async {
             Ion.getBitmapLoadExecutorService().await()
             val file = File(URI.create(request.uri.toString()));
             var bmp = createVideoThumbnail(file.absolutePath)
