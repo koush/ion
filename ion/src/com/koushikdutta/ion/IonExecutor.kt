@@ -127,6 +127,8 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     fun setupUploadProgress(request: AsyncHttpRequest): AsyncHttpRequest {
         val body = request.body ?: return request
         val read = setupProgress(body, request.headers.contentLength, uploadProgress, uploadProgressBar, uploadProgressDialog, uploadProgressHandler)
+        if (read == null)
+            return request
         return AsyncHttpRequest(request.requestLine, request.headers, read, request::close)
     }
 

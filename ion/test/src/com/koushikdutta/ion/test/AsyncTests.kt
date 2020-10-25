@@ -25,7 +25,7 @@ class IonTestScope {
     }
 }
 
-open class AsyncTests(val timeout: Long = 1000L) {
+open class AsyncTests(val timeout: Long = 100000L) {
 
     // android tests run on a non-ui test thread.
     open fun testAsync(block: suspend IonTestScope.() -> Unit) {

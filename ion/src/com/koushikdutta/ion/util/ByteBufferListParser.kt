@@ -10,7 +10,7 @@ import java.lang.reflect.Type
 
 class ByteBufferListParser(override val contentType: String = "application/octet-stream") : AsyncParser<ByteBufferList> {
     override fun parse(read: AsyncRead) = Promise {
-        readAllBuffer(read);
+        readAllBuffer(read)
     }
 
     override val type = ByteBufferList::class.java
