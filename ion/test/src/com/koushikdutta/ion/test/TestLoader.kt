@@ -2,8 +2,10 @@ package com.koushikdutta.ion.test
 
 import com.koushikdutta.ion.*
 import com.koushikdutta.ion.loader.SimpleLoader
+import com.koushikdutta.scratch.AsyncAffinity
 import com.koushikdutta.scratch.AsyncReader
 import com.koushikdutta.scratch.Promise
+import com.koushikdutta.scratch.async.async
 import com.koushikdutta.scratch.collections.*
 import com.koushikdutta.scratch.http.*
 import com.koushikdutta.scratch.http.body.BufferBody
@@ -12,6 +14,7 @@ import com.koushikdutta.scratch.http.server.AsyncHttpRouter
 import com.koushikdutta.scratch.http.server.get
 import com.koushikdutta.scratch.http.server.post
 import com.koushikdutta.scratch.parser.*
+import kotlinx.coroutines.Deferred
 import org.json.JSONObject
 
 class TestLoader : SimpleLoader() {
@@ -72,11 +75,11 @@ class TestLoader : SimpleLoader() {
         }
     }
 
-    override fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Promise<Loader.LoaderResult>? {
+    override fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Deferred<Loader.LoaderResult>? {
         if (request.uri.scheme != "test")
             return null
 
-        return Promise {
+        return AsyncAffinity.NO_AFFINITY.async {
             val response = router.handle(request)
             Loader.LoaderResult(response, response.headers.contentLength, ResponseServedFrom.LOADED_FROM_MEMORY, HeadersResponse(response), request)
         }

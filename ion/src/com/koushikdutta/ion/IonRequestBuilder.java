@@ -160,7 +160,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     @Override
     public Builders.Any.B noCache() {
         noCache = true;
-        return setHeader("Cache-Control", "no-cache");
+        return this;
     }
 
     QueryString query;
@@ -532,17 +532,17 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return this;
     }
 
-    ProgressBar uploadProgressBar;
+    WeakReference<ProgressBar> uploadProgressBar;
     @Override
     public Builders.Any.B uploadProgressBar(ProgressBar progressBar) {
-        uploadProgressBar = progressBar;
+        uploadProgressBar = new WeakReference<>(progressBar);
         return this;
     }
 
-    ProgressDialog uploadProgressDialog;
+    WeakReference<ProgressDialog> uploadProgressDialog;
     @Override
     public Builders.Any.B uploadProgressDialog(ProgressDialog progressDialog) {
-        uploadProgressDialog = progressDialog;
+        uploadProgressDialog = new WeakReference<>(progressDialog);
         return this;
     }
 

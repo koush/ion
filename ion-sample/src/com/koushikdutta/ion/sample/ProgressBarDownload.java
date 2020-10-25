@@ -58,7 +58,7 @@ public class ProgressBarDownload extends Activity {
                     // Updates to TextViews MUST happen on the UI thread.
                     .progressHandler(new ProgressCallback() {
                         @Override
-                        public void onProgress(long downloaded, long total) {
+                        public void onProgress(long downloaded, Long total) {
                             downloadCount.setText("" + downloaded + " / " + total);
                         }
                     })

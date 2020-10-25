@@ -6,10 +6,10 @@ import com.koushikdutta.ion.IonRequestOptions
 import com.koushikdutta.ion.Loader.LoaderResult
 import com.koushikdutta.ion.ResponseServedFrom
 import com.koushikdutta.scratch.async.async
-import com.koushikdutta.scratch.event.AsyncEventLoop
 import com.koushikdutta.scratch.http.AsyncHttpRequest
 import com.koushikdutta.scratch.http.client.AsyncHttpClient
 import com.koushikdutta.scratch.http.client.buildUpon
+import com.koushikdutta.scratch.http.client.executor.useCache
 import com.koushikdutta.scratch.http.client.followRedirects
 import com.koushikdutta.scratch.http.contentLength
 import kotlinx.coroutines.Deferred
@@ -17,16 +17,20 @@ import kotlinx.coroutines.Deferred
 /**
  * Created by koush on 5/22/13.
  */
-class HttpLoader(val loop: AsyncEventLoop) : SimpleLoader() {
+class HttpLoader(ion: Ion) : SimpleLoader() {
     override fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Deferred<LoaderResult>? {
         val scheme = request.uri.scheme
         if (scheme != "http" && scheme != "https")
             return null
-        return loop.async {
+        return ion.loop.async {
             val client = if (options.followRedirect)
                 httpClient.buildUpon().followRedirects().build()
             else
                 httpClient
+
+            if (options.noCache && !request.headers.contains("Cache-Control"))
+                request.headers["Cache-Control"] = "no-store"
+
             val response = client(request)
 
             LoaderResult(response, response.headers.contentLength,
@@ -38,5 +42,8 @@ class HttpLoader(val loop: AsyncEventLoop) : SimpleLoader() {
         }
     }
 
-    val httpClient = AsyncHttpClient(loop)
+    val httpClient = AsyncHttpClient(ion.loop)
+            .buildUpon()
+            .useCache(ion.cache)
+            .build()
 }

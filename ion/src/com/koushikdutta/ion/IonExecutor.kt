@@ -1,17 +1,37 @@
 package com.koushikdutta.ion
 
+import android.app.ProgressDialog
+import android.widget.ProgressBar
 import com.koushikdutta.ion.builder.ResponsePromise
 import com.koushikdutta.ion.util.AsyncParser
+import com.koushikdutta.scratch.AsyncRead
 import com.koushikdutta.scratch.createScheduler
 import com.koushikdutta.scratch.event.timeout
 import com.koushikdutta.scratch.http.AsyncHttpRequest
 import com.koushikdutta.scratch.http.Headers
 import com.koushikdutta.scratch.http.client.executor.setProxy
+import com.koushikdutta.scratch.http.contentLength
 import com.koushikdutta.scratch.http.contentType
 import kotlinx.coroutines.*
+import java.lang.ref.WeakReference
 
 interface IonRequestOptions {
     val followRedirect: Boolean
+    val noCache: Boolean
+}
+
+private fun AsyncRead.observe(progressCallback: (Long) -> Unit): AsyncRead {
+    var total = 0L
+    return {
+        val before = it.remaining()
+        val ret = this(it)
+        val progress = it.remaining() - before
+        if (progress != 0) {
+            total += progress
+            progressCallback(total)
+        }
+        ret
+    }
 }
 
 internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: AsyncParser<T>, val cancel: Runnable?): IonRequestOptions {
@@ -29,6 +49,15 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     val timeoutMilliseconds = ionRequestBuilder.timeoutMilliseconds
     val affinity = handler?.createScheduler()
     override val followRedirect = ionRequestBuilder.followRedirect
+    val progressBar = ionRequestBuilder.progressBar
+    val progressDialog = ionRequestBuilder.progressDialog
+    val progress = ionRequestBuilder.progress
+    val progressHandler = ionRequestBuilder.progressHandler
+    val uploadProgressBar = ionRequestBuilder.uploadProgressBar
+    val uploadProgressDialog = ionRequestBuilder.uploadProgressDialog
+    val uploadProgress = ionRequestBuilder.uploadProgress
+    val uploadProgressHandler = ionRequestBuilder.uploadProgressHandler
+    override val noCache = ionRequestBuilder.noCache
 
     suspend fun loadRequest(request: AsyncHttpRequest): Loader.LoaderResult {
         // now attempt to fetch it directly
@@ -92,30 +121,74 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
         val request = rawRequest ?: prepareURI()
         if (proxyHost != null)
             request.setProxy(proxyHost, proxyPort)
-        return request
+        return setupUploadProgress(request)
     }
+
+    fun setupUploadProgress(request: AsyncHttpRequest): AsyncHttpRequest {
+        val body = request.body ?: return request
+        val read = setupProgress(body, request.headers.contentLength, uploadProgress, uploadProgressBar, uploadProgressDialog, uploadProgressHandler)
+        return AsyncHttpRequest(request.requestLine, request.headers, read, request::close)
+    }
+
+    companion object {
+        fun setupProgress(read: AsyncRead, length: Long?, progress: ProgressCallback?, progressBar: WeakReference<ProgressBar>?, progressDialog: WeakReference<ProgressDialog>?, progressHandler: ProgressCallback?): AsyncRead? {
+            if (progress == null && progressBar == null && progressDialog == null && progressHandler == null)
+                return null
+
+            Ion.mainHandler.post {
+                if (length == null) {
+                    progressBar?.get()?.isIndeterminate = true
+                    progressDialog?.get()?.isIndeterminate = true
+                }
+                else {
+                    progressBar?.get()?.max = length.toInt()
+                    progressDialog?.get()?.max = length.toInt()
+                }
+            }
+
+            return read.observe {
+                if (progressBar != null || progressDialog != null) {
+                    Ion.mainHandler.post {
+                        progressBar?.get()?.setProgress(it.toInt())
+                        progressDialog?.get()?.setProgress(it.toInt())
+                        progressHandler?.onProgress(it, length)
+                    }
+                }
+                progress?.onProgress(it, length)
+            }
+        }
+    }
+
+
+    fun setupDownloadProgress(emitter: Loader.LoaderResult): AsyncRead = setupProgress(emitter.input::read, emitter.length, progress, progressBar, progressDialog, progressHandler) ?: emitter.input::read
 
     fun <F> executeParser(parser: AsyncParser<F>, fastLoad: suspend(request: AsyncHttpRequest) -> Response<F>? = { null }): ResponsePromise<F> {
         val response: Deferred<Response<F>> = GlobalScope.async(Dispatchers.Unconfined) {
-            ion.loop.timeout(timeoutMilliseconds.toLong()) {
-                val finalRequest = resolvedRequest.await()
-                fastLoad(finalRequest)?.let {
-                    return@timeout it
-                }
-                val emitter = loadRequest(finalRequest)
-                val response: Response<F> = try {
-                    val value = parser.parse(emitter.input::read).await()
-                    Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.success(value))
-                }
-                catch (throwable: Throwable) {
-                    Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.failure(throwable))
-                }
-                finally {
-                    emitter.input.close()
-                }
+            val finalRequest = resolvedRequest.await()
 
-                response
+            // should this be guarded in a timeout?
+            fastLoad(finalRequest)?.let {
+                return@async it
             }
+
+            val emitter = ion.loop.timeout(timeoutMilliseconds.toLong()) {
+                loadRequest(finalRequest)
+            }
+
+            val response: Response<F> = try {
+                val read = setupDownloadProgress(emitter)
+                val value = parser.parse(read).await()
+                Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.success(value))
+            }
+            catch (throwable: Throwable) {
+                Response(emitter.resolvedRequest, emitter.servedFrom, emitter.headers, com.koushikdutta.scratch.Result.failure(throwable))
+            }
+            finally {
+                emitter.input.close()
+            }
+
+            response
+
         }
 
         val result = GlobalScope.async(Dispatchers.Unconfined) {

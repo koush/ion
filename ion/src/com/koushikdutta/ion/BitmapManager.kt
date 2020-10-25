@@ -158,22 +158,18 @@ internal class BitmapManager(val ion: Ion) {
                 if (bitmapRequest.deepZoom) {
                     Ion.getBitmapLoadExecutorService().await()
 
-                    val file = ion.cache.getFile(bitmapRequest.decodeKey)
+                    val file = ion.cache.store.getFile(bitmapRequest.decodeKey)
                     val servedFrom: ResponseServedFrom = if (!file.exists()) {
-                        val tmp = ion.cache.getFile(bitmapRequest.decodeKey + ".tmp")
-                        val parser = FileParser(ion.loop, tmp)
+                        val parser = FileParser(ion.loop, ion.cache.store.getFile(bitmapRequest.decodeKey))
 
                         val loadResult = try {
                             bitmapRequest.executor.executeParser(parser).withResponse().await()
                         }
                         catch (throwable: Throwable) {
-                            Ion.getBitmapLoadExecutorService().await()
-                            tmp.delete()
                             throw UncacheableThrowable(throwable)
                         }
 
                         Ion.getBitmapLoadExecutorService().await()
-                        tmp.renameTo(file)
                         loadResult.servedFrom
                     }
                     else {

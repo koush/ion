@@ -15,6 +15,7 @@ import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.IonPromise;
 import com.koushikdutta.ion.util.ByteBufferListParser;
 import com.koushikdutta.scratch.LooperKt;
+import com.koushikdutta.scratch.collections.LruCache;
 import com.koushikdutta.scratch.event.FileStore;
 
 import java.util.ArrayList;
@@ -124,7 +125,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         // memory cache
         if (info != null && info.exception == null)
             return LocallyCachedStatus.CACHED;
-        FileStore fileCache = ion.getCache();
+        LruCache<FileStore> fileCache = ion.getCache();
         if (hasTransforms() && fileCache.exists(bitmapKey))
             return LocallyCachedStatus.CACHED;
         if (fileCache.exists(decodeKey))
@@ -138,7 +139,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         final String decodeKey = computeDecodeKey();
         addDefaultTransform();
         String bitmapKey = computeBitmapKey(decodeKey);
-        FileStore fileCache = ion.getCache();
+        LruCache<FileStore> fileCache = ion.getCache();
         fileCache.removeAsync(decodeKey);
         fileCache.removeAsync(bitmapKey);
         builder.ion.bitmapCache.remove(bitmapKey);

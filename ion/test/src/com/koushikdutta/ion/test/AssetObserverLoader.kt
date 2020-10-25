@@ -18,14 +18,14 @@ class AssetObserverLoader: StreamLoader() {
     var loadObserved = 0
     var loadBitmapObserved = 0
 
-    override fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Promise<Loader.LoaderResult>? {
-        val ret = super.load(ion, request, )
+    override fun load(ion: Ion, options: IonRequestOptions, request: AsyncHttpRequest): Deferred<Loader.LoaderResult>? {
+        val ret = super.load(ion, options, request)
         if (ret != null)
             loadObserved++
         return ret
     }
 
-    override fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Promise<BitmapInfo>? {
+    override fun loadBitmap(context: Context, ion: Ion, key: String, request: AsyncHttpRequest, resizeWidth: Int, resizeHeight: Int, animateGif: Boolean): Deferred<BitmapInfo>? {
         if (!request.headers.contains("X-Allow-Bitmap"))
             return null
 

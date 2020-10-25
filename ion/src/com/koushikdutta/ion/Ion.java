@@ -21,6 +21,7 @@ import com.koushikdutta.ion.loader.PackageIconLoader;
 import com.koushikdutta.ion.loader.ResourceLoader;
 import com.koushikdutta.ion.loader.VideoLoader;
 import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.collections.LruCache;
 import com.koushikdutta.scratch.event.FileStore;
 import com.koushikdutta.scratch.event.AsyncEventLoop;
 import com.koushikdutta.scratch.event.NamedThreadFactory;
@@ -115,8 +116,7 @@ public class Ion {
     }
 
     AsyncEventLoop loop;
-    FileStore fileStore;
-    FileStore cacheStore;
+    LruCache<FileStore> cacheStore;
     HttpLoader httpLoader;
     ContentLoader contentLoader;
     ResourceLoader resourceLoader;
@@ -151,15 +151,14 @@ public class Ion {
             }
         }.start();
 
-        fileStore = new FileStore(loop, true, () -> new File(this.context.getFilesDir(), name));
-        cacheStore = new FileStore(loop, true, () -> new File(this.context.getCacheDir(), name));
+        cacheStore = new LruCache(new FileStore(loop, true, new File(this.context.getCacheDir(), name)), 10L * 1024L * 1024L);
         bitmapCache = new IonBitmapCache(this);
         bitmapManager = new BitmapManager(this);
 
         configure()
                 .addLoader(videoLoader = new VideoLoader())
                 .addLoader(packageIconLoader = new PackageIconLoader())
-                .addLoader(httpLoader = new HttpLoader(loop))
+                .addLoader(httpLoader = new HttpLoader(this))
                 .addLoader(contentLoader = new ContentLoader())
                 .addLoader(resourceLoader = new ResourceLoader())
                 .addLoader(assetLoader = new AssetLoader())
@@ -341,12 +340,8 @@ public class Ion {
     // maintain a list of futures that are in being processed, allow for bulk cancellation
     WeakHashMap<Object, FutureSet> inFlight = new WeakHashMap<Object, FutureSet>();
 
-    public FileStore getCache() {
+    public LruCache<FileStore> getCache() {
         return cacheStore;
-    }
-
-    public FileStore getStore() {
-        return fileStore;
     }
 
     public String getName() {
