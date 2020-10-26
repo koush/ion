@@ -9,6 +9,8 @@ import com.koushikdutta.scratch.async.async
 import com.koushikdutta.scratch.http.AsyncHttpRequest
 import com.koushikdutta.scratch.http.client.AsyncHttpClient
 import com.koushikdutta.scratch.http.client.buildUpon
+import com.koushikdutta.scratch.http.client.executor.CacheResult
+import com.koushikdutta.scratch.http.client.executor.cacheResult
 import com.koushikdutta.scratch.http.client.executor.useCache
 import com.koushikdutta.scratch.http.client.followRedirects
 import com.koushikdutta.scratch.http.contentLength
@@ -33,9 +35,15 @@ class HttpLoader(ion: Ion) : SimpleLoader() {
 
             val response = client(request)
 
+            val responseServedFrom = when(response.cacheResult) {
+                CacheResult.Cache -> ResponseServedFrom.LOADED_FROM_CACHE
+                CacheResult.ConditionalCache -> ResponseServedFrom.LOADED_FROM_CONDITIONAL_CACHE
+                else -> ResponseServedFrom.LOADED_FROM_NETWORK
+            }
+
             LoaderResult(response, response.headers.contentLength,
                     // fixup cache reporting
-                    ResponseServedFrom.LOADED_FROM_NETWORK,
+                    responseServedFrom,
                     HeadersResponse(response.code, response.message, response.headers),
                     // fixup redirected final request
                     request)
