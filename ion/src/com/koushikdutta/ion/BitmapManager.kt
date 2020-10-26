@@ -261,7 +261,7 @@ internal class BitmapManager(val ion: Ion) {
             lazy.add(promise)
         }
 
-        lazy.sortByDescending {
+        lazy.sortBy {
             it.lazyPriority
         }
 
