@@ -4,6 +4,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.koushikdutta.ion.Ion
 import com.koushikdutta.scratch.Promise
 import com.koushikdutta.scratch.event.post
+import java.lang.IllegalStateException
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
@@ -25,10 +26,10 @@ class IonTestScope {
     }
 }
 
-open class AsyncTests(val timeout: Long = 100000L) {
+open class AsyncTests(val timeout: Long = 1000L) {
 
     // android tests run on a non-ui test thread.
-    open fun testAsync(block: suspend IonTestScope.() -> Unit) {
+    open fun testAsync(expectTimeout: Boolean = false, expectIncomplete: Boolean = false, block: suspend IonTestScope.() -> Unit) {
         val semaphore = Semaphore(0)
         val scope = IonTestScope()
         val promise = Promise {
@@ -46,8 +47,14 @@ open class AsyncTests(val timeout: Long = 100000L) {
 
         val timeout = !semaphore.tryAcquire(actualTimeout, TimeUnit.MILLISECONDS)
         scope.ion.loop.stop()
-        if (timeout)
+        if (!expectTimeout && timeout)
             throw Exception("test timed out")
-        promise.getOrThrow()
+        try {
+            promise.getOrThrow()
+        }
+        catch (throwable: IllegalStateException) {
+            if (!expectIncomplete)
+                throw throwable
+        }
     }
 }

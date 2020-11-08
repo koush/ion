@@ -6,6 +6,7 @@ import com.koushikdutta.ion.builder.ResponsePromise
 import com.koushikdutta.ion.util.AsyncParser
 import com.koushikdutta.scratch.AsyncRead
 import com.koushikdutta.scratch.createScheduler
+import com.koushikdutta.scratch.event.monitor
 import com.koushikdutta.scratch.event.timeout
 import com.koushikdutta.scratch.http.AsyncHttpRequest
 import com.koushikdutta.scratch.http.Headers
@@ -63,11 +64,8 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
         // now attempt to fetch it directly
         for (loader in ion.loaders) {
             val emitter = loader.load(ion, this, request)
-            if (emitter != null) {
-//                request.logi("Using loader: $loader")
-//                ret.setParent(emitter)
+            if (emitter != null)
                 return emitter.await()
-            }
         }
 
         throw Exception("Unknown uri scheme")
@@ -174,7 +172,9 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
             }
 
             val emitter = ion.loop.timeout(timeoutMilliseconds.toLong()) {
-                loadRequest(finalRequest)
+                ion.loop.monitor(1000L, { contextReference.isAlive == null }) {
+                    loadRequest(finalRequest)
+                }
             }
 
             val response: Response<F> = try {
@@ -193,11 +193,7 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
 
         }
 
-        val result = GlobalScope.async(Dispatchers.Unconfined) {
-            response.await().result.getOrThrow()
-        }
-
-        return ResponsePromise(result, affinity, response)
+        return ResponsePromise(affinity, response)
     }
 
     fun execute(): ResponsePromise<T> {

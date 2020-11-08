@@ -655,7 +655,7 @@ public class IonDrawable extends LayerDrawable {
                 }
 
                 // TODO: cancellation of unnecessary regions when fast pan/zooming
-                ion.bitmapManager.requestRegion(info, texRect, sampleSize)
+                ion.bitmapManager.requestRegion(null, info, texRect, sampleSize)
                 .result(bitmapInfo -> invalidateSelf());
 
                 int parentLeft = 0;

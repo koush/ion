@@ -1,9 +1,12 @@
 package com.koushikdutta.ion.test
 
+import android.content.Context
 import android.os.Looper
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.JsonObject
+import com.koushikdutta.ion.ContextReference
 import com.koushikdutta.ion.Ion
+import com.koushikdutta.ion.IonContext
 import com.koushikdutta.ion.builder.IonPromise
 import com.koushikdutta.scratch.createScheduler
 import com.koushikdutta.scratch.event.sleep
@@ -143,11 +146,13 @@ class BasicTests: AsyncTests() {
         assertEquals(assetObserver.loadObserved, 2)
     }
 
+    private val contextReference = ContextReference.fromContext(InstrumentationRegistry.getInstrumentation().context)
+
     @Test
     fun testIonPromise() = testAsync {
         val affinity = Looper.getMainLooper().createScheduler()
         assertFalse(affinity.isAffinityThread)
-        val promise = IonPromise(Looper.getMainLooper().createScheduler()) {
+        val promise = IonPromise(contextReference, Looper.getMainLooper().createScheduler()) {
             42
         }
 
@@ -160,7 +165,7 @@ class BasicTests: AsyncTests() {
     fun testIonPromise2() = testAsync {
         val affinity = Looper.getMainLooper().createScheduler()
         assertFalse(affinity.isAffinityThread)
-        val promise = IonPromise(Looper.getMainLooper().createScheduler()) {
+        val promise = IonPromise(contextReference, Looper.getMainLooper().createScheduler()) {
             42
         }
 
@@ -169,5 +174,21 @@ class BasicTests: AsyncTests() {
 
         promise.await()
         assertTrue(affinity.isAffinityThread)
+    }
+
+    class DeadContext : IonContext {
+        override fun isAlive() = "dead"
+        override fun getContext() = InstrumentationRegistry.getInstrumentation().context
+    }
+
+    @Test
+    fun testDeadContext() = testAsync(true, true) {
+        val result = ion.build(DeadContext())
+                .load("test://example.com/hello")
+                .asString()
+                .await()
+
+        assertEquals(result, "hello")
+        assertEquals(Thread.currentThread(), Looper.getMainLooper().thread)
     }
 }

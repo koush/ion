@@ -42,7 +42,6 @@ class HttpLoader(ion: Ion) : SimpleLoader() {
             }
 
             LoaderResult(response, response.headers.contentLength,
-                    // fixup cache reporting
                     responseServedFrom,
                     HeadersResponse(response.code, response.message, response.headers),
                     // fixup redirected final request

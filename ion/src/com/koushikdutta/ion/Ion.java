@@ -244,7 +244,7 @@ public class Ion {
         }
     };
 
-    private Runnable processDeferred = new Runnable() {
+    final private Runnable processDeferred = new Runnable() {
         @Override
         public void run() {
             bitmapManager.processDeferred();

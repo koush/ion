@@ -26,16 +26,16 @@ internal class BitmapManager(val ion: Ion) {
 
     val pendingBitmaps = mutableMapOf<String, BitmapPromise>()
 
-    private fun getOrCreateBitmapPromise(key: String, start: Boolean, block: suspend () -> BitmapInfo) = getOrCreateBitmapPromise(null, key, start, null, block)
+    private fun getOrCreateBitmapPromise(key: String, start: Boolean, block: suspend () -> BitmapInfo) = getOrCreateBitmapPromise(null, null, key, start, null, block)
 
-    private fun getOrCreateBitmapPromise(lazyId: Int?, key: String, start: Boolean, affinity: AsyncAffinity?, block: suspend () -> BitmapInfo): BitmapPromise {
+    private fun getOrCreateBitmapPromise(contextReference: IonContext? = null, lazyId: Int?, key: String, start: Boolean, affinity: AsyncAffinity?, block: suspend () -> BitmapInfo): BitmapPromise {
         requireMainThread()
 
         val loadPromise = pendingBitmaps[key]
         if (loadPromise != null)
             return loadPromise
 
-        val newPromise = BitmapPromise(lazyId, affinity = affinity) {
+        val newPromise = BitmapPromise(contextReference = contextReference, lazyPriority = lazyId, affinity = affinity) {
             var uncacheable = false
             var forceCache = false
             val bi = try {
@@ -97,15 +97,15 @@ internal class BitmapManager(val ion: Ion) {
     fun requestLazyLoad(bitmapRequest: BitmapRequest): BitmapPromise {
         val id = BitmapPromise.createLazyLoadPriority()
         val key = BitmapPromise.getLazyLoadKey(id, bitmapRequest.bitmapKey)
-        return getOrCreateBitmapPromise(id, key, false, bitmapRequest.executor.affinity) {
+        return getOrCreateBitmapPromise(bitmapRequest.executor.contextReference, id, key, false, bitmapRequest.executor.affinity) {
             val promise = requestInternal(bitmapRequest, true)
             promise.start()
             promise.await()
         }
     }
 
-    fun requestRegion(info: BitmapInfo, region: Rect, inSampleSize: Int): BitmapPromise {
-        val ret = BitmapPromise(affinity = mainAffinity) {
+    fun requestRegion(contextReference: IonContext?, info: BitmapInfo, region: Rect, inSampleSize: Int): BitmapPromise {
+        val ret = BitmapPromise(contextReference = contextReference, affinity = mainAffinity) {
             val key = BitmapRequest.computeRegionKey(info.key, region, inSampleSize)
             getOrCreateBitmapInfo(key, true) {
                 mainAffinity.await()

@@ -7,8 +7,8 @@ import kotlinx.coroutines.Deferred
 /**
  * Created by koush on 7/2/13.
  */
-class ResponsePromise<T>(wrappedDeferred: Deferred<T>, affinity: AsyncAffinity?, private val response: Deferred<Response<T>>) : IonPromise<T>(affinity, wrappedDeferred) {
+class ResponsePromise<T>(affinity: AsyncAffinity?, private val response: Deferred<Response<T>>) : IonPromise<T>(null, affinity, block = { response.await().result.getOrThrow() }) {
     fun withResponse(): IonPromise<Response<T>> {
-        return IonPromise(affinity, response)
+        return IonPromise(contextReference, affinity, response)
     }
 }

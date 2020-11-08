@@ -15,11 +15,15 @@ internal fun requireMainThread() {
         throw IllegalStateException("must only call from main thread")
 }
 
-internal class BitmapPromise(val lazyPriority: Int? = null, affinity: AsyncAffinity?, block: suspend() -> BitmapInfo): IonPromise<BitmapInfo>(affinity, CoroutineStart.LAZY, block) {
+internal class BitmapPromise(contextReference: IonContext? = null, val lazyPriority: Int? = null, affinity: AsyncAffinity?, block: suspend() -> BitmapInfo): IonPromise<BitmapInfo>(contextReference, affinity, CoroutineStart.LAZY, block) {
     val isLazyLoad
         get() = lazyPriority != null
     val isLoading
         get() = isStarted
+
+    init {
+        cancelSilently = false
+    }
 
     companion object {
         var LAZYLOAD_COUNTER = 0
