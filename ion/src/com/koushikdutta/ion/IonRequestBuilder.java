@@ -322,7 +322,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
             AsyncHttpRequestBody wrappedBody = new RequestBodyUploadObserver(body, new ProgressCallback() {
                     @Override
                     public void onProgress(final long downloaded, final long total) {
-                    assert Thread.currentThread() != Looper.getMainLooper().getThread();
 
                     final int percent = (int)((float)downloaded / total * 100f);
 
@@ -530,7 +529,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
                 int lastPercent;
                 @Override
                 public void onData(final int totalBytesRead) {
-                    assert Thread.currentThread() != Looper.getMainLooper().getThread();
                     // if the requesting context dies during the transfer... cancel
                     String deadReason = contextReference.isAlive();
                     if (deadReason != null) {
@@ -644,8 +642,6 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     <T> ResponseFuture<T> execute(final AsyncParser<T> parser, Runnable cancel) {
-        assert parser != null;
-
         // only set the accept header if the default is currently in use
         String mime = parser.getMime();
         if (!TextUtils.isEmpty(mime)) {

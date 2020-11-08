@@ -159,8 +159,6 @@ class IonDrawable extends LayerDrawable {
 
         @Override
         public void onCompleted(Exception e, BitmapInfo result) {
-            assert Thread.currentThread() == Looper.getMainLooper().getThread();
-            assert result != null;
             // see if the imageview is still alive and cares about this result
             IonDrawable drawable = ionDrawableRef.get();
             if (drawable == null)

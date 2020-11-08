@@ -124,7 +124,6 @@ public class IonImageViewRequestBuilder extends IonBitmapRequestBuilder implemen
 
     @Override
     public ImageViewFuture intoImageView(ImageView imageView) {
-        assert Thread.currentThread() == Looper.getMainLooper().getThread();
         if (imageView == null)
             throw new NullPointerException("imageView");
 

@@ -134,8 +134,6 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     }
 
     public static String computeBitmapKey(String decodeKey, List<Transform> transforms) {
-        assert decodeKey != null;
-
         // determine the key for this bitmap after all transformations
         String bitmapKey = decodeKey;
         if (transforms != null && transforms.size() > 0) {
