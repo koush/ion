@@ -18,6 +18,7 @@ import com.koushikdutta.scratch.http.StatusCode
 import com.koushikdutta.scratch.http.server.AsyncHttpRouter
 import com.koushikdutta.scratch.http.server.AsyncHttpServer
 import com.koushikdutta.scratch.http.server.post
+import com.koushikdutta.scratch.siphon
 import java.io.File
 import java.io.RandomAccessFile
 
@@ -38,7 +39,7 @@ class ProgressBarUpload : Activity() {
         loop.startThread("upload")
 
         router.post("/upload") {
-            it.body!!.drain()
+            it.body!!.siphon()
             StatusCode.OK()
         }
 

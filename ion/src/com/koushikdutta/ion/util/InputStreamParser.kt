@@ -18,11 +18,10 @@ class InputStreamParser(override val contentType: String = "application/octet-st
 class InputStreamSerializer(val contentLength: Long? = null, val contentType: String = "application/octet-stream") : AsyncSerializer<InputStream> {
     override fun write(value: InputStream) = Promise<AsyncHttpMessageBody> {
         val input = value.createAsyncInput()
-        val read = input::read
         object : AsyncHttpMessageBody {
             override val contentLength = this@InputStreamSerializer.contentLength
             override val contentType = this@InputStreamSerializer.contentType
-            override val read = read
+            override val read = input
             override suspend fun sent(throwable: Throwable?) = input.close()
         }
     }

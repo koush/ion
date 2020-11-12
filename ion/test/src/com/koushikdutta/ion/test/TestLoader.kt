@@ -3,6 +3,7 @@ package com.koushikdutta.ion.test
 import com.koushikdutta.ion.*
 import com.koushikdutta.ion.loader.SimpleLoader
 import com.koushikdutta.scratch.AsyncAffinity
+import com.koushikdutta.scratch.AsyncRead
 import com.koushikdutta.scratch.AsyncReader
 import com.koushikdutta.scratch.Promise
 import com.koushikdutta.scratch.async.async
@@ -22,7 +23,7 @@ class TestLoader : SimpleLoader() {
 
     init {
         router.post("/echo") {
-            val data = readAllBuffer(it.body ?: { false })
+            val data = readAllBuffer(it.body ?: AsyncRead { false })
             StatusCode.OK(body = BufferBody(data.readBytes()))
         }
 

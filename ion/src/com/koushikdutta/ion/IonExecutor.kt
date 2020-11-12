@@ -23,7 +23,7 @@ interface IonRequestOptions {
 
 private fun AsyncRead.observe(progressCallback: (Long) -> Unit): AsyncRead {
     var total = 0L
-    return {
+    return AsyncRead {
         val before = it.remaining()
         val ret = this(it)
         val progress = it.remaining() - before
@@ -160,7 +160,7 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
     }
 
 
-    fun setupDownloadProgress(emitter: Loader.LoaderResult): AsyncRead = setupProgress(emitter.input::read, emitter.length, progress, progressBar, progressDialog, progressHandler) ?: emitter.input::read
+    fun setupDownloadProgress(emitter: Loader.LoaderResult): AsyncRead = setupProgress(emitter.input, emitter.length, progress, progressBar, progressDialog, progressHandler) ?: emitter.input
 
     fun <F> executeParser(parser: AsyncParser<F>, fastLoad: suspend(request: AsyncHttpRequest) -> Response<F>? = { null }): ResponsePromise<F> {
         val response: Deferred<Response<F>> = GlobalScope.async(Dispatchers.Unconfined) {
@@ -189,8 +189,8 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
                 emitter.input.close()
             }
 
+            println(response)
             response
-
         }
 
         return ResponsePromise(affinity, response)

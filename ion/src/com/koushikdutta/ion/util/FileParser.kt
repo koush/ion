@@ -15,7 +15,7 @@ class FileParser(val loop: AsyncEventLoop, val file: File, override val contentT
         tmp.parentFile?.mkdirs()
         val storage = loop.openFile(tmp, true)
         try {
-            read.copy(storage::write)
+            read.copy(storage)
             storage.close()
         }
         catch (throwable: Throwable) {
@@ -35,11 +35,10 @@ class FileSerializer(val loop: AsyncEventLoop, val contentType: String = "applic
     override fun write(value: File) = Promise<AsyncHttpMessageBody> {
         val storage = loop.openFile(value)
         val length = storage.size()
-        val read = storage::read
         object : AsyncHttpMessageBody {
             override val contentLength = length
             override val contentType = this@FileSerializer.contentType
-            override val read = read
+            override val read = storage
             override suspend fun sent(throwable: Throwable?) {
                 storage.close()
                 if (throwable != null)
