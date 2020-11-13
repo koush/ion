@@ -14,11 +14,12 @@ import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 import com.koushikdutta.ion.builder.IonPromise;
 import com.koushikdutta.ion.util.ByteBufferListParser;
-import com.koushikdutta.scratch.LooperKt;
 import com.koushikdutta.scratch.collections.LruCache;
 import com.koushikdutta.scratch.event.FileStore;
 
 import java.util.ArrayList;
+
+import static com.koushikdutta.scratch.event.LooperKt.createScheduler;
 
 /**
  * Created by koush on 5/23/13.
@@ -174,7 +175,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     @Override
     public IonPromise<Bitmap> asBitmap() {
         BitmapRequest request = buildRequest();
-        return new IonPromise<>(builder.contextReference, builder.handler != null ? LooperKt.createScheduler(builder.handler) : null, ion.bitmapManager.request(request)
+        return new IonPromise<>(builder.contextReference, builder.handler != null ? createScheduler(builder.handler) : null, ion.bitmapManager.request(request)
         .apply(bitmapInfo -> {
             if (bitmapInfo.exception != null)
                 throw bitmapInfo.exception;

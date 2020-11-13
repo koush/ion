@@ -4,8 +4,8 @@ import com.koushikdutta.scratch.asyncIterator
 import com.koushikdutta.scratch.collections.toString
 import com.koushikdutta.scratch.http.AsyncHttpMessageBody
 import com.koushikdutta.scratch.http.Headers
-import com.koushikdutta.scratch.parser.Multipart
-import com.koushikdutta.scratch.parser.Part
+import com.koushikdutta.scratch.http.body.Multipart
+import com.koushikdutta.scratch.http.body.Part
 import kotlinx.coroutines.*
 
 class MultipartBody {

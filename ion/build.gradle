@@ -22,7 +22,8 @@ dependencies {
     // for when i wanna test this against gms conscrypt
     androidTestImplementation 'com.google.android.gms:play-services-base:17.4.0'
 
-    api project(":scratch:core")
+    api project(":scratch:http")
+    api project(":scratch:core-android-extensions")
 
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.uiautomator:uiautomator:2.2.0';

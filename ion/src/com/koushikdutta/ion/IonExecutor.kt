@@ -5,7 +5,7 @@ import android.widget.ProgressBar
 import com.koushikdutta.ion.builder.ResponsePromise
 import com.koushikdutta.ion.util.AsyncParser
 import com.koushikdutta.scratch.AsyncRead
-import com.koushikdutta.scratch.createScheduler
+import com.koushikdutta.scratch.event.createScheduler
 import com.koushikdutta.scratch.event.monitor
 import com.koushikdutta.scratch.event.timeout
 import com.koushikdutta.scratch.http.AsyncHttpRequest

@@ -43,14 +43,13 @@ import com.koushikdutta.ion.util.QueryString;
 import com.koushikdutta.ion.util.StringParser;
 import com.koushikdutta.ion.util.StringSerializer;
 import com.koushikdutta.ion.util.UrlEncodedFormBody;
-import com.koushikdutta.scratch.LooperKt;
 import com.koushikdutta.scratch.buffers.ByteBufferList;
 import com.koushikdutta.scratch.http.AsyncHttpMessageBody;
 import com.koushikdutta.scratch.http.AsyncHttpRequest;
 import com.koushikdutta.scratch.http.Header;
 import com.koushikdutta.scratch.http.Headers;
 import com.koushikdutta.scratch.http.Methods;
-import com.koushikdutta.scratch.parser.Part;
+import com.koushikdutta.scratch.http.body.Part;
 
 import org.w3c.dom.Document;
 
@@ -67,6 +66,8 @@ import java.util.Map;
 import kotlin.NotImplementedError;
 import kotlin.text.Charsets;
 import kotlinx.coroutines.Deferred;
+
+import static com.koushikdutta.scratch.event.LooperKt.createScheduler;
 
 /**
  * Created by koush on 5/21/13.
@@ -468,7 +469,7 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
 
     @Override
     public IonPromise<Bitmap> asBitmap() {
-        return new IonPromise<>(contextReference, handler != null ? LooperKt.createScheduler(handler) : null, new IonImageViewRequestBuilder(this).asBitmap());
+        return new IonPromise<>(contextReference, handler != null ? createScheduler(handler) : null, new IonImageViewRequestBuilder(this).asBitmap());
     }
 
     String logTag;

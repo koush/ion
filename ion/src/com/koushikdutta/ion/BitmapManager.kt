@@ -13,8 +13,8 @@ import com.koushikdutta.ion.util.StreamUtility
 import com.koushikdutta.scratch.AsyncAffinity
 import com.koushikdutta.scratch.buffers.ByteBuffer
 import com.koushikdutta.scratch.buffers.ByteBufferList
-import com.koushikdutta.scratch.createScheduler
 import com.koushikdutta.scratch.event.await
+import com.koushikdutta.scratch.event.createScheduler
 import java.io.File
 import java.io.InputStream
 
