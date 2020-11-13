@@ -38,7 +38,7 @@ class TwitterKotlin : Activity() {
                     tweet = retweet
 
                 // grab the user info... name, profile picture, tweet text
-                val user = tweet!!.getAsJsonObject("user")
+                val user = tweet.getAsJsonObject("user")
                 val twitterId = user.get("screen_name").getAsString()
 
                 // set the profile photo using Ion
@@ -56,10 +56,10 @@ class TwitterKotlin : Activity() {
                         .load(imageUrl.replace("_normal", ""))
 
                 // and finally, set the name and text
-                val handle = view!!.findViewById<TextView>(R.id.handle)
+                val handle = view.findViewById<TextView>(R.id.handle)
                 handle.setText(twitterId)
 
-                val text = view!!.findViewById<TextView>(R.id.tweet)
+                val text = view.findViewById<TextView>(R.id.tweet)
                 text.setText(tweet.get("text").getAsString())
                 return view
             }
