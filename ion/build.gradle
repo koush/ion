@@ -15,12 +15,12 @@ dependencies {
     // ConscryptMiddleware will throw ClassNotFoundErrors upon attempting to load it at runtime.
     // Conscrypt will fail to load, and the system SSL stack will be used.
     // "compileOnly" means the library is compiled but not required at runtime.
-    compileOnly 'com.google.android.gms:play-services-base:17.4.0'
+    compileOnly 'com.google.android.gms:play-services-base:17.5.0'
 
     api 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // for when i wanna test this against gms conscrypt
-    androidTestImplementation 'com.google.android.gms:play-services-base:17.4.0'
+    androidTestImplementation 'com.google.android.gms:play-services-base:17.5.0'
 
     api project(":scratch:http")
     api project(":scratch:core-android-extensions")

@@ -20,7 +20,9 @@ import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
 import com.koushikdutta.ion.loader.ResourceLoader;
 import com.koushikdutta.ion.loader.VideoLoader;
+import com.koushikdutta.scratch.Deferred;
 import com.koushikdutta.scratch.Promise;
+import com.koushikdutta.scratch.PromiseResultCallback;
 import com.koushikdutta.scratch.collections.LruCache;
 import com.koushikdutta.scratch.event.FileStore;
 import com.koushikdutta.scratch.event.AsyncEventLoop;
@@ -32,6 +34,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -454,5 +457,18 @@ public class Ion {
      */
     public IonBitmapCache getBitmapCache() {
         return bitmapCache;
+    }
+
+    static public <T> Promise<T> submitBackgroundTask(Callable<T> callback) {
+        Deferred<T> deferred = new Deferred<>();
+        new Thread(() -> {
+            try {
+                deferred.resolve(callback.call());
+            }
+            catch (Throwable throwable) {
+                deferred.reject(throwable);
+            }
+        }, "ion-background").start();
+        return deferred.getPromise();
     }
 }
