@@ -14,7 +14,7 @@ import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.util.StreamUtility;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.Loader;
+import com.koushikdutta.ion.ResponseServedFrom;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 
@@ -66,7 +66,7 @@ public class FileLoader extends StreamLoader {
                             throw new Exception("Bitmap failed to load");
                         info = new BitmapInfo(key, options.outMimeType, bitmap, size);
                     }
-                    info.loadedFrom =  Loader.LoaderEmitter.LOADED_FROM_CACHE;
+                    info.servedFrom = ResponseServedFrom.LOADED_FROM_CACHE;
                     ret.setComplete(info);
                 }
                 catch (OutOfMemoryError e) {
@@ -82,27 +82,8 @@ public class FileLoader extends StreamLoader {
     }
 
     @Override
-    public Future<InputStream> load(final Ion ion, final AsyncHttpRequest request) {
-        if (!request.getUri().getScheme().startsWith("file"))
-            return null;
-        final SimpleFuture<InputStream> ret = new SimpleFuture<InputStream>();
-        Ion.getIoExecutorService().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    InputStream stream = new FileInputStream(new File(URI.create(request.getUri().toString())));
-                    ret.setComplete(stream);
-                } catch (Exception e) {
-                    ret.setComplete(e);
-                }
-            }
-        });
-        return ret;
-    }
-
-    @Override
     public Future<DataEmitter> load(final Ion ion, final AsyncHttpRequest request, final FutureCallback<LoaderEmitter> callback) {
-        if (!request.getUri().getScheme().startsWith("file"))
+        if (request.getUri().getScheme() == null || !request.getUri().getScheme().startsWith("file"))
             return null;
         final FileFuture ret = new FileFuture();
         ion.getHttpClient().getServer().post(new Runnable() {
@@ -111,7 +92,7 @@ public class FileLoader extends StreamLoader {
                 File file = new File(URI.create(request.getUri().toString()));
                 FileDataEmitter emitter = new FileDataEmitter(ion.getHttpClient().getServer(), file);
                 ret.setComplete(emitter);
-                callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length(), LoaderEmitter.LOADED_FROM_CACHE, null, request));
+                callback.onCompleted(null, new LoaderEmitter(emitter, (int)file.length(), ResponseServedFrom.LOADED_FROM_CACHE, null, request));
             }
         });
         return ret;

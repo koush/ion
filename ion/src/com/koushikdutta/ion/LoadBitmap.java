@@ -14,24 +14,25 @@ import com.koushikdutta.ion.gif.GifFrame;
 
 import java.nio.ByteBuffer;
 
-class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferList> {
+class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<Response<ByteBufferList>> {
     int resizeWidth;
     int resizeHeight;
 
-    public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, boolean animateGif, IonRequestBuilder.EmitterTransform<ByteBufferList> emitterTransform) {
-        super(ion, urlKey, put, animateGif, emitterTransform);
+    public LoadBitmap(Ion ion, String urlKey, boolean put, int resizeWidth, int resizeHeight, boolean animateGif) {
+        super(ion, urlKey, put, animateGif);
         this.resizeWidth = resizeWidth;
         this.resizeHeight = resizeHeight;
-        this.animateGif = animateGif;
-        this.emitterTransform = emitterTransform;
     }
 
     @Override
-    public void onCompleted(Exception e, final ByteBufferList result) {
+    public void onCompleted(Exception e, final Response<ByteBufferList> response) {
+        if (e == null)
+            e = response.getException();
         if (e != null) {
             report(e, null);
             return;
         }
+        final ByteBufferList result = response.getResult();
 
         if (ion.bitmapsPending.tag(key) != this) {
             result.recycle();
@@ -71,10 +72,7 @@ class LoadBitmap extends LoadBitmapEmitter implements FutureCallback<ByteBufferL
 
                     BitmapInfo info = new BitmapInfo(key, options.outMimeType, bitmap, size);
                     info.gifDecoder = gifDecoder;
-                    if (emitterTransform != null)
-                        info.loadedFrom = emitterTransform.loadedFrom();
-                    else
-                        info.loadedFrom = Loader.LoaderEmitter.LOADED_FROM_CACHE;
+                    info.servedFrom = response.getServedFrom();
 
                     report(null, info);
                 }

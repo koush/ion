@@ -6,8 +6,8 @@ import com.koushikdutta.async.future.TransformFuture;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 
 class BitmapInfoToBitmap extends TransformFuture<Bitmap, BitmapInfo> {
-    ContextReference contextReference;
-    public BitmapInfoToBitmap(ContextReference contextReference) {
+    IonContext contextReference;
+    public BitmapInfoToBitmap(IonContext contextReference) {
         this.contextReference = contextReference;
     }
 

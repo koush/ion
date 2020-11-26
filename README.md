@@ -3,11 +3,11 @@
 ![](ion-sample/ion-sample.png)
 
 #### Download
- * [Jar](https://github.com/koush/ion#get-ion)
  * [Maven](https://github.com/koush/ion#get-ion)
  * [Git](https://github.com/koush/ion#get-ion)
 
 #### Features
+ * [Kotlin coroutine/suspend support](https://github.com/koush/AndroidAsync/blob/master/AndroidAsync-Kotlin/README.md)
  * Asynchronously download:
    * [Images](https://github.com/koush/ion#load-an-image-into-an-imageview) into ImageViews or Bitmaps (animated GIFs supported too)
    * [JSON](https://github.com/koush/ion#get-json) (via [Gson](https://code.google.com/p/google-gson/))
@@ -48,12 +48,12 @@ The included documented [ion-sample](https://github.com/koush/ion/tree/master/io
    * Populate a ListView Adapter and fetch more data as you scroll to the end
    * Put images from a URLs into ImageViews (twitter profile pictures)
  * File Download with [Progress Bar Sample](https://github.com/koush/ion/blob/master/ion-sample/src/com/koushikdutta/ion/sample/ProgressBarDownload.java)
- * Get JSON and show images with the [Google Image Search Sample](https://github.com/koush/ion/blob/master/ion-sample/src/com/koushikdutta/ion/sample/GoogleImageSearch.java)
+ * Get JSON and show images with the [Image Search Sample](https://github.com/koush/ion/blob/master/ion-sample/src/com/koushikdutta/ion/sample/ImageSearch.java)
 
 #### More Examples
 
 Looking for more? Check out the examples below that demonstrate some other common scenarios. You can also take a look
-at 30+ ion unit tests in the [ion-test](https://github.com/koush/ion/tree/master/ion-test/src/com/koushikdutta/ion/test).
+at 30+ ion unit tests in the [ion-test](https://github.com/koush/ion/tree/master/ion/test/src/com/koushikdutta/ion/test).
 
 #### Get JSON
 
@@ -105,7 +105,7 @@ Ion.with(getContext())
 .load("https://koush.clockworkmod.com/test/echo")
 .uploadProgressBar(uploadProgressBar)
 .setMultipartParameter("goop", "noop")
-.setMultipartFile("filename.zip", new File("/sdcard/filename.zip"))
+.setMultipartFile("archive", "application/zip", new File("/sdcard/filename.zip"))
 .asJsonObject()
 .setCallback(...)
 ```
@@ -121,7 +121,7 @@ Ion.with(context)
 .progressDialog(progressDialog)
 // can also use a custom callback
 .progress(new ProgressCallback() {@Override
-   public void onProgress(int downloaded, int total) {
+   public void onProgress(long downloaded, long total) {
        System.out.println("" + downloaded + " / " + total);
    }
 })
@@ -170,7 +170,7 @@ Ion.with(imageView)
 
 The Ion Image load API has the following features:
  * Disk and memory caching
- * Bitmaps are held via weak references so memory is managed very effeciently
+ * Bitmaps are held via weak references so memory is managed very efficiently
  * ListView Adapter recycling support
  * Bitmap transformations via the .transform(Transform)
  * Animate loading and loaded ImageView states
@@ -290,8 +290,8 @@ Future<JsonObject> json2 = Ion.with(activity, "http://example.com/test2.json").a
 // later... in activity.onStop
 @Override
 protected void onStop() {
-    super.onStop();
     Ion.getDefault(activity).cancelAll(activity);
+    super.onStop();
 }
 ```
 
@@ -373,23 +373,19 @@ Ion.with(getContext())
 
 #### Get Ion
 
-##### Jars
- * [androidasync.jar](https://search.maven.org/remote_content?g=com.koushikdutta.async&a=androidasync&v=LATEST) (dependency)
- * [ion.jar](https://search.maven.org/remote_content?g=com.koushikdutta.ion&a=ion&v=LATEST)
-
 ##### Maven
 ```xml
 <dependency>
    <groupId>com.koushikdutta.ion</groupId>
    <artifactId>ion</artifactId>
-   <version>2,</version>
+   <version>(insert latest version)</version>
 </dependency>
 ```
 
 ##### Gradle
 ```groovy
 dependencies {
-    compile 'com.koushikdutta.ion:ion:2.+'
+    compile 'com.koushikdutta.ion:ion:(insert latest version)'
 }
 ````
 
@@ -424,3 +420,6 @@ There's hundreds of apps using ion. Feel free to contact me or submit a pull req
 * [PictureCast](https://play.google.com/store/apps/details?id=com.unstableapps.picturecast.app)
 * [Eventius](https://play.google.com/store/apps/details?id=com.eventius.android)
 * [Plume](https://play.google.com/store/apps/details?id=com.levelup.touiteur)
+* [GameRaven](https://play.google.com/store/apps/details?id=com.ioabsoftware.gameraven)
+* [See You There](https://play.google.com/store/apps/details?id=com.maps.wearat&hl=en)
+* [Doogles](https://play.google.com/store/apps/details?id=io.dooglesapp)

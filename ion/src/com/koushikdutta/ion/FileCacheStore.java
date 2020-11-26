@@ -105,9 +105,8 @@ public class FileCacheStore {
                         ret.setComplete((T)null);
                         return;
                     }
-                    ion.build(ion.getContext()).load(file)
-                    .as(parser)
-                    .setCallback(ret.getCompletionCallback());
+                    ret.setComplete(ion.build(ion.getContext()).load(file)
+                    .as(parser));
                 }
                 catch (Exception e) {
                     ret.setComplete(e);

@@ -25,6 +25,14 @@ public class Samples extends Activity {
             }
         });
 
+        Button twitterKotlin = (Button)findViewById(R.id.twitter_kotlin);
+        twitterKotlin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(Samples.this, TwitterKotlin.class));
+            }
+        });
+
         Button twitterGson = (Button)findViewById(R.id.twitter_gson);
         twitterGson.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -49,11 +57,11 @@ public class Samples extends Activity {
             }
         });
 
-        Button googleImageSearch = (Button)findViewById(R.id.google_image_search);
-        googleImageSearch.setOnClickListener(new View.OnClickListener() {
+        Button imageSearch = (Button)findViewById(R.id.image_search);
+        imageSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(Samples.this, GoogleImageSearch.class));
+                startActivity(new Intent(Samples.this, ImageSearch.class));
             }
         });
 
@@ -80,6 +88,22 @@ public class Samples extends Activity {
                 startActivity(new Intent(Samples.this, DeepZoomSample.class));
             }
         });
+
+        findViewById(R.id.kenburns)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivity(new Intent(Samples.this, KenBurnsSample.class));
+                    }
+                });
+
+        findViewById(R.id.rounded)
+                .setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        startActivity(new Intent(Samples.this, RoundedImageViewSample.class));
+                    }
+                });
 
         Button lollipopTransitionSample = (Button)findViewById(R.id.lollipop_transition);
         if (Build.VERSION.SDK_INT >= 21) {

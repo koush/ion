@@ -9,18 +9,15 @@ import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.ion.Ion;
 import com.koushikdutta.ion.Loader;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
+import com.koushikdutta.ion.future.ResponseFuture;
 
 import java.io.InputStream;
+import java.lang.reflect.Type;
 
 /**
  * Created by koush on 12/22/13.
  */
 public class SimpleLoader implements Loader {
-    @Override
-    public Future<InputStream> load(Ion ion, AsyncHttpRequest request) {
-        return null;
-    }
-
     @Override
     public Future<DataEmitter> load(Ion ion, AsyncHttpRequest request, FutureCallback<LoaderEmitter> callback) {
         return null;
@@ -33,6 +30,11 @@ public class SimpleLoader implements Loader {
 
     @Override
     public Future<AsyncHttpRequest> resolve(Context context, Ion ion, AsyncHttpRequest request) {
+        return null;
+    }
+
+    @Override
+    public <T> ResponseFuture<T> load(Ion ion, AsyncHttpRequest request, Type type) {
         return null;
     }
 }

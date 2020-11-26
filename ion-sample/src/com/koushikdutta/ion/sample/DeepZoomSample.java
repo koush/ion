@@ -30,7 +30,7 @@ public class DeepZoomSample extends Activity {
 
         // this is going to load a 30mb download...
         Ion.with(this)
-        .load("https://raw.githubusercontent.com/koush/ion/master/ion-sample/telescope.jpg")
+        .load("https://raw.githubusercontent.com/koush/ion/master/ion-sample/assets/telescope.jpg")
         .progressDialog(dlg)
         .setLogging("DeepZoom", Log.VERBOSE)
         .withBitmap()

@@ -1,14 +1,9 @@
 package com.koushikdutta.ion.sample;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -20,7 +15,6 @@ import com.google.gson.JsonObject;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
 import com.koushikdutta.ion.Ion;
-import com.koushikdutta.ion.bitmap.Transform;
 
 public class Twitter extends Activity {
     // adapter that holds tweets, obviously :)
@@ -121,7 +115,7 @@ public class Twitter extends Activity {
             return;
 
         // load the tweets
-        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=BestAt&count=20";
+        String url = "https://api.twitter.com/1.1/statuses/user_timeline.json?screen_name=dog_rates&count=20";
         if (tweetAdapter.getCount() > 0) {
             // load from the "last" id
             JsonObject last = tweetAdapter.getItem(tweetAdapter.getCount() - 1);

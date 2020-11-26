@@ -18,6 +18,7 @@ import com.koushikdutta.ion.builder.AnimateGifMode;
 import com.koushikdutta.ion.builder.BitmapFutureBuilder;
 import com.koushikdutta.ion.builder.Builders;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -133,8 +134,6 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     }
 
     public static String computeBitmapKey(String decodeKey, List<Transform> transforms) {
-        assert decodeKey != null;
-
         // determine the key for this bitmap after all transformations
         String bitmapKey = decodeKey;
         if (transforms != null && transforms.size() > 0) {
@@ -164,6 +163,18 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
         if (fileCache.exists(decodeKey))
             return LocallyCachedStatus.MAYBE_CACHED;
         return LocallyCachedStatus.NOT_CACHED;
+    }
+
+
+    @Override
+    public void removeCachedBitmap() {
+        final String decodeKey = computeDecodeKey();
+        addDefaultTransform();
+        String bitmapKey = computeBitmapKey(decodeKey);
+        ion.responseCache.getFileCache().remove(decodeKey);
+        ion.responseCache.getFileCache().remove(bitmapKey);
+        builder.ion.bitmapCache.remove(bitmapKey);
+        builder.ion.bitmapCache.remove(decodeKey);
     }
 
     @Override

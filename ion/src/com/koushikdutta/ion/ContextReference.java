@@ -15,9 +15,9 @@ import java.util.List;
 /**
  * Created by koush on 4/15/14.
  */
-abstract class ContextReference<T> extends WeakReference<T> {
-    ContextReference(T t) {
-        super(t);
+public abstract class ContextReference<T> extends WeakReference<T> implements IonContext{
+    public ContextReference(T context) {
+        super(context);
     }
 
     abstract static class NormalContextReference<T extends Context> extends ContextReference<T> {
@@ -39,7 +39,7 @@ abstract class ContextReference<T> extends WeakReference<T> {
         }
     }
 
-    static class ServiceContextReference extends NormalContextReference<Service> {
+    public static class ServiceContextReference extends com.koushikdutta.ion.ContextReference.NormalContextReference<Service> {
         public ServiceContextReference(Service service) {
             super(service);
         }
@@ -65,7 +65,7 @@ abstract class ContextReference<T> extends WeakReference<T> {
         }
     }
 
-    static class ActivityContextReference extends NormalContextReference<Activity> {
+    public static class ActivityContextReference extends com.koushikdutta.ion.ContextReference.NormalContextReference<Activity> {
         public ActivityContextReference(Activity activity) {
             super(activity);
         }
@@ -85,7 +85,7 @@ abstract class ContextReference<T> extends WeakReference<T> {
     }
 
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    static class FragmentContextReference extends ContextReference<Fragment> {
+    public static class FragmentContextReference extends ContextReference<Fragment> {
         public FragmentContextReference(Fragment fragment) {
             super(fragment);
         }
@@ -112,14 +112,14 @@ abstract class ContextReference<T> extends WeakReference<T> {
         }
     }
 
-    static class SupportFragmentContextReference extends ContextReference<android.support.v4.app.Fragment> {
-        public SupportFragmentContextReference(android.support.v4.app.Fragment fragment) {
+    public static class SupportFragmentContextReference extends ContextReference<androidx.fragment.app.Fragment> {
+        public SupportFragmentContextReference(androidx.fragment.app.Fragment fragment) {
             super(fragment);
         }
 
         @Override
         public Context getContext() {
-            android.support.v4.app.Fragment fragment = get();
+            androidx.fragment.app.Fragment fragment = get();
             if (fragment == null)
                 return null;
             return fragment.getActivity();
@@ -127,7 +127,7 @@ abstract class ContextReference<T> extends WeakReference<T> {
 
         @Override
         public String isAlive() {
-            android.support.v4.app.Fragment fragment = get();
+            androidx.fragment.app.Fragment fragment = get();
             if (fragment == null)
                 return "Fragment reference null";
             String ret = ActivityContextReference.isAlive(fragment.getActivity());
@@ -139,7 +139,7 @@ abstract class ContextReference<T> extends WeakReference<T> {
         }
     }
 
-    static class ImageViewContextReference extends ContextReference<ImageView> {
+    public static class ImageViewContextReference extends ContextReference<ImageView> {
         public ImageViewContextReference(ImageView imageView) {
             super(imageView);
         }
@@ -163,11 +163,11 @@ abstract class ContextReference<T> extends WeakReference<T> {
 
     public static ContextReference fromContext(Context context) {
         if (context instanceof Service)
-            return new ServiceContextReference((Service)context);
+            return new com.koushikdutta.ion.ContextReference.ServiceContextReference((Service)context);
         if (context instanceof Activity)
-            return new ActivityContextReference((Activity)context);
+            return new com.koushikdutta.ion.ContextReference.ActivityContextReference((Activity)context);
 
-        return new NormalContextReference<Context>(context) {
+        return new com.koushikdutta.ion.ContextReference.NormalContextReference<Context>(context) {
             @Override
             public String isAlive() {
                 Context context = get();
@@ -177,7 +177,4 @@ abstract class ContextReference<T> extends WeakReference<T> {
             }
         };
     }
-
-    public abstract String isAlive();
-    public abstract Context getContext();
 }

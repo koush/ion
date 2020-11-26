@@ -28,14 +28,20 @@ import java.lang.ref.WeakReference;
  * Created by koush on 6/8/13.
  */
 class IonDrawable extends LayerDrawable {
+    private static final double LOG_2 = Math.log(2);
+    private static final int TILE_DIM = 256;
+    private static final long FADE_DURATION = 200;
+    private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
+
     private Paint paint;
+    private int alpha = 0xFF;
     private BitmapInfo info;
     private int placeholderResource;
     private Drawable placeholder;
     private int errorResource;
     private Drawable error;
     private Resources resources;
-    private int loadedFrom;
+    private ResponseServedFrom servedFrom;
     private boolean fadeIn;
     private int resizeWidth;
     private int resizeHeight;
@@ -45,6 +51,14 @@ class IonDrawable extends LayerDrawable {
     private IonDrawableCallback callback;
     private FutureCallback<IonDrawable> loadCallback;
     private IonGifDecoder gifDecoder;
+    private Drawable bitmapDrawable;
+    private int textureDim;
+    private int maxLevel;
+    private BitmapDrawableFactory bitmapDrawableFactory;
+
+    private final Drawable NULL_PLACEHOLDER;
+    private final Drawable NULL_BITMAPINFO;
+    private final Drawable NULL_ERROR;
 
     public FutureCallback<IonDrawable> getLoadCallback() {
         return loadCallback;
@@ -145,13 +159,13 @@ class IonDrawable extends LayerDrawable {
 
         @Override
         public void onCompleted(Exception e, BitmapInfo result) {
-            assert Thread.currentThread() == Looper.getMainLooper().getThread();
-            assert result != null;
             // see if the imageview is still alive and cares about this result
             IonDrawable drawable = ionDrawableRef.get();
             if (drawable == null)
                 return;
-            drawable.setBitmap(result, result.loadedFrom);
+            drawable
+            .setBitmap(result, result.servedFrom)
+            .updateLayers();
             FutureCallback<IonDrawable> callback = drawable.loadCallback;
             if (callback != null)
                 callback.onCompleted(e, drawable);
@@ -174,6 +188,9 @@ class IonDrawable extends LayerDrawable {
                 try {
                     gifDecoder.nextFrame();
                 }
+                catch (OutOfMemoryError e) {
+                    exception = new Exception(e);
+                }
                 catch (Exception e) {
                     exception = e;
                 }
@@ -190,6 +207,9 @@ class IonDrawable extends LayerDrawable {
         };
 
         long getDelay() {
+            // error case?
+            if (currentFrame == null)
+                return 1000 / 10;
             long delay = currentFrame.delay;
             if (delay == 0)
                 delay = 1000 / 10;
@@ -208,7 +228,11 @@ class IonDrawable extends LayerDrawable {
                 if (gifDecoder.getLastFrame() != currentFrame) {
                     // we have a frame waiting, grab it i guess.
                     currentFrame = gifDecoder.getLastFrame();
-                    nextFrameRender += getDelay();
+                    // check if we need to drop frames, or maintain timing
+                    if (now > nextFrameRender + getDelay())
+                        nextFrameRender = now + getDelay();
+                    else
+                        nextFrameRender += getDelay();
                 }
                 scheduleNextFrame();
             }
@@ -241,41 +265,80 @@ class IonDrawable extends LayerDrawable {
         return this;
     }
 
+    public IonDrawable setBitmapDrawableFactory(BitmapDrawableFactory factory) {
+        this.bitmapDrawableFactory = factory;
+        return this;
+    }
+
     public void cancel() {
         callback.register(null, null);
         bitmapFetcher = null;
     }
 
-    private final static Drawable null0 = new BitmapDrawable((Bitmap)null);
-    private final static Drawable null1 = new BitmapDrawable((Bitmap)null);
-    private final static Drawable null2 = new BitmapDrawable((Bitmap)null);
-    private static final int DEFAULT_PAINT_FLAGS = Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG;
     public IonDrawable(Resources resources) {
-        super(new Drawable[] { null0, null1, null2 });
+        super(new Drawable[] { new BitmapDrawable((Bitmap)null), new BitmapDrawable((Bitmap)null), new BitmapDrawable((Bitmap)null) });
 
         setId(0, 0);
         setId(1, 1);
         setId(2, 2);
+
+        NULL_PLACEHOLDER = getDrawable(0);
+        NULL_BITMAPINFO = getDrawable(1);
+        NULL_ERROR = getDrawable(2);
 
         this.resources = resources;
         paint = new Paint(DEFAULT_PAINT_FLAGS);
         callback = new IonDrawableCallback(this);
     }
 
-    private int textureDim;
-    private int maxLevel;
-    public IonDrawable setBitmap(BitmapInfo info, int loadedFrom) {
+    public IonDrawable updateLayers() {
+        // always set up the placeholder, it will disappear automagically
+        tryGetPlaceholderResource();
+        if (placeholder == null)
+            setDrawableByLayerId(0, NULL_PLACEHOLDER);
+        else
+            setDrawableByLayerId(0, placeholder);
+
+        if (info == null) {
+            setDrawableByLayerId(1, NULL_BITMAPINFO);
+            setDrawableByLayerId(2, NULL_ERROR);
+            return this;
+        }
+
+        // error case
+        if (info.bitmap == null && info.decoder == null && info.gifDecoder == null) {
+            setDrawableByLayerId(1, NULL_BITMAPINFO);
+            tryGetErrorResource();
+            if (error == null)
+                setDrawableByLayerId(2, NULL_ERROR);
+            else
+                setDrawableByLayerId(2, error);
+            return this;
+        }
+
+        if (info.decoder == null && info.gifDecoder == null) {
+            // normal bitmap
+            tryGetBitmapResource();
+            setDrawableByLayerId(1, bitmapDrawable);
+        }
+        else {
+            // gif or deepzoom
+            setDrawableByLayerId(1, NULL_BITMAPINFO);
+        }
+        setDrawableByLayerId(2, NULL_ERROR);
+        return this;
+    }
+
+    public IonDrawable setBitmap(BitmapInfo info, ResponseServedFrom servedFrom) {
         if (this.info == info)
             return this;
 
         cancel();
-        this.loadedFrom = loadedFrom;
+        this.servedFrom = servedFrom;
         this.info = info;
         gifDecoder = null;
         bitmapDrawable = null;
-        setDrawableByLayerId(2, null2);
         invalidateSelf();
-        tryGetBitmapResource();
         if (info == null)
             return this;
 
@@ -322,11 +385,6 @@ class IonDrawable extends LayerDrawable {
 
         errorResource = resource;
         error = drawable;
-        if (error != null)
-            setDrawableByLayerId(1, error);
-        else
-            setDrawableByLayerId(1, null1);
-        invalidateSelf();
         return this;
     }
 
@@ -336,12 +394,6 @@ class IonDrawable extends LayerDrawable {
 
         placeholderResource = resource;
         placeholder = drawable;
-        if (placeholder != null)
-            setDrawableByLayerId(0, placeholder);
-        else
-            setDrawableByLayerId(0, null0);
-        invalidateSelf();
-
         return this;
     }
 
@@ -351,21 +403,21 @@ class IonDrawable extends LayerDrawable {
         if (errorResource == 0)
             return null;
         error = resources.getDrawable(errorResource);
-        if (error != null)
-            setDrawableByLayerId(1, error);
         return error;
     }
 
-    BitmapDrawable bitmapDrawable;
-    private BitmapDrawable tryGetBitmapResource() {
+    private Drawable tryGetBitmapResource() {
         if (bitmapDrawable != null)
             return bitmapDrawable;
         if (info == null)
             return null;
+        if (info.gifDecoder != null)
+            return null;
+        if (info.decoder != null)
+            return null;
         if (info.bitmap == null)
             return null;
-        bitmapDrawable = new BitmapDrawable(resources, info.bitmap);
-        setDrawableByLayerId(2, bitmapDrawable);
+        bitmapDrawable = bitmapDrawableFactory.fromBitmap(resources, info.bitmap);
         return bitmapDrawable;
     }
 
@@ -375,20 +427,8 @@ class IonDrawable extends LayerDrawable {
         if (placeholderResource == 0)
             return null;
         placeholder = resources.getDrawable(placeholderResource);
-        if (placeholder != null)
-            setDrawableByLayerId(0, placeholder);
         return placeholder;
     }
-
-    public static final long FADE_DURATION = 200;
-
-    @Override
-    public int getNumberOfLayers() {
-        return super.getNumberOfLayers();
-    }
-
-    private static final double LOG_2 = Math.log(2);
-    private static final int TILE_DIM = 256;
 
     private FutureCallback<BitmapInfo> tileCallback = new FutureCallback<BitmapInfo>() {
         @Override
@@ -451,9 +491,6 @@ class IonDrawable extends LayerDrawable {
     @Override
     public void draw(Canvas canvas) {
         if (info == null) {
-            // setup the placeholder if needed
-            tryGetPlaceholderResource();
-
             // draw stuff
             super.draw(canvas);
 
@@ -469,6 +506,8 @@ class IonDrawable extends LayerDrawable {
                     bitmapFetcher.recomputeDecodeKey();
                     BitmapInfo found = ion.bitmapCache.get(bitmapFetcher.bitmapKey);
                     if (found != null) {
+                        // won't be needing THIS anymore
+                        bitmapFetcher = null;
                         // found what we're looking for, but can't draw at this very moment,
                         // since we need to trigger a new measure.
                         callback.onCompleted(null, found);
@@ -502,23 +541,23 @@ class IonDrawable extends LayerDrawable {
         if (info.drawTime == 0)
             info.drawTime = SystemClock.uptimeMillis();
 
-        long destAlpha = 0xFF;
+        long destAlpha = this.alpha;
 
         if (fadeIn) {
             destAlpha = ((SystemClock.uptimeMillis() - info.drawTime) << 8) / FADE_DURATION;
-            destAlpha = Math.min(destAlpha, 0xFF);
+            destAlpha = Math.min(destAlpha, this.alpha);
         }
 
-        // remove self if not visible
-        if (destAlpha == 255) {
+        // remove plaeholder if not visible
+        if (destAlpha == this.alpha) {
             if (placeholder != null) {
                 placeholder = null;
-                setDrawableByLayerId(0, null0);
+                setDrawableByLayerId(0, NULL_PLACEHOLDER);
             }
         } else {
-            tryGetPlaceholderResource();
-            //invalidate to fade in
-            invalidateSelf();
+            // invalidate to fade in
+            if (placeholder != null)
+                invalidateSelf();
         }
 
         if (info.gifDecoder != null) {
@@ -528,18 +567,18 @@ class IonDrawable extends LayerDrawable {
             if (frame != null) {
                 paint.setAlpha((int) destAlpha);
                 canvas.drawBitmap(frame.image, null, getBounds(), paint);
-                paint.setAlpha(0xFF);
+                paint.setAlpha(this.alpha);
                 invalidateSelf();
             }
             return;
         }
 
-        if (bitmapDrawable != null) {
-            bitmapDrawable.setAlpha((int) destAlpha);
+        if (info.bitmap != null) {
+            if (bitmapDrawable != null)
+                bitmapDrawable.setAlpha((int)destAlpha);
         } else {
-            tryGetErrorResource();
             if (error != null)
-                error.setAlpha((int) destAlpha);
+                error.setAlpha((int)destAlpha);
         }
 
         super.draw(canvas);
@@ -555,20 +594,14 @@ class IonDrawable extends LayerDrawable {
         canvas.drawRect(0, -10, 7.5f, 10, paint);
 
         int sourceColor;
-        switch (loadedFrom) {
-            case Loader.LoaderEmitter.LOADED_FROM_CACHE:
-                sourceColor = Color.CYAN;
-                break;
-            case Loader.LoaderEmitter.LOADED_FROM_CONDITIONAL_CACHE:
-                sourceColor = Color.YELLOW;
-                break;
-            case Loader.LoaderEmitter.LOADED_FROM_MEMORY:
-                sourceColor = Color.GREEN;
-                break;
-            default:
-                sourceColor = Color.RED;
-                break;
-        }
+        if (servedFrom == ResponseServedFrom.LOADED_FROM_CACHE)
+            sourceColor = Color.CYAN;
+        else if (servedFrom == ResponseServedFrom.LOADED_FROM_CONDITIONAL_CACHE)
+            sourceColor = Color.YELLOW;
+        else if (servedFrom == ResponseServedFrom.LOADED_FROM_MEMORY)
+            sourceColor = Color.GREEN;
+        else
+            sourceColor = Color.RED;
 
         paint.setColor(sourceColor);
         canvas.drawRect(0, -9, 6.5f, 9, paint);
@@ -730,18 +763,21 @@ class IonDrawable extends LayerDrawable {
 
     @Override
     public void setAlpha(int alpha) {
-       paint.setAlpha(alpha);
+        super.setAlpha(alpha);
+        this.alpha = alpha;
+        paint.setAlpha(alpha);
     }
 
     @Override
     public void setColorFilter(ColorFilter cf) {
+        super.setColorFilter(cf);
         paint.setColorFilter(cf);
     }
 
     @Override
     public int getOpacity() {
         return (info == null || info.bitmap == null || info.bitmap.hasAlpha() || paint.getAlpha() < 255) ?
-                PixelFormat.TRANSLUCENT : PixelFormat.OPAQUE;
+                PixelFormat.TRANSLUCENT : super.getOpacity();
     }
 
     static IonDrawable getOrCreateIonDrawable(ImageView imageView) {

@@ -16,6 +16,15 @@ import javax.net.ssl.SSLSocketFactory;
 public class ConscryptTests extends AndroidTestCase {
     // needs to be run on fresh vm startups...
 
+    public void testSni() throws Exception {
+//        Ion.getDefault(getContext())
+//                .getConscryptMiddleware().enable(false);
+        Ion.with(getContext())
+                .load("https://koush.com")
+                .asString()
+                .get();
+    }
+
     /*
     public void testConscryptInit() throws Exception {
         Ion.getDefault(getContext())

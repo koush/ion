@@ -1,5 +1,7 @@
 package com.koushikdutta.ion.builder;
 
+import com.koushikdutta.async.http.AsyncHttpRequest;
+
 import java.io.File;
 
 /**
@@ -27,4 +29,11 @@ public interface LoadBuilder<B> {
      * @return
      */
     public B load(File file);
+
+    /**
+     * Load an http request, exactly as provided.
+     * @param request
+     * @return
+     */
+    B load(AsyncHttpRequest request);
 }

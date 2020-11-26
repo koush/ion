@@ -31,6 +31,7 @@ public interface MultipartBodyBuilder<M extends MultipartBodyBuilder> {
      * Specify a multipart/form-data file to send to the HTTP server. If no HTTP method was explicitly
      * provided in the load call, the default HTTP method, POST, is used.
      * @param name Multipart name
+     *    Name part of Content-Disposition header.
      * @param file Multipart file to send
      * @return
      */
@@ -40,7 +41,9 @@ public interface MultipartBodyBuilder<M extends MultipartBodyBuilder> {
      * Specify a multipart/form-data file to send to the HTTP server. If no HTTP method was explicitly
      * provided in the load call, the default HTTP method, POST, is used.
      * @param name Multipart name
-     * @param file Multipart Content-Type
+     *    Name part of Content-Disposition header.
+     * @param file Multipart file's content type
+     *    MIME type of file.
      * @param file Multipart file to send
      * @return
      */

@@ -1,12 +1,10 @@
 package com.koushikdutta.ion;
 
 class LoadBitmapEmitter extends LoadBitmapBase {
-    IonRequestBuilder.EmitterTransform emitterTransform;
-    boolean animateGif;
+    final boolean animateGif;
 
-    public LoadBitmapEmitter(Ion ion, String urlKey, boolean put, boolean animateGif, IonRequestBuilder.EmitterTransform emitterTransform) {
+    public LoadBitmapEmitter(Ion ion, String urlKey, boolean put, boolean animateGif) {
         super(ion, urlKey, put);
         this.animateGif = animateGif;
-        this.emitterTransform = emitterTransform;
     }
 }

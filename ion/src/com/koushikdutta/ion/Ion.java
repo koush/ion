@@ -13,8 +13,10 @@ import android.widget.ImageView;
 
 import com.google.gson.Gson;
 import com.koushikdutta.async.AsyncServer;
+import com.koushikdutta.async.callback.ValueFunction;
 import com.koushikdutta.async.future.Future;
 import com.koushikdutta.async.future.FutureCallback;
+import com.koushikdutta.async.future.SimpleFuture;
 import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpRequest;
 import com.koushikdutta.async.http.Headers;
@@ -22,6 +24,7 @@ import com.koushikdutta.async.http.cache.ResponseCacheMiddleware;
 import com.koushikdutta.async.util.FileCache;
 import com.koushikdutta.async.util.FileUtility;
 import com.koushikdutta.async.util.HashList;
+import com.koushikdutta.ion.apache.BrowserCompatHostnameVerifier;
 import com.koushikdutta.ion.bitmap.BitmapInfo;
 import com.koushikdutta.ion.bitmap.IonBitmapCache;
 import com.koushikdutta.ion.builder.Builders;
@@ -36,8 +39,6 @@ import com.koushikdutta.ion.loader.HttpLoader;
 import com.koushikdutta.ion.loader.PackageIconLoader;
 import com.koushikdutta.ion.loader.ResourceLoader;
 import com.koushikdutta.ion.loader.VideoLoader;
-
-import org.apache.http.conn.ssl.BrowserCompatHostnameVerifier;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +64,21 @@ public class Ion {
     static ExecutorService bitmapExecutorService  = availableProcessors > 2 ? Executors.newFixedThreadPool(availableProcessors - 1) : Executors.newFixedThreadPool(1);
     static HashMap<String, Ion> instances = new HashMap<String, Ion>();
 
+    public static <T> Future<T> submitBackgroundTask(ValueFunction<T> task) {
+        SimpleFuture<T> ret = new SimpleFuture<>();
+        getIoExecutorService().submit(() -> {
+            if (ret.isCancelled())
+                return;
+            try {
+                ret.setComplete(task.getValue());
+            }
+            catch (Exception e) {
+                ret.setComplete(e);
+            }
+        });
+        return ret;
+    }
+
     /**
      * Get the default Ion object instance and begin building a request
      * @param context
@@ -70,6 +86,15 @@ public class Ion {
      */
     public static LoadBuilder<Builders.Any.B> with(Context context) {
         return getDefault(context).build(context);
+    }
+
+    /**
+     * Get the default Ion object instance and begin building a request
+     * @param context
+     * @return
+     */
+    public static LoadBuilder<Builders.Any.B> with(IonContext context) {
+        return getDefault(context.getContext()).build(context);
     }
 
     /**
@@ -87,7 +112,7 @@ public class Ion {
      * @param fragment
      * @return
      */
-    public static LoadBuilder<Builders.Any.B> with(android.support.v4.app.Fragment fragment) {
+    public static LoadBuilder<Builders.Any.B> with(androidx.fragment.app.Fragment fragment) {
         return getDefault(fragment.getActivity()).build(fragment);
     }
 
@@ -154,7 +179,6 @@ public class Ion {
 
         httpClient = new AsyncHttpClient(new AsyncServer("ion-" + name));
         httpClient.getSSLSocketMiddleware().setHostnameVerifier(new BrowserCompatHostnameVerifier());
-        httpClient.getSSLSocketMiddleware().setSpdyEnabled(true);
         httpClient.insertMiddleware(conscryptMiddleware = new ConscryptMiddleware(context, httpClient.getSSLSocketMiddleware()));
 
         File ionCacheDir = new File(context.getCacheDir(), name);
@@ -212,6 +236,15 @@ public class Ion {
 
     /**
      * Begin building a request
+     * @param context
+     * @return
+     */
+    public LoadBuilder<Builders.Any.B> build(IonContext context) {
+        return new IonRequestBuilder(context, this);
+    }
+
+    /**
+     * Begin building a request
      * @param fragment
      * @return
      */
@@ -224,7 +257,7 @@ public class Ion {
      * @param fragment
      * @return
      */
-    public LoadBuilder<Builders.Any.B> build(android.support.v4.app.Fragment fragment) {
+    public LoadBuilder<Builders.Any.B> build(androidx.fragment.app.Fragment fragment) {
         return new IonRequestBuilder(new ContextReference.SupportFragmentContextReference(fragment), this);
     }
 

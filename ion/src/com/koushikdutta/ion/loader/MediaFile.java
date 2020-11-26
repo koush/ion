@@ -142,6 +142,7 @@ public class MediaFile {
     static void addFileType(String extension, int fileType, String mimeType) {
         sFileTypeMap.put(extension, new MediaFileType(fileType, mimeType));
         sMimeTypeMap.put(mimeType, Integer.valueOf(fileType));
+        sMimeTypeToExtensionMap.put(mimeType, extension);
     }
 
     static void addFileType(String extension, int fileType, String mimeType, int mtpFormatCode) {
@@ -149,7 +150,6 @@ public class MediaFile {
         sFileTypeToFormatMap.put(extension, Integer.valueOf(mtpFormatCode));
         sMimeTypeToFormatMap.put(mimeType, Integer.valueOf(mtpFormatCode));
         sFormatToMimeTypeMap.put(mtpFormatCode, mimeType);
-        sMimeTypeToExtensionMap.put(mimeType, extension);
     }
 
     /*
@@ -310,7 +310,10 @@ public class MediaFile {
     }
 
     public static String getExtensionForMimeType(String mimeType) {
-        return sMimeTypeToExtensionMap.get(mimeType).toLowerCase();
+        String ret = sMimeTypeToExtensionMap.get(mimeType);
+        if (ret != null)
+            return ret.toLowerCase();
+        return null;
     }
 
     // generates a title based on file name
@@ -333,7 +336,7 @@ public class MediaFile {
 
     public static int getFileTypeForMimeType(String mimeType) {
         Integer value = sMimeTypeMap.get(mimeType);
-        return (value == null ? 0 : value.intValue());
+        return (value == null ? 0 : value);
     }
 
     public static String getMimeTypeForFile(String path) {
@@ -345,7 +348,7 @@ public class MediaFile {
         if (mimeType != null) {
             Integer value = sMimeTypeToFormatMap.get(mimeType);
             if (value != null) {
-                return value.intValue();
+                return value;
             }
         }
         int lastDot = fileName.lastIndexOf('.');
@@ -353,7 +356,7 @@ public class MediaFile {
             String extension = fileName.substring(lastDot + 1).toUpperCase(Locale.ROOT);
             Integer value = sFileTypeToFormatMap.get(extension);
             if (value != null) {
-                return value.intValue();
+                return value;
             }
         }
         return MtpConstants.FORMAT_UNDEFINED;

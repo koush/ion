@@ -23,6 +23,11 @@ public interface BitmapFutureBuilder {
     public BitmapInfo asCachedBitmap();
 
     /**
+     * Remove the cached bitmap, if it exists.
+     */
+    public void removeCachedBitmap();
+
+    /**
      * Check whether the Bitmap can be loaded from either the file or memory cache
      * @return
      */
