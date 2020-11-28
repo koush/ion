@@ -13,6 +13,7 @@ import com.koushikdutta.scratch.http.Headers
 import com.koushikdutta.scratch.http.client.executor.setProxy
 import com.koushikdutta.scratch.http.contentLength
 import com.koushikdutta.scratch.http.contentType
+import com.koushikdutta.scratch.uri.URI
 import kotlinx.coroutines.*
 import java.lang.ref.WeakReference
 
@@ -112,7 +113,7 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
             if (ct != null)
                 headers.contentType = ct
         }
-        return ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(uri, method, headers, body)
+        return ion.configure().getAsyncHttpRequestFactory().createAsyncHttpRequest(URI(uri.toString()), method, headers, body)
     }
 
     suspend fun prepareRequest(): AsyncHttpRequest {
