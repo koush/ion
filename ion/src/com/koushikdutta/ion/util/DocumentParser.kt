@@ -4,7 +4,7 @@ import com.koushikdutta.scratch.AsyncRead
 import com.koushikdutta.scratch.Promise
 import com.koushikdutta.scratch.buffers.ByteBufferList
 import com.koushikdutta.scratch.buffers.ByteBufferListInputStream
-import com.koushikdutta.scratch.http.AsyncHttpMessageBody
+import com.koushikdutta.scratch.http.AsyncHttpMessageContent
 import org.w3c.dom.Document
 import java.io.ByteArrayOutputStream
 import java.io.OutputStreamWriter
@@ -30,7 +30,7 @@ class DocumentParser : AsyncParser<Document> {
 }
 
 class DocumentSerializer : AsyncSerializer<Document> {
-    override fun write(value: Document): Promise<AsyncHttpMessageBody> {
+    override fun write(value: Document): Promise<AsyncHttpMessageContent> {
         val source = DOMSource(value)
         val tf: TransformerFactory = TransformerFactory.newInstance()
         val transformer: Transformer = tf.newTransformer()

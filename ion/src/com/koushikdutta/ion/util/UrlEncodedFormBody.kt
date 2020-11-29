@@ -2,8 +2,7 @@ package com.koushikdutta.ion.util
 
 import com.koushikdutta.scratch.collections.StringMultimap
 import com.koushikdutta.scratch.collections.add
-import com.koushikdutta.scratch.collections.toString
-import com.koushikdutta.scratch.http.AsyncHttpMessageBody
+import com.koushikdutta.scratch.http.AsyncHttpMessageContent
 import kotlinx.coroutines.*
 
 class UrlEncodedFormBody {
@@ -13,7 +12,7 @@ class UrlEncodedFormBody {
         map.add(name, value)
     }
 
-    fun defer(): Deferred<AsyncHttpMessageBody> = GlobalScope.async(Dispatchers.Unconfined, start = CoroutineStart.LAZY) {
+    fun defer(): Deferred<AsyncHttpMessageContent> = GlobalScope.async(Dispatchers.Unconfined, start = CoroutineStart.LAZY) {
         UrlEncodedFormBodySerializer().write(map).await()
     }
 }

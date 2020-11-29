@@ -7,12 +7,13 @@ import com.google.gson.stream.JsonReader
 import com.koushikdutta.ion.util.AsyncParser
 import com.koushikdutta.ion.util.AsyncSerializer
 import com.koushikdutta.ion.util.ByteBufferListParser
+import com.koushikdutta.scratch.AsyncInput
 import com.koushikdutta.scratch.AsyncRead
 import com.koushikdutta.scratch.Promise
 import com.koushikdutta.scratch.buffers.ByteBufferList
 import com.koushikdutta.scratch.buffers.ByteBufferListInputStream
 import com.koushikdutta.scratch.createReader
-import com.koushikdutta.scratch.http.AsyncHttpMessageBody
+import com.koushikdutta.scratch.http.AsyncHttpMessageContent
 import java.io.InputStreamReader
 import java.lang.reflect.Type
 import java.nio.charset.Charset
@@ -34,13 +35,14 @@ abstract class GsonParser<T : JsonElement?>(override val type: Class<T>, private
 }
 
 abstract class GsonSerializer<T : JsonElement?>(private val charset: Charset = Charsets.UTF_8) : AsyncSerializer<T> {
-    override fun write(value: T) = Promise<AsyncHttpMessageBody> {
+    override fun write(value: T) = Promise<AsyncHttpMessageContent> {
         val buffer = ByteBufferList()
         buffer.add(value.toString().toByteArray(charset))
-        object : AsyncHttpMessageBody {
+        object : AsyncHttpMessageContent, AsyncRead by buffer.createReader() {
             override val contentType = "application/json"
             override val contentLength = buffer.remaining().toLong()
-            override val read = buffer.createReader()
+            override suspend fun close() {
+            }
         }
     }
 }

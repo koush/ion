@@ -9,7 +9,7 @@ import com.koushikdutta.scratch.AsyncRead
 import com.koushikdutta.scratch.Promise
 import com.koushikdutta.scratch.buffers.ByteBufferList
 import com.koushikdutta.scratch.buffers.ByteBufferListInputStream
-import com.koushikdutta.scratch.http.AsyncHttpMessageBody
+import com.koushikdutta.scratch.http.AsyncHttpMessageContent
 import java.io.ByteArrayOutputStream
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -43,7 +43,7 @@ class PojoParser<T>: AsyncParser<T> {
 }
 
 class PojoSerializer<T>(val gson: Gson, val type: Type) : AsyncSerializer<T> {
-    override fun write(value: T): Promise<AsyncHttpMessageBody> {
+    override fun write(value: T): Promise<AsyncHttpMessageContent> {
         val bout = ByteArrayOutputStream()
         val out = OutputStreamWriter(bout)
         gson.toJson(value, type, out)

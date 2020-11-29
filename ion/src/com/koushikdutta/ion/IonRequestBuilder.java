@@ -44,7 +44,7 @@ import com.koushikdutta.ion.util.StringParser;
 import com.koushikdutta.ion.util.StringSerializer;
 import com.koushikdutta.ion.util.UrlEncodedFormBody;
 import com.koushikdutta.scratch.buffers.ByteBufferList;
-import com.koushikdutta.scratch.http.AsyncHttpMessageBody;
+import com.koushikdutta.scratch.http.AsyncHttpMessageContent;
 import com.koushikdutta.scratch.http.AsyncHttpRequest;
 import com.koushikdutta.scratch.http.Header;
 import com.koushikdutta.scratch.http.Headers;
@@ -196,8 +196,8 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
         return this;
     }
 
-    Deferred<AsyncHttpMessageBody> body;
-    private IonRequestBuilder setBody(Deferred<AsyncHttpMessageBody> body) {
+    Deferred<AsyncHttpMessageContent> body;
+    private IonRequestBuilder setBody(Deferred<AsyncHttpMessageContent> body) {
         if (!methodWasSet)
             method = Methods.POST.name();
         this.body = body;
