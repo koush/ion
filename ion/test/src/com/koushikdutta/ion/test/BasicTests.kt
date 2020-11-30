@@ -1,16 +1,12 @@
 package com.koushikdutta.ion.test
 
-import android.content.Context
 import android.os.Looper
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.gson.JsonObject
 import com.koushikdutta.ion.ContextReference
-import com.koushikdutta.ion.Ion
 import com.koushikdutta.ion.IonContext
 import com.koushikdutta.ion.builder.IonPromise
-import com.koushikdutta.scratch.createScheduler
-import com.koushikdutta.scratch.event.sleep
-import kotlinx.coroutines.CompletableDeferred
+import com.koushikdutta.scratch.event.createScheduler
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
