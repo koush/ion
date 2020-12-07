@@ -190,7 +190,6 @@ internal class IonExecutor<T>(ionRequestBuilder: IonRequestBuilder, val parser: 
                 emitter.input.close()
             }
 
-            println(response)
             response
         }
 
