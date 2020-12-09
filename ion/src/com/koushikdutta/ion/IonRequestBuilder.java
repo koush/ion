@@ -115,6 +115,18 @@ class IonRequestBuilder implements Builders.Any.B, Builders.Any.F, Builders.Any.
     }
 
     @Override
+    public R setMethod(String method) {
+        methodWasSet = true;
+        this.method = method;
+        return this;
+    }
+
+    @Override
+    public IonRequestBuilder load(String format, String... args) {
+        return load(String.format(format, args));
+    }
+
+    @Override
     public IonRequestBuilder load(AsyncHttpRequest request) {
         headers = new Headers(request.getHeaders().getMultiMap());
         setBody(request.getBody());

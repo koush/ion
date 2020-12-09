@@ -388,4 +388,15 @@ public class Issues extends AndroidTestCase {
                 + "} should be equal to {Pixel(35,200,5): " + Integer.toHexString(frame5Pixel) + "}";
         Assert.assertEquals(assertionMessage, frame4Pixel, frame5Pixel);
     }
+
+    public void testIssue365() throw Exception {
+        String noFormatting = Ion.with(getContext()).load("https://raw.githubusercontent.com/koush/AndroidAsync/master/AndroidAsync/test/assets/test.json")
+                .asString().get();
+        String username = "koush";
+        String withFormatting = Ion.with(getContext()).load(
+                "https://raw.githubusercontent.com/%s/AndroidAsync/master/AndroidAsync/test/assets/test.json",
+                username)
+                .asString().get();
+        Assert.asserEquals(noFormatting, withFormatting);
+    }
 }

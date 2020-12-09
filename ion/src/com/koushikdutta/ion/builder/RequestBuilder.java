@@ -108,6 +108,13 @@ public interface RequestBuilder<F, R extends RequestBuilder, M extends Multipart
     public R setHandler(Handler handler);
 
     /**
+     * Set the HTTP method explicitly
+     * @param method HTTP method of the request
+     * @return
+     */
+    public R setMethod(String method);
+
+    /**
      * Set a HTTP header
      * @param name Header name
      * @param value Header value
