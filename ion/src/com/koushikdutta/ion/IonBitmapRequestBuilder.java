@@ -33,7 +33,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
     };
 
     IonRequestBuilder builder;
-    Ion ion;
+    static Ion ion;
     ArrayList<Transform> transforms;
     ScaleMode scaleMode;
     int resizeWidth;
@@ -115,7 +115,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
             decodeKey += ":noAnimate";
         if (deepZoom)
             decodeKey += ":deepZoom";
-        return FileCache.toKeyString(decodeKey);
+        return ion.getCache().toKeyString(decodeKey);
     }
 
     public void addDefaultTransform() {
@@ -140,7 +140,7 @@ abstract class IonBitmapRequestBuilder implements BitmapFutureBuilder, Builders.
             for (Transform transform : transforms) {
                 bitmapKey += transform.key();
             }
-            bitmapKey = FileCache.toKeyString(bitmapKey);
+            bitmapKey = ion.getCache().toKeyString(bitmapKey);
         }
 
         return bitmapKey;

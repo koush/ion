@@ -688,7 +688,7 @@ class IonDrawable extends LayerDrawable {
 
                 // find, render/fetch
 //                    System.out.println("rendering: " + texRect + " for: " + bounds);
-                String tileKey = FileCache.toKeyString(info.key, ",", level, ",", x, ",", y);
+                String tileKey = ion.getCache().toKeyString(info.key, ",", level, ",", x, ",", y);
                 BitmapInfo tile = ion.bitmapCache.get(tileKey);
                 if (tile != null && tile.bitmap != null) {
                     // render it
@@ -717,7 +717,7 @@ class IonDrawable extends LayerDrawable {
                 int parentY = y >> 1;
 
                 while (parentLevel >= 0) {
-                    tileKey = FileCache.toKeyString(info.key, ",", parentLevel, ",", parentX, ",", parentY);
+                    tileKey = ion.getCache().toKeyString(info.key, ",", parentLevel, ",", parentX, ",", parentY);
                     tile = ion.bitmapCache.get(tileKey);
                     if (tile != null && tile.bitmap != null)
                         break;
