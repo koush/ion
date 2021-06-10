@@ -13,6 +13,7 @@ import com.koushikdutta.scratch.http.client.AsyncHttpClient
 import com.koushikdutta.scratch.http.client.AsyncHttpExecutor
 import com.koushikdutta.scratch.http.client.executor.findHttpClientExecutor
 import com.koushikdutta.scratch.http.server.AsyncHttpServer
+import com.koushikdutta.scratch.listenAsync
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
@@ -38,7 +39,7 @@ open class HttpCacheTests {
             ion.cache.clear()
 
             val serverSocket = listen()
-            httpServer.listen(serverSocket)
+            httpServer.listenAsync(serverSocket)
 
             val data = Ion.with(InstrumentationRegistry.getInstrumentation().context)
                     .load("http://localhost:${serverSocket.localPort}/")
