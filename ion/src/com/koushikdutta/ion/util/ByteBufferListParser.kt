@@ -5,12 +5,12 @@ import com.koushikdutta.scratch.Promise
 import com.koushikdutta.scratch.buffers.ByteBufferList
 import com.koushikdutta.scratch.createReader
 import com.koushikdutta.scratch.http.AsyncHttpMessageContent
-import com.koushikdutta.scratch.parser.readAllBuffer
-import java.lang.reflect.Type
+import com.koushikdutta.scratch.parser.readBuffer
 
 class ByteBufferListParser(override val contentType: String = "application/octet-stream") : AsyncParser<ByteBufferList> {
     override fun parse(read: AsyncRead) = Promise {
-        readAllBuffer(read)
+        val parser = com.koushikdutta.scratch.parser.AsyncParser(read)
+        parser.readBuffer()
     }
 
     override val type = ByteBufferList::class.java
