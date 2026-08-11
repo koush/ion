@@ -267,7 +267,7 @@ internal class BitmapManager(val ion: Ion) {
 
         var available = Ion.numBitmapExecutors - loading
         while (lazy.isNotEmpty() && available > 0) {
-            val start = lazy.removeFirst()
+            val start = lazy.removeAt(0)
             start.start()
             available--
         }
